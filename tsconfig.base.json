@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "verbatimModuleSyntax": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@chronarium/types": ["packages/types/src/index.ts"],
+      "@chronarium/schemas": ["packages/schemas/src/index.ts"],
+      "@chronarium/archive": ["packages/archive/src/index.ts"],
+      "@chronarium/core": ["packages/core/src/index.ts"],
+      "@chronarium/adapter-chaturbate": [
+        "packages/adapters/chaturbate/src/index.ts"
+      ],
+      "@chronarium/testkit": ["packages/testkit/src/index.ts"]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "chronarium",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local-first livestream archive and replay platform.",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm -r --if-present lint"
+  }
+}

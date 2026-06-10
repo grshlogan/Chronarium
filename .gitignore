@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+.turbo/
+.vite/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Local runtime state
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# Local archives and captures
+*.chron/
+archives/
+captures/
+recordings/
+runtime/
+
+# Real media should not be committed.
+*.aac
+*.flac
+*.m4a
+*.m4s
+*.mkv
+*.mov
+*.mp3
+*.mp4
+*.ogg
+*.opus
+*.tsv.media
+*.wav
+*.webm
