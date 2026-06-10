@@ -17,6 +17,7 @@ Current files:
 .gitignore
 README.md
 AGENTS.md
+LICENSE
 package.json
 pnpm-workspace.yaml
 tsconfig.base.json
@@ -78,6 +79,16 @@ Boundary:
 - It is not a product specification.
 - It should not contain personal credentials, project-specific local secrets, or
   unrelated agent persona instructions.
+
+### `LICENSE`
+
+Responsibility:
+
+- Project open-source license text.
+
+Current status:
+
+- Apache License 2.0.
 
 ## Docs
 
@@ -210,6 +221,12 @@ Responsibility:
 
 - Plan and scope for the initial workspace and schema foundation.
 - Records explicit out-of-scope items for this step.
+
+### `docs/plan/plan_license_apache_2.md`
+
+Responsibility:
+
+- Plan and scope for adding Apache-2.0 licensing metadata.
 
 ## Current Code Tree
 
@@ -449,11 +466,13 @@ Responsibility:
 Responsibility:
 
 - Root private workspace metadata.
+- SPDX license identifier.
 - Delegating scripts for future build, typecheck, test, and lint commands.
 
 Current status:
 
 - No dependencies have been installed.
+- Root license is `Apache-2.0`.
 
 ### `pnpm-workspace.yaml`
 

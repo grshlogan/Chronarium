@@ -102,3 +102,30 @@ unimplemented ideas as completed work.
     not run.
 - Next: choose a license, install exact development dependencies, add runtime
   schema validation, and implement a synthetic-fixture archive writer.
+
+## 2026-06-11: Apache-2.0 license
+
+- Conversation: user accepted the recommendation to license Chronarium under
+  Apache-2.0.
+- Landed: added the standard Apache License 2.0 text, root package license
+  metadata, and documentation updates.
+- Files:
+  - `LICENSE`
+  - `package.json`
+  - `README.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/plan/plan_license_apache_2.md`
+- Decisions:
+  - Project license is Apache-2.0.
+  - Future license changes require explicit user direction.
+- Verification:
+  - `package.json` parsed successfully and reports `license: Apache-2.0`.
+  - Trailing whitespace scan with `Select-String -Pattern '[ \t]$'` produced no
+    output.
+  - `git diff --check` produced no output before staging.
+- Next: install exact development dependencies, add runtime schema validation,
+  and implement a synthetic-fixture archive writer.

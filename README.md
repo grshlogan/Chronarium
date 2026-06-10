@@ -48,6 +48,7 @@ AI 可以快速接手局部问题
 - 已创建 `packages/types`、`packages/schemas`、`packages/archive`、
   `packages/core`、`packages/adapters/chaturbate`、`packages/testkit` 的
   初版空壳或契约。
+- 已选择并添加开源许可证：Apache-2.0。
 - 尚未安装依赖。
 - 尚未实现 GUI、可运行 core、真实站点 adapter、SQLite index、FFmpeg
   command builder、完整 archive writer 或 replay player。
@@ -79,6 +80,7 @@ small module boundaries.
 当前事实源：
 
 - [AGENTS.md](./AGENTS.md)：AI coding agent 行为约束、工程边界和安全规则。
+- [LICENSE](./LICENSE)：Apache License 2.0。
 - [docs/CONTEXT.md](./docs/CONTEXT.md)：产品词汇、架构词汇和关键概念。
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)：首版系统框架、技术栈、进程边界和数据流。
 - [docs/PRODUCT_SPEC.md](./docs/PRODUCT_SPEC.md)：产品承诺、MVP 范围、非目标和核心工作流。
@@ -117,15 +119,13 @@ Chronarium 目标 GitHub 仓库：
 - 不提交真实直播媒体片段，除非它们是明确可公开的人工 fixture。
 - 站点 adapter 的测试样本需要脱敏。
 - 文档中不要包含个人账号、路径外的凭据或可识别用户数据。
-- 尚未选择开源 LICENSE；添加 LICENSE 前需要用户明确选择。
+- 项目许可证为 Apache-2.0。
 
 ## 近期建议
 
 下一步适合先做这些基础工作：
 
-1. 选择开源许可证；添加 LICENSE 前需要用户明确选择 MIT、Apache-2.0、
-   AGPL-3.0 或其他。
-2. 安装 TypeScript/Vitest 等最小开发依赖并生成 lockfile。
-3. 把 `packages/schemas` 从 schema 草案推进到可运行 runtime validation。
-4. 实现只写本地 synthetic fixture 的 `.chron` archive writer。
-5. 用离线 fixture 验证 timeline append、manifest 生成和 SQLite index 同步。
+1. 安装 TypeScript/Vitest 等最小开发依赖并生成 lockfile。
+2. 把 `packages/schemas` 从 schema 草案推进到可运行 runtime validation。
+3. 实现只写本地 synthetic fixture 的 `.chron` archive writer。
+4. 用离线 fixture 验证 timeline append、manifest 生成和 SQLite index 同步。

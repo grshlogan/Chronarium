@@ -110,7 +110,6 @@ unimplemented.
 
 ## Open Product Decisions
 
-- Open-source license.
 - Exact `.chron` migration strategy after v1.
 - Public fixture policy.
 - GUI information architecture.

@@ -26,9 +26,10 @@ Current state:
 - Package code is contract-first and placeholder-only.
 - Chaturbate adapter code is synthetic fixture mode only and does not connect to
   live rooms.
+- License selected and added: Apache-2.0.
 - No dependencies have been installed and no lockfile exists.
 - No GUI, runnable core, SQLite index, FFmpeg command builder, complete archive
-  writer, replay player, real capture, tests, or license exists yet.
+  writer, replay player, real capture, or tests exist yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
 
@@ -50,8 +51,10 @@ docs/AI_HANDOFF.md
 docs/AI_CHANGE_INDEX.md
 docs/plan/README.md
 docs/plan/plan_workspace_schema_foundation.md
+docs/plan/plan_license_apache_2.md
 .gitattributes
 .gitignore
+LICENSE
 package.json
 pnpm-workspace.yaml
 tsconfig.base.json
@@ -117,19 +120,17 @@ The project should optimize for AI-assisted long-term maintenance:
 - Do not commit secrets, cookies, headers, signed URLs, private-room data, or
   real captured media.
 - Keep docs honest: do not claim planned code exists.
-- Do not add a LICENSE until the user chooses MIT, Apache-2.0, AGPL-3.0, or
-  another license.
+- Do not change the Apache-2.0 license without explicit user direction.
 
 ## Suggested Next Steps
 
-1. Choose license and add `LICENSE` only after explicit user selection.
-2. Choose and install exact development dependencies, then generate a lockfile.
-3. Run the first real TypeScript typecheck after dependencies exist.
-4. Turn `packages/schemas` from JSON-schema-lite descriptors into runtime
+1. Choose and install exact development dependencies, then generate a lockfile.
+2. Run the first real TypeScript typecheck after dependencies exist.
+3. Turn `packages/schemas` from JSON-schema-lite descriptors into runtime
    validators.
-5. Add archive writer prototype using synthetic fixtures only.
-6. Add first tests for timeline append and manifest validation.
-7. Only after archive/timeline validation works, expand the CB adapter fixture
+4. Add archive writer prototype using synthetic fixtures only.
+5. Add first tests for timeline append and manifest validation.
+6. Only after archive/timeline validation works, expand the CB adapter fixture
    harness.
 
 ## Verification Status
@@ -149,3 +150,9 @@ Pre-commit safe checks run during the workspace skeleton step:
 
 No `pnpm`, `npm`, TypeScript, lint, build, or test command was run because
 dependencies have not been installed.
+
+License update checks:
+
+- `package.json` parsed successfully and reports `license: Apache-2.0`.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: no output.
+- `git diff --check`: no output before staging.

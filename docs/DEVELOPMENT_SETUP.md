@@ -69,7 +69,8 @@ When the user approves dependency installation, a future step should:
 - Keep source code inside `D:\live\Chronarium`.
 - Do not touch sibling recorder projects.
 - Do not commit or push unless explicitly requested.
-- Do not add a license without asking the user to choose one.
+- The project license is Apache-2.0; do not change it without explicit user
+  direction.
 - Keep Chaturbate work fixture-first until archive and timeline foundations are
   validated.
 - Keep docs honest about what is implemented.
