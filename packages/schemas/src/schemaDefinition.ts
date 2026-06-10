@@ -14,3 +14,9 @@ export function defineSchema<TSchema extends SchemaDefinition>(
 ): TSchema {
   return schema;
 }
+
+export interface ParseResult<TValue> {
+  readonly ok: boolean;
+  readonly value?: TValue;
+  readonly issues?: readonly string[];
+}

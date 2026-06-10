@@ -10,12 +10,15 @@
     }
   },
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -b tsconfig.json --pretty false"
   },
   "dependencies": {
-    "@chronarium/types": "workspace:*"
+    "@chronarium/types": "workspace:*",
+    "zod": "^4.4.3"
   }
 }

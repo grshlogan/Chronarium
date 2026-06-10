@@ -1,68 +1,82 @@
 # Development Setup
 
-Status: initial workspace setup notes. Dependencies have not been installed in
-this foundation step.
+Status: initial executable workspace setup notes.
 
 ## Current State
 
-The repository now has a minimal TypeScript workspace skeleton and package
-boundaries. It does not yet have:
+The repository now has a minimal TypeScript workspace skeleton, installed
+development dependencies, runtime schema validation, and a fixture-only archive
+writer path.
 
-- installed dependencies;
-- a lockfile;
+It has:
+
+- `pnpm-lock.yaml`;
+- root dev dependencies for TypeScript, Vitest, and Node types;
+- `zod` in `@chronarium/schemas`;
+- package project references;
+- `vitest.config.ts`;
+- runtime schemas for the first session, media track, timeline event, archive
+  manifest, and adapter message boundaries;
+- a fixture-safe archive writer that writes `manifest.json`, appends
+  `timeline.jsonl`, and creates top-level archive directories;
+- one Vitest behavior test for a synthetic `.chron` package.
+
+It does not yet have:
+
 - executable GUI;
 - core runtime implementation;
-- archive writer implementation;
+- full archive reader/validator;
 - SQLite index implementation;
 - real site adapters;
-- tests that can be run through a package manager.
+- FFmpeg / ffprobe command builders;
+- replay player.
 
-## Expected Tooling Direction
+## Tooling
+
+Current tools:
+
+- Node.js for TypeScript packages and Electron later.
+- pnpm workspaces through Corepack.
+- TypeScript.
+- Vitest for fixture and unit tests.
+- Zod for runtime schema validation.
 
 Planned tools:
 
-- Node.js for TypeScript packages and Electron later.
-- pnpm workspaces.
-- TypeScript.
-- Vitest for unit and fixture tests later.
 - Playwright for GUI/replay smoke tests later.
 - FFmpeg and ffprobe through typed command builders later.
 - Python only for offline diagnostics.
 
-Exact dependency versions are intentionally not pinned in this step because no
-install was requested or performed.
+Dependency versions are recorded in `pnpm-lock.yaml`. The root `package.json`
+pins `packageManager` to `pnpm@11.5.3`.
 
-## Safe Checks Before Dependencies Exist
+## Common Commands
 
-These checks do not require network access or package installation:
+```powershell
+pnpm install
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+## Safe Checks
 
 ```powershell
 rg --files
 Get-Content package.json -Raw | ConvertFrom-Json
-Get-Content packages/types/package.json -Raw | ConvertFrom-Json
-Test-Path .git
+pnpm typecheck
+pnpm test
+pnpm build
+git diff --check
 ```
 
 Trailing whitespace can be scanned with:
 
 ```powershell
 Get-ChildItem -Recurse -File |
-  Where-Object { $_.FullName -notmatch '\\node_modules\\|\\dist\\' } |
+  Where-Object { $_.FullName -notmatch '\\.git\\|\\node_modules\\|\\dist\\' } |
   Select-String -Pattern '[ \t]$'
 ```
-
-If Git has not been initialized, `git diff --check` is not available as a
-meaningful repository check.
-
-## Future Dependency Install
-
-When the user approves dependency installation, a future step should:
-
-1. choose exact dev dependency versions;
-2. add or update `devDependencies`;
-3. run `pnpm install`;
-4. commit the generated lockfile only if the user asks for Git work;
-5. run the first real checks, likely `pnpm typecheck` and fixture tests.
 
 ## Development Rules
 

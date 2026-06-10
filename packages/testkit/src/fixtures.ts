@@ -1,4 +1,5 @@
 import type {
+  ArchiveManifest,
   JsonObject,
   LiveSession,
   TimelineEventEnvelope,
@@ -49,5 +50,41 @@ export function createSyntheticTimelineEvent<
     },
     sensitivity: "synthetic",
     payload: input.payload
+  };
+}
+
+export function createSyntheticArchiveManifest(input: {
+  readonly session?: LiveSession;
+  readonly archiveId?: string;
+  readonly createdAt?: string;
+  readonly updatedAt?: string;
+} = {}): ArchiveManifest {
+  const session = input.session ?? createSyntheticSession();
+  const createdAt = input.createdAt ?? SYNTHETIC_TIME;
+
+  return {
+    archiveFormatVersion: 1,
+    archiveId: input.archiveId ?? "archive-synthetic-001",
+    session,
+    createdAt,
+    updatedAt: input.updatedAt ?? createdAt,
+    schemaVersions: {
+      timeline: 1,
+      adapterProtocol: 1
+    },
+    timeline: {
+      path: "timeline.jsonl"
+    },
+    tracks: [],
+    paths: {
+      timeline: "timeline.jsonl",
+      events: "events",
+      tracks: "tracks",
+      diagnostics: "diagnostics",
+      exports: "exports"
+    },
+    generator: {
+      name: "chronarium"
+    }
   };
 }

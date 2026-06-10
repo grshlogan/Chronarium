@@ -129,3 +129,45 @@ unimplemented ideas as completed work.
   - `git diff --check` produced no output before staging.
 - Next: install exact development dependencies, add runtime schema validation,
   and implement a synthetic-fixture archive writer.
+
+## 2026-06-11: Runtime schema and synthetic archive fixture
+
+- Conversation: continued from the foundation work to make the first validation
+  chain executable.
+- Landed: installed minimal dependencies, added Zod runtime schemas, implemented
+  a fixture-safe archive writer, and added a Vitest behavior test for writing a
+  synthetic `.chron` package.
+- Files:
+  - `package.json`
+  - `pnpm-lock.yaml`
+  - `vitest.config.ts`
+  - `tsconfig.base.json`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/ARCHIVE_FORMAT_V1.md`
+  - `docs/plan/plan_runtime_schema_archive_fixture.md`
+  - `packages/types/`
+  - `packages/schemas/`
+  - `packages/archive/`
+  - `packages/core/`
+  - `packages/adapters/chaturbate/`
+  - `packages/testkit/`
+- Decisions:
+  - Runtime validation uses Zod.
+  - Root package manager is pinned to `pnpm@11.5.3`.
+  - The first archive writer is fixture-safe and local-only; it does not handle
+    real media, recovery, migrations, SQLite, FFmpeg, or real site capture.
+- Verification:
+  - `pnpm typecheck` passed across all workspace packages.
+  - `pnpm test` passed 1 Vitest file and 1 test.
+  - `pnpm build` passed across all workspace packages.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan with `Select-String -Pattern '[ \t]$'` produced no
+    output.
+  - JSON parse scan with `ConvertFrom-Json` succeeded for all package and
+    TypeScript config JSON files.
+- Next: add archive reader/validator and timeline ordering tests before any
+  real adapter work.

@@ -1,7 +1,8 @@
 # Timeline Schema V1
 
-Status: draft schema contract. Runtime validation and tests are not complete
-yet.
+Status: draft schema contract. First-pass Zod runtime validation exists for the
+event envelope, and one synthetic archive writer test exercises it. Event-family
+payload schemas and ordering diagnostics are still incomplete.
 
 ## Principle
 

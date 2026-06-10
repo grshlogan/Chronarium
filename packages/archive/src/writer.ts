@@ -1,4 +1,11 @@
 import type { ArchiveManifest, TimelineEventEnvelope } from "@chronarium/types";
+import {
+  parseArchiveManifestV1,
+  parseTimelineEventEnvelopeV1
+} from "@chronarium/schemas";
+import { mkdir, rename, stat, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { DEFAULT_ARCHIVE_LAYOUT } from "./layout.js";
 
 export interface ArchiveWriterOptions {
   readonly rootPath: string;
@@ -16,12 +23,114 @@ export interface ArchiveWriterFactory {
   create(options: ArchiveWriterOptions): Promise<ArchiveWriter>;
 }
 
-export function createArchiveWriterContract(): ArchiveWriterFactory {
-  return {
-    async create(): Promise<ArchiveWriter> {
-      throw new Error(
-        "Archive writer implementation is not available in the skeleton."
-      );
+class FileArchiveWriter implements ArchiveWriter {
+  readonly rootPath: string;
+  private manifest: ArchiveManifest | undefined;
+  private eventCount = 0;
+  private lastSequence: number | undefined;
+
+  constructor(rootPath: string) {
+    this.rootPath = rootPath;
+  }
+
+  async writeManifest(manifest: ArchiveManifest): Promise<void> {
+    const parsed = parseArchiveManifestV1(manifest);
+    await this.ensureArchiveDirectories(parsed);
+    await this.writeJsonFile(DEFAULT_ARCHIVE_LAYOUT.manifest, parsed);
+    this.manifest = parsed;
+  }
+
+  async appendTimelineEvent(event: TimelineEventEnvelope): Promise<void> {
+    const parsed = parseTimelineEventEnvelopeV1(event);
+    const timelinePath = this.safePath(DEFAULT_ARCHIVE_LAYOUT.timeline);
+    await writeFile(timelinePath, `${JSON.stringify(parsed)}\n`, {
+      encoding: "utf8",
+      flag: "a"
+    });
+    this.eventCount += 1;
+    this.lastSequence = parsed.sequence;
+  }
+
+  async finalize(): Promise<ArchiveManifest> {
+    if (!this.manifest) {
+      throw new Error("Cannot finalize archive before a manifest is written.");
     }
+
+    const finalized: ArchiveManifest = {
+      ...this.manifest,
+      timeline: {
+        ...this.manifest.timeline,
+        eventCount: this.eventCount,
+        ...(this.lastSequence === undefined
+          ? {}
+          : { lastSequence: this.lastSequence })
+      }
+    };
+
+    await this.writeManifest(finalized);
+    return finalized;
+  }
+
+  private async ensureArchiveDirectories(
+    manifest: ArchiveManifest
+  ): Promise<void> {
+    await mkdir(this.safePath(manifest.paths.events), { recursive: true });
+    await mkdir(this.safePath(manifest.paths.tracks), { recursive: true });
+    await mkdir(this.safePath(manifest.paths.diagnostics), {
+      recursive: true
+    });
+    await mkdir(this.safePath(manifest.paths.exports), { recursive: true });
+  }
+
+  private async writeJsonFile(
+    relativePath: string,
+    value: unknown
+  ): Promise<void> {
+    const finalPath = this.safePath(relativePath);
+    const temporaryPath = `${finalPath}.tmp`;
+    await writeFile(temporaryPath, `${JSON.stringify(value, null, 2)}\n`, {
+      encoding: "utf8",
+      flag: "w"
+    });
+    await rename(temporaryPath, finalPath);
+  }
+
+  private safePath(relativePath: string): string {
+    const parts = relativePath.split("/");
+
+    if (
+      path.isAbsolute(relativePath) ||
+      relativePath.includes("\\") ||
+      parts.includes("..")
+    ) {
+      throw new Error(`Unsafe archive-relative path: ${relativePath}`);
+    }
+
+    return path.join(this.rootPath, ...parts);
+  }
+}
+
+export async function createFileArchiveWriter(
+  options: ArchiveWriterOptions
+): Promise<ArchiveWriter> {
+  if (options.createIfMissing) {
+    await mkdir(options.rootPath, { recursive: false });
+  } else {
+    const rootStat = await stat(options.rootPath);
+    if (!rootStat.isDirectory()) {
+      throw new Error(`Archive root is not a directory: ${options.rootPath}`);
+    }
+  }
+
+  return new FileArchiveWriter(options.rootPath);
+}
+
+export function createFileArchiveWriterFactory(): ArchiveWriterFactory {
+  return {
+    create: createFileArchiveWriter
   };
+}
+
+export function createArchiveWriterContract(): ArchiveWriterFactory {
+  return createFileArchiveWriterFactory();
 }

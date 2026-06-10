@@ -5,10 +5,10 @@ does not replace `docs/ARCHITECTURE.md`.
 
 ## Current State
 
-Chronarium now has documentation plus a minimal TypeScript workspace skeleton.
-The package code is contract-first and placeholder-only. No GUI, runnable core,
-real site capture, SQLite index, FFmpeg command builder, full archive writer, or
-replay player exists yet.
+Chronarium now has documentation plus a minimal executable TypeScript validation
+chain. The package code is still early and fixture-first. No GUI, runnable core,
+real site capture, SQLite index, FFmpeg command builder, full archive
+reader/validator, real media writer, or replay player exists yet.
 
 Current files:
 
@@ -19,9 +19,11 @@ README.md
 AGENTS.md
 LICENSE
 package.json
+pnpm-lock.yaml
 pnpm-workspace.yaml
 tsconfig.base.json
 tsconfig.json
+vitest.config.ts
 docs/
   CONTEXT.md
   ARCHITECTURE.md
@@ -37,6 +39,8 @@ docs/
   plan/
     README.md
     plan_workspace_schema_foundation.md
+    plan_license_apache_2.md
+    plan_runtime_schema_archive_fixture.md
 packages/
   types/
   schemas/
@@ -228,6 +232,13 @@ Responsibility:
 
 - Plan and scope for adding Apache-2.0 licensing metadata.
 
+### `docs/plan/plan_runtime_schema_archive_fixture.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first runtime schema and
+  synthetic archive writer path.
+
 ## Current Code Tree
 
 The following tree exists as a skeleton. Packages expose types and placeholder
@@ -235,9 +246,11 @@ contracts only.
 
 ```text
 package.json
+pnpm-lock.yaml
 pnpm-workspace.yaml
 tsconfig.base.json
 tsconfig.json
+vitest.config.ts
 
 packages/
   types/
@@ -258,7 +271,10 @@ packages/
       adapterSchemas.ts
       archiveSchemas.ts
       index.ts
+      mediaSchemas.ts
+      primitiveSchemas.ts
       schemaDefinition.ts
+      sessionSchemas.ts
       timelineSchemas.ts
   core/
     package.json
@@ -281,6 +297,8 @@ packages/
       index.ts
       layout.ts
       writer.ts
+    tests/
+      syntheticArchiveWriter.test.ts
   testkit/
     package.json
     tsconfig.json
@@ -377,8 +395,8 @@ Owns:
 
 Current status:
 
-- Exists with schema-definition placeholders and JSON-schema-lite draft objects.
-- Does not yet perform runtime validation.
+- Performs first-pass Zod runtime validation for sessions, media tracks,
+  timeline events, archive manifests, and adapter protocol messages.
 
 ### `packages/core`
 
@@ -427,7 +445,11 @@ Owns:
 Current status:
 
 - Exists with layout constants and writer interfaces.
-- The writer implementation intentionally throws until implemented.
+- Includes a fixture-safe file writer for synthetic `.chron` packages.
+- Writes `manifest.json`, appends `timeline.jsonl`, and creates top-level
+  archive directories.
+- Full reader, validator, media-track writing, recovery, and migration behavior
+  are still pending.
 
 ### `packages/player`
 
@@ -450,6 +472,7 @@ Owns:
 Current status:
 
 - Exists with helpers for synthetic sessions and timeline events.
+- Includes a helper for synthetic archive manifests.
 
 ## Root Workspace Files
 
@@ -471,8 +494,15 @@ Responsibility:
 
 Current status:
 
-- No dependencies have been installed.
 - Root license is `Apache-2.0`.
+- Package manager is pinned to `pnpm@11.5.3`.
+- Root dev dependencies include TypeScript, Vitest, and Node types.
+
+### `pnpm-lock.yaml`
+
+Responsibility:
+
+- Locked dependency graph for the pnpm workspace.
 
 ### `pnpm-workspace.yaml`
 
@@ -492,6 +522,13 @@ Responsibility:
 Responsibility:
 
 - TypeScript project references for package skeletons.
+
+### `vitest.config.ts`
+
+Responsibility:
+
+- Vitest Node environment configuration.
+- Source aliases for workspace packages during tests.
 
 ### `.gitignore`
 

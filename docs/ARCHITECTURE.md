@@ -89,7 +89,9 @@ flowchart LR
 
 ## Replay Package Shape
 
-The exact schema is not implemented yet. The first design target is:
+The first schema and fixture writer path now exists for `manifest.json`,
+`timeline.jsonl`, and top-level archive directories. The broader package shape
+is still the design target:
 
 ```text
 <session-id>.chron/
@@ -293,4 +295,3 @@ These decisions are intentionally deferred:
 - native module needs;
 - signed update channel;
 - public fixture policy;
-- exact open-source license.

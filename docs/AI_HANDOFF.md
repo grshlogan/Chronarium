@@ -23,13 +23,22 @@ Current state:
 - Initial packages exist: `packages/types`, `packages/schemas`,
   `packages/archive`, `packages/core`, `packages/adapters/chaturbate`, and
   `packages/testkit`.
-- Package code is contract-first and placeholder-only.
+- Package code is contract-first, fixture-first, and only has the first
+  executable validation path.
 - Chaturbate adapter code is synthetic fixture mode only and does not connect to
   live rooms.
 - License selected and added: Apache-2.0.
-- No dependencies have been installed and no lockfile exists.
+- Minimal dependencies have been installed and `pnpm-lock.yaml` exists.
+- `packages/schemas` has first-pass Zod runtime schemas.
+- `packages/archive` has a fixture-safe file writer that writes
+  `manifest.json`, appends `timeline.jsonl`, and creates top-level archive
+  directories.
+- `packages/testkit` has synthetic session, timeline event, and archive
+  manifest helpers.
+- One Vitest behavior test exercises synthetic archive validation and writing.
 - No GUI, runnable core, SQLite index, FFmpeg command builder, complete archive
-  writer, replay player, real capture, or tests exist yet.
+  reader/validator, real media writer, replay player, or real capture exists
+  yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
 
@@ -52,13 +61,16 @@ docs/AI_CHANGE_INDEX.md
 docs/plan/README.md
 docs/plan/plan_workspace_schema_foundation.md
 docs/plan/plan_license_apache_2.md
+docs/plan/plan_runtime_schema_archive_fixture.md
 .gitattributes
 .gitignore
 LICENSE
 package.json
+pnpm-lock.yaml
 pnpm-workspace.yaml
 tsconfig.base.json
 tsconfig.json
+vitest.config.ts
 packages/types/
 packages/schemas/
 packages/archive/
@@ -124,13 +136,11 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Choose and install exact development dependencies, then generate a lockfile.
-2. Run the first real TypeScript typecheck after dependencies exist.
-3. Turn `packages/schemas` from JSON-schema-lite descriptors into runtime
-   validators.
-4. Add archive writer prototype using synthetic fixtures only.
-5. Add first tests for timeline append and manifest validation.
-6. Only after archive/timeline validation works, expand the CB adapter fixture
+1. Add archive reader/validator for synthetic `.chron` packages.
+2. Add timeline append/order tests for duplicate event IDs and sequence gaps.
+3. Add a minimal SQLite index package or core module after archive validation is
+   stable.
+4. Only after archive/timeline validation works, expand the CB adapter fixture
    harness.
 
 ## Verification Status
@@ -148,11 +158,21 @@ Pre-commit safe checks run during the workspace skeleton step:
 - `git init -b main`: initialized the repository on `main`.
 - `git diff --cached --check`: passed after trimming extra blank lines at EOF.
 
-No `pnpm`, `npm`, TypeScript, lint, build, or test command was run because
-dependencies have not been installed.
+No `pnpm`, `npm`, TypeScript, lint, build, or test command was run during the
+initial workspace skeleton step because dependencies had not been installed yet.
 
 License update checks:
 
 - `package.json` parsed successfully and reports `license: Apache-2.0`.
 - Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: no output.
 - `git diff --check`: no output before staging.
+
+Runtime schema and archive fixture checks:
+
+- `pnpm typecheck`: passed across all workspace packages.
+- `pnpm test`: passed 1 Vitest file and 1 test.
+- `pnpm build`: passed across all workspace packages.
+- `git diff --check`: no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: no output.
+- JSON parse scan with `ConvertFrom-Json`: all `package.json` and `tsconfig`
+  files parsed successfully.

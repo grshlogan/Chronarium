@@ -39,7 +39,7 @@ AI 可以快速接手局部问题
 
 ## 当前阶段
 
-当前仓库处于项目启动、文档框架和最小 TypeScript workspace 骨架阶段：
+当前仓库处于项目启动、文档框架和最小可运行 TypeScript 验证链阶段：
 
 - 已确定项目名：`Chronarium`。
 - 已确定产品方向：直播事实归档与完美回放，而不是普通录制器。
@@ -49,9 +49,15 @@ AI 可以快速接手局部问题
   `packages/core`、`packages/adapters/chaturbate`、`packages/testkit` 的
   初版空壳或契约。
 - 已选择并添加开源许可证：Apache-2.0。
-- 尚未安装依赖。
+- 已安装最小开发依赖并生成 `pnpm-lock.yaml`。
+- 已实现 `packages/schemas` 的首批 Zod runtime schemas。
+- 已实现 `packages/archive` 的 fixture-safe `.chron` writer，可写
+  `manifest.json`、`timeline.jsonl` 和顶层目录骨架。
+- 已添加 Vitest 行为测试，覆盖 synthetic session/timeline 写入 `.chron`
+  package 的最小链路。
 - 尚未实现 GUI、可运行 core、真实站点 adapter、SQLite index、FFmpeg
-  command builder、完整 archive writer 或 replay player。
+  command builder、完整 archive reader/validator、真实媒体写入或 replay
+  player。
 - 本阶段的重点是先立稳工程边界、AI 维护规则、架构词汇、schema 草案、
   代码地图和交接文档。
 
@@ -88,7 +94,7 @@ small module boundaries.
 - [docs/TIMELINE_SCHEMA_V1.md](./docs/TIMELINE_SCHEMA_V1.md)：timeline event envelope 和事件族草案。
 - [docs/ADAPTER_PROTOCOL.md](./docs/ADAPTER_PROTOCOL.md)：core 与 adapter worker 的消息协议草案。
 - [docs/SECURITY_PRIVACY.md](./docs/SECURITY_PRIVACY.md)：安全、隐私、fixture 和敏感数据规则。
-- [docs/DEVELOPMENT_SETUP.md](./docs/DEVELOPMENT_SETUP.md)：当前开发环境、未安装依赖前的安全检查和后续安装说明。
+- [docs/DEVELOPMENT_SETUP.md](./docs/DEVELOPMENT_SETUP.md)：当前开发环境、依赖、脚本和安全检查说明。
 - [docs/APP_CODE_MAP.md](./docs/APP_CODE_MAP.md)：当前文件树和计划中的代码地图。
 - [docs/AI_HANDOFF.md](./docs/AI_HANDOFF.md)：给后续 AI 或开发者接手的当前状态、决策和下一步。
 - [docs/AI_CHANGE_INDEX.md](./docs/AI_CHANGE_INDEX.md)：AI 对话与结构性更改索引。
@@ -125,7 +131,7 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 安装 TypeScript/Vitest 等最小开发依赖并生成 lockfile。
-2. 把 `packages/schemas` 从 schema 草案推进到可运行 runtime validation。
-3. 实现只写本地 synthetic fixture 的 `.chron` archive writer。
-4. 用离线 fixture 验证 timeline append、manifest 生成和 SQLite index 同步。
+1. 增加 archive reader/validator，读取并校验 synthetic `.chron` package。
+2. 增加 timeline append/order 的边界测试，例如 sequence gap 和重复 event。
+3. 增加 SQLite index 的最小 schema 和从 synthetic archive 构建索引的测试。
+4. 扩展 Chaturbate fixture harness，但继续禁止真实站点连接和账号/session 处理。

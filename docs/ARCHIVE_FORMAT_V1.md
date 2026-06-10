@@ -1,7 +1,9 @@
 # Archive Format V1
 
-Status: draft storage contract. The initial package code defines boundaries
-only; a complete archive writer is not implemented yet.
+Status: draft storage contract. A fixture-safe writer now creates a minimal
+`.chron` package with `manifest.json`, `timeline.jsonl`, and top-level
+directories. Full reader, validator, media-track writing, recovery, and
+migration behavior are not implemented yet.
 
 ## Purpose
 
@@ -91,6 +93,7 @@ are not the only replay truth.
   },
   "tracks": [],
   "paths": {
+    "timeline": "timeline.jsonl",
     "events": "events",
     "tracks": "tracks",
     "diagnostics": "diagnostics",

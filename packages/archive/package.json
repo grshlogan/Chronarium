@@ -13,9 +13,10 @@
   "files": ["dist"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -b tsconfig.json --pretty false"
   },
   "dependencies": {
+    "@chronarium/schemas": "workspace:*",
     "@chronarium/types": "workspace:*"
   }
 }

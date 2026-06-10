@@ -13,8 +13,10 @@
     "declarationMap": true,
     "sourceMap": true,
     "composite": true,
+    "types": ["node"],
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@chronarium/types": ["packages/types/src/index.ts"],
