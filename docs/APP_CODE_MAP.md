@@ -33,6 +33,7 @@ docs/
   TIMELINE_SCHEMA_V1.md
   ADAPTER_PROTOCOL.md
   SECURITY_PRIVACY.md
+  MAINTENANCE_OPS_DESIGN.md
   DEVELOPMENT_SETUP.md
   APP_CODE_MAP.md
   AI_HANDOFF.md
@@ -50,6 +51,7 @@ docs/
     plan_media_track_archive_io.md
     plan_core_archive_index_service.md
     plan_core_runtime_lifecycle_shell.md
+    plan_maintenance_ops_design.md
 packages/
   types/
   schemas/
@@ -192,6 +194,21 @@ Responsibility:
 - Redaction labels.
 - Process, filesystem, external tool, and logging safety rules.
 
+### `docs/MAINTENANCE_OPS_DESIGN.md`
+
+Responsibility:
+
+- Design draft for Chronarium's maintenance / ops inspection system.
+- Records external project references and what Chronarium should learn from
+  them.
+- Defines deterministic inspection, finding, evidence, and action-safety
+  boundaries.
+
+Boundary:
+
+- Does not claim maintenance runtime, AI agent, scheduler, GUI, or automatic
+  repair exists.
+
 ### `docs/DEVELOPMENT_SETUP.md`
 
 Responsibility:
@@ -298,6 +315,12 @@ Responsibility:
 
 - Plan, scope, and verification notes for the minimal core runtime lifecycle
   shell.
+
+### `docs/plan/plan_maintenance_ops_design.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the maintenance / ops design draft.
 
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 

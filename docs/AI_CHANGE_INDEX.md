@@ -442,3 +442,45 @@ unimplemented ideas as completed work.
   - `pnpm typecheck` passed.
 - Next: design the maintenance / ops inspection model with deterministic checks
   first, or add archive recovery behavior for interrupted metadata writes.
+
+## 2026-06-11: Maintenance ops design draft
+
+- Conversation: user asked to look at GitHub projects that could inform a
+  local always-on AI-style operations layer, then asked to consolidate the
+  findings into a design document with project references.
+- Landed: added a maintenance / ops design draft and linked it from the docs.
+- Files:
+  - `README.md`
+  - `docs/MAINTENANCE_OPS_DESIGN.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_maintenance_ops_design.md`
+- References:
+  - Uptime Kuma
+  - Healthchecks
+  - Netdata
+  - Beszel
+  - OpenTelemetry Collector
+  - Alerta
+  - changedetection.io
+  - Watchtower
+  - Gotify
+  - Home Assistant Core
+  - OpenHands
+  - Aider
+  - Open Interpreter
+- Decisions:
+  - Chronarium maintenance starts with deterministic inspection, not LLM calls.
+  - AI reasoning should later consume structured reports and approved tools.
+  - Safe automatic actions are limited to rebuildable derived artifacts, such as
+    SQLite indexes.
+  - Destructive changes, migrations, real media probing, adapter live capture,
+    and arbitrary shell execution remain outside automatic maintenance.
+- Verification:
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan succeeded.
+- Next: implement first deterministic maintenance inspection types and archive
+  inspector under core.

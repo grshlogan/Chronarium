@@ -31,6 +31,7 @@ Chronarium now has:
   archive reading, and rebuildable SQLite indexing.
 - a minimal core runtime lifecycle shell for start/stop/health and archive
   index service ownership.
+- a maintenance / ops inspection design draft with external project references.
 
 The current A01 continuation added archive reader/validator foundations before
 any real site adapter work.
@@ -41,7 +42,7 @@ derives rows from synthetic `.chron` archives.
 The active follow-up moved basic timeline append invariants into the archive
 writer so Chronarium-generated archives avoid preventable timeline errors.
 
-The active follow-up is adding a minimal core runtime lifecycle shell.
+The active follow-up added a maintenance / ops design draft.
 
 ## Active Constraints
 
@@ -71,16 +72,17 @@ The active follow-up is adding a minimal core runtime lifecycle shell.
 
 Expected code changes:
 
-- `packages/core/src/runtime.ts`
-- `packages/core/tests/*`
+- none; this continuation is documentation design only.
 
 Expected documentation changes:
 
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
-- `docs/plan/plan_core_runtime_lifecycle_shell.md`
+- `docs/MAINTENANCE_OPS_DESIGN.md`
+- `docs/plan/plan_maintenance_ops_design.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
+- `README.md`
 - possibly `README.md`, `docs/PRODUCT_SPEC.md`, and
   `docs/DEVELOPMENT_SETUP.md`
 
@@ -187,8 +189,14 @@ Checks already run during this continuation:
 - trailing whitespace scan: produced no output after core runtime lifecycle
   shell.
 - JSON/package config parse scan: succeeded after core runtime lifecycle shell.
+- `git diff --check`: produced no output after maintenance / ops design draft.
+- trailing whitespace scan: produced no output after maintenance / ops design
+  draft.
+- JSON/package config parse scan: succeeded after maintenance / ops design
+  draft.
 
 ## Next Safe Step
 
-Continue with a deterministic maintenance / ops inspection model, or add
-archive recovery behavior for interrupted metadata writes.
+Implement the first deterministic maintenance inspection types and archive
+inspector under core, or add archive recovery behavior for interrupted metadata
+writes.

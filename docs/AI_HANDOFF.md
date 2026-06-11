@@ -51,6 +51,8 @@ Current state:
 - `packages/core` has a minimal runtime lifecycle shell that can start, stop,
   report health, create local data/archive directories, and expose the
   archive/index service while running.
+- `docs/MAINTENANCE_OPS_DESIGN.md` records the draft maintenance / ops
+  inspection model and external project references.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
 - Five Vitest behavior test files exercise synthetic archive writing, reading,
@@ -74,6 +76,7 @@ docs/ARCHIVE_FORMAT_V1.md
 docs/TIMELINE_SCHEMA_V1.md
 docs/ADAPTER_PROTOCOL.md
 docs/SECURITY_PRIVACY.md
+docs/MAINTENANCE_OPS_DESIGN.md
 docs/DEVELOPMENT_SETUP.md
 docs/APP_CODE_MAP.md
 docs/AI_HANDOFF.md
@@ -89,6 +92,7 @@ docs/plan/plan_indexer_rebuild_query_contracts.md
 docs/plan/plan_media_track_archive_io.md
 docs/plan/plan_core_archive_index_service.md
 docs/plan/plan_core_runtime_lifecycle_shell.md
+docs/plan/plan_maintenance_ops_design.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 .gitattributes
 .gitignore
@@ -167,8 +171,8 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Design the maintenance / ops inspection model, using deterministic checks
-   first and no autonomous destructive actions.
+1. Implement the first deterministic maintenance inspection types and archive
+   inspector under core, without AI calls or destructive actions.
 2. Add real media segment IO only after the media-track metadata validator
    remains stable.
 3. Add recovery behavior for interrupted archive writes.
