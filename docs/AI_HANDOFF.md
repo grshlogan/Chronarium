@@ -48,12 +48,16 @@ Current state:
   filtered query contracts.
 - `packages/core` has a first archive/index service that coordinates archive
   validation, archive reading, reindexing, and index queries.
+- `packages/core` has a minimal runtime lifecycle shell that can start, stop,
+  report health, create local data/archive directories, and expose the
+  archive/index service while running.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
-- Four Vitest behavior test files exercise synthetic archive writing, reading,
-  validation failures, SQLite indexing, and the core archive/index service.
-- No GUI, full runnable core runtime, SQLite integration with GUI, FFmpeg
-  command builder, real media segment writer/prober, archive
+- Five Vitest behavior test files exercise synthetic archive writing, reading,
+  validation failures, SQLite indexing, the core archive/index service, and
+  core runtime lifecycle.
+- No GUI, core task scheduler, adapter lifecycle, SQLite integration with GUI,
+  FFmpeg command builder, real media segment writer/prober, archive
   recovery/migration, replay player, or real capture exists yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
@@ -84,6 +88,7 @@ docs/plan/plan_archive_writer_timeline_invariants.md
 docs/plan/plan_indexer_rebuild_query_contracts.md
 docs/plan/plan_media_track_archive_io.md
 docs/plan/plan_core_archive_index_service.md
+docs/plan/plan_core_runtime_lifecycle_shell.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 .gitattributes
 .gitignore
@@ -162,8 +167,8 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Add a minimal core runtime lifecycle shell around the existing core service,
-   but do not start real adapters yet.
+1. Design the maintenance / ops inspection model, using deterministic checks
+   first and no autonomous destructive actions.
 2. Add real media segment IO only after the media-track metadata validator
    remains stable.
 3. Add recovery behavior for interrupted archive writes.
@@ -283,6 +288,21 @@ Core archive/index service continuation checks:
   check runs; removed only the explicit generated files.
 - `pnpm typecheck`: passed across all workspace packages.
 - `pnpm test`: passed 4 Vitest files and 30 tests.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed across all workspace packages.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
+  output.
+- JSON parse scan with `ConvertFrom-Json`: all `package.json` and `tsconfig`
+  files parsed successfully.
+
+Core runtime lifecycle shell continuation checks:
+
+- `pnpm exec vitest run packages/core/tests`: passed 2 Vitest files and 4
+  tests.
+- `pnpm typecheck`: passed across all workspace packages.
+- `pnpm test`: passed 5 Vitest files and 32 tests.
 - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
   passed.
 - `pnpm build`: passed across all workspace packages.

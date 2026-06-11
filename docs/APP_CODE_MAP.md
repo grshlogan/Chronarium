@@ -6,10 +6,10 @@ does not replace `docs/ARCHITECTURE.md`.
 ## Current State
 
 Chronarium now has documentation plus a minimal executable TypeScript validation
-chain. The package code is still early and fixture-first. No GUI, full runnable
-core runtime, real site capture, SQLite integration with GUI, FFmpeg command
-builder, real media segment writer/prober, archive recovery/migration, or
-replay player exists yet.
+chain. The package code is still early and fixture-first. No GUI, core task
+scheduler, adapter lifecycle, real site capture, SQLite integration with GUI,
+FFmpeg command builder, real media segment writer/prober, archive
+recovery/migration, or replay player exists yet.
 
 Current files:
 
@@ -49,6 +49,7 @@ docs/
     plan_indexer_rebuild_query_contracts.md
     plan_media_track_archive_io.md
     plan_core_archive_index_service.md
+    plan_core_runtime_lifecycle_shell.md
 packages/
   types/
   schemas/
@@ -291,6 +292,13 @@ Responsibility:
 
 - Plan, scope, and verification notes for the first core archive/index service.
 
+### `docs/plan/plan_core_runtime_lifecycle_shell.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the minimal core runtime lifecycle
+  shell.
+
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 
 Responsibility:
@@ -345,6 +353,7 @@ packages/
       runtime.ts
     tests/
       archiveIndexService.test.ts
+      runtime.test.ts
   adapters/
     chaturbate/
       package.json
@@ -487,10 +496,15 @@ Owns:
 
 Current status:
 
-- Exists with a runtime contract skeleton and a first archive/index service.
+- Exists with a minimal runtime lifecycle shell and a first archive/index
+  service.
+- The runtime can start, stop, report health, create local data/archive
+  directories, open/close the rebuildable SQLite index, and expose the
+  archive/index service while running.
 - The archive/index service validates archives, reads valid archives, reindexes
   archives, and exposes index queries through core.
-- Does not start tasks, adapters, capture jobs, exports, or a full runtime yet.
+- Does not start tasks, adapters, capture jobs, exports, ops loops, or media
+  tools yet.
 
 ### `packages/adapters/<site>`
 

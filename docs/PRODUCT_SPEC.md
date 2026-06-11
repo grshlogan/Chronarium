@@ -110,10 +110,11 @@ synthetic fixture data can be runtime-validated and written into a local
 report basic timeline and track consistency issues. The first SQLite indexer
 can derive query rows from synthetic archives for archive metadata, timeline
 events, and validation issues. The first core archive/index service can call
-archive validation, archive reading, reindex, and index queries. GUI, full
-runnable core runtime, SQLite integration with GUI, media tooling, real media
-segment writing/probing, archive recovery/migration, replay player, and real
-adapters remain unimplemented.
+archive validation, archive reading, reindex, and index queries. A minimal core
+runtime lifecycle shell can start, stop, report health, and expose that service
+while running. GUI, core task scheduling, adapter lifecycle, SQLite integration
+with GUI, media tooling, real media segment writing/probing, archive
+recovery/migration, replay player, and real adapters remain unimplemented.
 
 ## Open Product Decisions
 

@@ -68,12 +68,15 @@ AI 可以快速接手局部问题
   site/type/code 过滤查询的初版契约。
 - `packages/core` 已有第一个 archive/index service，可通过 core 调用
   archive validate/read 和 SQLite reindex/query。
+- `packages/core` 已有最小 runtime lifecycle shell，可 start/stop、返回
+  health，并在运行时持有 archive/index service。
 - 已添加 Vitest 行为测试，覆盖 synthetic session/timeline 写入 `.chron`
   package、读取 `.chron` package，以及 invalid JSONL、重复 eventId、
   sequence gap、manifest count/lastSequence mismatch、unsafe path、media track
-  metadata 缺失/不一致、SQLite index 写入/查询和 core archive/index service。
-- 尚未实现 GUI、完整可运行 core runtime、真实站点 adapter、SQLite index 与
-  GUI 集成、FFmpeg command builder、真实媒体分片写入、archive
+  metadata 缺失/不一致、SQLite index 写入/查询、core archive/index service
+  和 core runtime lifecycle。
+- 尚未实现 GUI、core task scheduler、adapter lifecycle、真实站点 adapter、
+  SQLite index 与 GUI 集成、FFmpeg command builder、真实媒体分片写入、archive
   recovery/migration 或 replay player。
 - 本阶段的重点是先立稳工程边界、AI 维护规则、架构词汇、schema 草案、
   代码地图和交接文档。
@@ -149,7 +152,7 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 为 core runtime 增加最小 lifecycle shell，但继续不启动真实 adapter。
+1. 设计 maintenance / ops 巡检模型，但先只用确定性检查，不接真实 AI 执行。
 2. 为 archive reader/validator 增加更完整的 fixture builder 和诊断样例。
 3. 设计真实媒体分片写入前的 FFmpeg / segment 边界。
 4. 扩展 Chaturbate fixture harness，但继续禁止真实站点连接和账号/session 处理。

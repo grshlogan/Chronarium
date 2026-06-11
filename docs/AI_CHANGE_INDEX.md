@@ -412,3 +412,33 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan succeeded.
 - Next: add a minimal core runtime lifecycle shell around the core service, or
   add archive recovery behavior for interrupted metadata writes.
+
+## 2026-06-11: Core runtime lifecycle shell
+
+- Conversation: user described Chronarium's future direction as a local
+  full-auto software with AI-style maintenance and asked to continue.
+- Landed: implemented a minimal `packages/core` runtime lifecycle shell.
+- Files:
+  - `README.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_core_runtime_lifecycle_shell.md`
+  - `packages/core/src/runtime.ts`
+  - `packages/core/tests/runtime.test.ts`
+- Decisions:
+  - `createCoreRuntime` now creates a local runtime that can start, stop, and
+    report health.
+  - `createCoreRuntimeContract` remains as a compatibility alias.
+  - Runtime startup creates local data/archive directories, opens the
+    rebuildable SQLite index, and exposes the archive/index service.
+  - Runtime still does not start adapters, capture jobs, FFmpeg, GUI, ops loops,
+    or real media work.
+- Verification:
+  - `pnpm exec vitest run packages/core/tests` passed 2 files and 4 tests.
+  - `pnpm typecheck` passed.
+- Next: design the maintenance / ops inspection model with deterministic checks
+  first, or add archive recovery behavior for interrupted metadata writes.

@@ -29,6 +29,8 @@ Chronarium now has:
 - archive reader/validator support for manifest-declared media track metadata.
 - a first core archive index service that coordinates archive validation,
   archive reading, and rebuildable SQLite indexing.
+- a minimal core runtime lifecycle shell for start/stop/health and archive
+  index service ownership.
 
 The current A01 continuation added archive reader/validator foundations before
 any real site adapter work.
@@ -39,7 +41,7 @@ derives rows from synthetic `.chron` archives.
 The active follow-up moved basic timeline append invariants into the archive
 writer so Chronarium-generated archives avoid preventable timeline errors.
 
-The active follow-up is adding a first core archive index service.
+The active follow-up is adding a minimal core runtime lifecycle shell.
 
 ## Active Constraints
 
@@ -69,16 +71,13 @@ The active follow-up is adding a first core archive index service.
 
 Expected code changes:
 
-- `packages/core/package.json`
-- `packages/core/tsconfig.json`
-- `packages/core/src/index.ts`
-- `packages/core/src/archiveIndexService.ts`
+- `packages/core/src/runtime.ts`
 - `packages/core/tests/*`
 
 Expected documentation changes:
 
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
-- `docs/plan/plan_core_archive_index_service.md`
+- `docs/plan/plan_core_runtime_lifecycle_shell.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
@@ -176,9 +175,20 @@ Checks already run during this continuation:
 - trailing whitespace scan: produced no output after core archive/index
   service.
 - JSON/package config parse scan: succeeded after core archive/index service.
+- `pnpm exec vitest run packages/core/tests`: passed 2 files and 4 tests after
+  core runtime lifecycle shell.
+- `pnpm typecheck`: passed after core runtime lifecycle shell.
+- `pnpm test`: passed 5 Vitest files and 32 tests after core runtime lifecycle
+  shell.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed after core runtime lifecycle shell.
+- `git diff --check`: produced no output after core runtime lifecycle shell.
+- trailing whitespace scan: produced no output after core runtime lifecycle
+  shell.
+- JSON/package config parse scan: succeeded after core runtime lifecycle shell.
 
 ## Next Safe Step
 
-Continue with a minimal core runtime lifecycle shell around the core
-archive/index service, or add archive recovery behavior for interrupted
-metadata writes.
+Continue with a deterministic maintenance / ops inspection model, or add
+archive recovery behavior for interrupted metadata writes.
