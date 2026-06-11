@@ -7,8 +7,9 @@ does not replace `docs/ARCHITECTURE.md`.
 
 Chronarium now has documentation plus a minimal executable TypeScript validation
 chain. The package code is still early and fixture-first. No GUI, runnable core,
-real site capture, SQLite index, FFmpeg command builder, full archive
-reader/validator, real media writer, or replay player exists yet.
+real site capture, SQLite integration with core/GUI, FFmpeg command builder,
+media-track archive reader/writer behavior, archive recovery/migration, real
+media writer, or replay player exists yet.
 
 Current files:
 
@@ -36,15 +37,19 @@ docs/
   APP_CODE_MAP.md
   AI_HANDOFF.md
   AI_CHANGE_INDEX.md
+  conversation-A01-documentation-and-initial-skeleton.md
   plan/
     README.md
     plan_workspace_schema_foundation.md
     plan_license_apache_2.md
     plan_runtime_schema_archive_fixture.md
+    plan_archive_reader_validator.md
+    plan_sqlite_index_foundation.md
 packages/
   types/
   schemas/
   archive/
+  indexer/
   core/
   adapters/
     chaturbate/
@@ -77,6 +82,7 @@ Responsibility:
 - Safety and privacy rules.
 - Default technology direction.
 - Documentation and verification discipline.
+- Required conversation context maintenance rules.
 
 Boundary:
 
@@ -138,10 +144,11 @@ Responsibility:
 - Manifest minimum shape.
 - JSON Lines and path rules.
 - Archive write safety and sensitive-data rules.
+- Current reader/validator consistency checks.
 
 Boundary:
 
-- Does not claim a complete writer exists.
+- Does not claim media-track archive IO, recovery, or migration exists.
 
 ### `docs/TIMELINE_SCHEMA_V1.md`
 
@@ -155,7 +162,8 @@ Responsibility:
 
 Boundary:
 
-- Runtime validation and fixture tests are still pending.
+- Runtime validation exists for the initial event envelope, but payload-specific
+  event schemas are still pending.
 
 ### `docs/ADAPTER_PROTOCOL.md`
 
@@ -239,10 +247,31 @@ Responsibility:
 - Plan, scope, and verification notes for the first runtime schema and
   synthetic archive writer path.
 
+### `docs/plan/plan_archive_reader_validator.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first fixture-safe archive
+  reader/validator path.
+
+### `docs/plan/plan_sqlite_index_foundation.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first rebuildable SQLite indexer.
+
+### `docs/conversation-A01-documentation-and-initial-skeleton.md`
+
+Responsibility:
+
+- Conversation-level continuity document for A01.
+- Records current status, constraints, decisions, files in scope,
+  verification, and next safe step.
+
 ## Current Code Tree
 
-The following tree exists as a skeleton. Packages expose types and placeholder
-contracts only.
+The following tree exists. Some packages are still contract skeletons; archive
+and indexer have the first executable fixture paths.
 
 ```text
 package.json
@@ -296,9 +325,21 @@ packages/
     src/
       index.ts
       layout.ts
+      reader.ts
+      validator.ts
       writer.ts
     tests/
+      archiveReaderValidator.test.ts
       syntheticArchiveWriter.test.ts
+  indexer/
+    package.json
+    tsconfig.json
+    src/
+      archiveIndexer.ts
+      index.ts
+      schema.ts
+    tests/
+      archiveIndexer.test.ts
   testkit/
     package.json
     tsconfig.json
@@ -337,9 +378,9 @@ packages/
       fixtures/
       tests/
   archive/
-    src/
-      reader/
-      validator/
+    tests/
+      media-track archive IO tests
+      recovery/migration tests
   player/
     src/
       timeline/
@@ -444,12 +485,37 @@ Owns:
 
 Current status:
 
-- Exists with layout constants and writer interfaces.
+- Exists with layout constants, path safety helpers, writer interfaces, reader
+  interfaces, and validator interfaces.
 - Includes a fixture-safe file writer for synthetic `.chron` packages.
 - Writes `manifest.json`, appends `timeline.jsonl`, and creates top-level
   archive directories.
-- Full reader, validator, media-track writing, recovery, and migration behavior
-  are still pending.
+- Includes a fixture-safe file reader for `manifest.json` and `timeline.jsonl`.
+- Includes a fixture-safe validator for invalid JSONL, schema-invalid timeline
+  lines, duplicate event IDs, sequence gaps, session mismatches, manifest
+  event-count mismatches, manifest last-sequence mismatches, timeline path
+  mismatches, and unsafe archive-relative paths.
+- Media-track writing/reading, recovery, migration, and real media behavior are
+  still pending.
+
+### `packages/indexer`
+
+Owns:
+
+- rebuildable local indexes derived from `.chron` archives;
+- SQLite schema setup for query/cache tables;
+- archive metadata, timeline event, and validation issue indexing;
+- narrow query interfaces for future core/GUI use.
+
+Current status:
+
+- Exists as the first SQLite indexer package.
+- Uses Node.js built-in `node:sqlite`, which is currently experimental in the
+  local runtime.
+- Can index synthetic `.chron` archives from `packages/archive`.
+- Stores archive rows, timeline event rows, and archive validation issue rows.
+- SQLite is still a rebuildable cache/index, not the source of replay truth.
+- Not yet integrated with `packages/core` or any GUI.
 
 ### `packages/player`
 

@@ -105,8 +105,12 @@ The maintainer should be able to answer:
 
 As of 2026-06-11, the project has a minimal executable validation chain:
 synthetic fixture data can be runtime-validated and written into a local
-`.chron` package skeleton. GUI, runnable core, SQLite index, media tooling,
-archive reader/validator, replay player, and real adapters remain
+`.chron` package skeleton. The first archive reader/validator can read
+`manifest.json` and `timeline.jsonl` and report basic timeline consistency
+issues. The first SQLite indexer can derive query rows from synthetic archives
+for archive metadata, timeline events, and validation issues. GUI, runnable
+core, SQLite integration with core/GUI, media tooling, media-track reading,
+archive recovery/migration, replay player, and real adapters remain
 unimplemented.
 
 ## Open Product Decisions

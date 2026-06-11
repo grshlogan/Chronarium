@@ -171,3 +171,88 @@ unimplemented ideas as completed work.
     TypeScript config JSON files.
 - Next: add archive reader/validator and timeline ordering tests before any
   real adapter work.
+
+## 2026-06-11: Archive reader and validator foundation
+
+- Conversation: user asked to establish an A01 conversation context maintenance
+  document and continue the foundation work.
+- Landed: added a conversation context hard rule to `AGENTS.md`, created the
+  A01 conversation context document, added a reader/validator plan, implemented
+  fixture-safe archive reading and validation for `manifest.json` and
+  `timeline.jsonl`, and added behavior tests.
+- Files:
+  - `AGENTS.md`
+  - `README.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/ARCHIVE_FORMAT_V1.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_archive_reader_validator.md`
+  - `packages/archive/src/layout.ts`
+  - `packages/archive/src/writer.ts`
+  - `packages/archive/src/reader.ts`
+  - `packages/archive/src/validator.ts`
+  - `packages/archive/src/index.ts`
+  - `packages/archive/tests/archiveReaderValidator.test.ts`
+- Decisions:
+  - Non-trivial conversations must maintain a factual context document under
+    `docs/conversation-<conversation-id>-<short-english-slug>.md`.
+  - `validateFileArchive` returns a diagnostic report and can collect multiple
+    issues.
+  - `readFileArchive` is strict and throws when validation fails.
+  - The first reader/validator scope is manifest and timeline only.
+- Verification:
+  - `pnpm typecheck` passed across all workspace packages.
+  - `pnpm test` passed 2 Vitest files and 9 tests.
+  - `pnpm build` passed across all workspace packages.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan with `Select-String -Pattern '[ \t]$'` produced no
+    output.
+  - JSON parse scan with `ConvertFrom-Json` succeeded for all package and
+    TypeScript config JSON files.
+- Next: consider a minimal SQLite index from synthetic archives or more
+  timeline append/order tests.
+
+## 2026-06-11: SQLite indexer foundation
+
+- Conversation: user approved continuing after discussing why SQLite exists as
+  a rebuildable index/cache rather than an archive truth source.
+- Landed: added `@chronarium/indexer`, a first SQLite schema, archive indexing
+  from synthetic `.chron` packages, query APIs, and behavior tests.
+- Files:
+  - `README.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_sqlite_index_foundation.md`
+  - `tsconfig.base.json`
+  - `tsconfig.json`
+  - `vitest.config.ts`
+  - `pnpm-lock.yaml`
+  - `packages/indexer/`
+- Decisions:
+  - SQLite remains a rebuildable index/cache, not the source of replay truth.
+  - The first schema stores archive rows, timeline event rows, and validation
+    issue rows.
+  - Invalid archives can still be indexed for diagnostics; duplicate event IDs
+    are stored as rows and reported through validation issues.
+  - The first implementation uses Node.js built-in `node:sqlite` behind
+    `@chronarium/indexer`; it currently emits an ExperimentalWarning.
+- Verification:
+  - `pnpm typecheck` passed across all workspace packages.
+  - `pnpm test` passed 3 Vitest files and 12 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed across all workspace packages.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan with `Select-String -Pattern '[ \t]$'` produced no
+    output.
+  - JSON parse scan with `ConvertFrom-Json` succeeded for all package and
+    TypeScript config JSON files.
+- Next: add rebuild/clear/query contracts or timeline append/order tests.

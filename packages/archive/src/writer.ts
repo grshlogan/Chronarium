@@ -4,8 +4,7 @@ import {
   parseTimelineEventEnvelopeV1
 } from "@chronarium/schemas";
 import { mkdir, rename, stat, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { DEFAULT_ARCHIVE_LAYOUT } from "./layout.js";
+import { DEFAULT_ARCHIVE_LAYOUT, resolveArchivePath } from "./layout.js";
 
 export interface ArchiveWriterOptions {
   readonly rootPath: string;
@@ -36,13 +35,16 @@ class FileArchiveWriter implements ArchiveWriter {
   async writeManifest(manifest: ArchiveManifest): Promise<void> {
     const parsed = parseArchiveManifestV1(manifest);
     await this.ensureArchiveDirectories(parsed);
+    await this.ensureTimelineFile(parsed.timeline.path);
     await this.writeJsonFile(DEFAULT_ARCHIVE_LAYOUT.manifest, parsed);
     this.manifest = parsed;
   }
 
   async appendTimelineEvent(event: TimelineEventEnvelope): Promise<void> {
     const parsed = parseTimelineEventEnvelopeV1(event);
-    const timelinePath = this.safePath(DEFAULT_ARCHIVE_LAYOUT.timeline);
+    const timelinePath = this.safePath(
+      this.manifest?.timeline.path ?? DEFAULT_ARCHIVE_LAYOUT.timeline
+    );
     await writeFile(timelinePath, `${JSON.stringify(parsed)}\n`, {
       encoding: "utf8",
       flag: "a"
@@ -82,6 +84,13 @@ class FileArchiveWriter implements ArchiveWriter {
     await mkdir(this.safePath(manifest.paths.exports), { recursive: true });
   }
 
+  private async ensureTimelineFile(relativePath: string): Promise<void> {
+    await writeFile(this.safePath(relativePath), "", {
+      encoding: "utf8",
+      flag: "a"
+    });
+  }
+
   private async writeJsonFile(
     relativePath: string,
     value: unknown
@@ -96,17 +105,7 @@ class FileArchiveWriter implements ArchiveWriter {
   }
 
   private safePath(relativePath: string): string {
-    const parts = relativePath.split("/");
-
-    if (
-      path.isAbsolute(relativePath) ||
-      relativePath.includes("\\") ||
-      parts.includes("..")
-    ) {
-      throw new Error(`Unsafe archive-relative path: ${relativePath}`);
-    }
-
-    return path.join(this.rootPath, ...parts);
+    return resolveArchivePath(this.rootPath, relativePath);
   }
 }
 

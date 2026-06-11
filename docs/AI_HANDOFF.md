@@ -21,8 +21,8 @@ Current state:
 - Root workspace files exist: `package.json`, `pnpm-workspace.yaml`,
   `tsconfig.base.json`, and `tsconfig.json`.
 - Initial packages exist: `packages/types`, `packages/schemas`,
-  `packages/archive`, `packages/core`, `packages/adapters/chaturbate`, and
-  `packages/testkit`.
+  `packages/archive`, `packages/indexer`, `packages/core`,
+  `packages/adapters/chaturbate`, and `packages/testkit`.
 - Package code is contract-first, fixture-first, and only has the first
   executable validation path.
 - Chaturbate adapter code is synthetic fixture mode only and does not connect to
@@ -33,12 +33,17 @@ Current state:
 - `packages/archive` has a fixture-safe file writer that writes
   `manifest.json`, appends `timeline.jsonl`, and creates top-level archive
   directories.
+- `packages/archive` has a fixture-safe reader/validator for `manifest.json`
+  and `timeline.jsonl`, including basic timeline consistency diagnostics.
+- `packages/indexer` has a rebuildable SQLite indexer for synthetic `.chron`
+  archive metadata, timeline events, and validation issues.
 - `packages/testkit` has synthetic session, timeline event, and archive
   manifest helpers.
-- One Vitest behavior test exercises synthetic archive validation and writing.
-- No GUI, runnable core, SQLite index, FFmpeg command builder, complete archive
-  reader/validator, real media writer, replay player, or real capture exists
-  yet.
+- Three Vitest behavior test files exercise synthetic archive writing, reading,
+  validation failures, and SQLite indexing.
+- No GUI, runnable core, SQLite integration with core/GUI, FFmpeg command
+  builder, media-track archive IO, archive recovery/migration, real media
+  writer, replay player, or real capture exists yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
 
@@ -62,6 +67,9 @@ docs/plan/README.md
 docs/plan/plan_workspace_schema_foundation.md
 docs/plan/plan_license_apache_2.md
 docs/plan/plan_runtime_schema_archive_fixture.md
+docs/plan/plan_archive_reader_validator.md
+docs/plan/plan_sqlite_index_foundation.md
+docs/conversation-A01-documentation-and-initial-skeleton.md
 .gitattributes
 .gitignore
 LICENSE
@@ -74,6 +82,7 @@ vitest.config.ts
 packages/types/
 packages/schemas/
 packages/archive/
+packages/indexer/
 packages/core/
 packages/adapters/chaturbate/
 packages/testkit/
@@ -132,13 +141,17 @@ The project should optimize for AI-assisted long-term maintenance:
 - Do not commit secrets, cookies, headers, signed URLs, private-room data, or
   real captured media.
 - Keep docs honest: do not claim planned code exists.
+- For non-trivial conversations, maintain a conversation context document under
+  `docs/conversation-<conversation-id>-<short-english-slug>.md`.
 - Do not change the Apache-2.0 license without explicit user direction.
 
 ## Suggested Next Steps
 
-1. Add archive reader/validator for synthetic `.chron` packages.
-2. Add timeline append/order tests for duplicate event IDs and sequence gaps.
-3. Add a minimal SQLite index package or core module after archive validation is
+1. Add more timeline append/order tests, such as out-of-order append and cross
+   session rejection.
+2. Add rebuild/clear/query contracts around `packages/indexer` before wiring it
+   into core.
+3. Add media-track archive IO only after the manifest/timeline validator remains
    stable.
 4. Only after archive/timeline validation works, expand the CB adapter fixture
    harness.
@@ -174,5 +187,29 @@ Runtime schema and archive fixture checks:
 - `pnpm build`: passed across all workspace packages.
 - `git diff --check`: no output.
 - Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: no output.
+- JSON parse scan with `ConvertFrom-Json`: all `package.json` and `tsconfig`
+  files parsed successfully.
+
+Archive reader/validator continuation checks:
+
+- `pnpm typecheck`: passed across all workspace packages.
+- `pnpm test`: passed 2 Vitest files and 9 tests.
+- `pnpm build`: passed across all workspace packages.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
+  output.
+- JSON parse scan with `ConvertFrom-Json`: all `package.json` and `tsconfig`
+  files parsed successfully.
+
+SQLite indexer continuation checks:
+
+- `pnpm typecheck`: passed across all workspace packages.
+- `pnpm test`: passed 3 Vitest files and 12 tests.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed across all workspace packages.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
+  output.
 - JSON parse scan with `ConvertFrom-Json`: all `package.json` and `tsconfig`
   files parsed successfully.

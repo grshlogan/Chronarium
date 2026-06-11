@@ -23,6 +23,7 @@
       "@chronarium/schemas": ["packages/schemas/src/index.ts"],
       "@chronarium/archive": ["packages/archive/src/index.ts"],
       "@chronarium/core": ["packages/core/src/index.ts"],
+      "@chronarium/indexer": ["packages/indexer/src/index.ts"],
       "@chronarium/adapter-chaturbate": [
         "packages/adapters/chaturbate/src/index.ts"
       ],

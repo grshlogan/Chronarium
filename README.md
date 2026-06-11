@@ -46,18 +46,25 @@ AI 可以快速接手局部问题
 - 已确定默认技术方向：TypeScript-first。
 - 已创建 `pnpm` workspace、基础 `tsconfig` 和首批 `packages/*` 边界。
 - 已创建 `packages/types`、`packages/schemas`、`packages/archive`、
-  `packages/core`、`packages/adapters/chaturbate`、`packages/testkit` 的
-  初版空壳或契约。
+  `packages/indexer`、`packages/core`、`packages/adapters/chaturbate`、
+  `packages/testkit` 的初版空壳或契约。
 - 已选择并添加开源许可证：Apache-2.0。
 - 已安装最小开发依赖并生成 `pnpm-lock.yaml`。
 - 已实现 `packages/schemas` 的首批 Zod runtime schemas。
 - 已实现 `packages/archive` 的 fixture-safe `.chron` writer，可写
   `manifest.json`、`timeline.jsonl` 和顶层目录骨架。
+- 已实现 `packages/archive` 的首个 fixture-safe reader/validator，可读取
+  `manifest.json` 和 `timeline.jsonl`，并报告 timeline 一致性问题。
+- 已实现 `packages/indexer` 的首个 rebuildable SQLite index，可从
+  synthetic `.chron` archive 派生 archive metadata、timeline events 和
+  validation issues。
 - 已添加 Vitest 行为测试，覆盖 synthetic session/timeline 写入 `.chron`
-  package 的最小链路。
-- 尚未实现 GUI、可运行 core、真实站点 adapter、SQLite index、FFmpeg
-  command builder、完整 archive reader/validator、真实媒体写入或 replay
-  player。
+  package、读取 `.chron` package，以及 invalid JSONL、重复 eventId、
+  sequence gap、manifest count/lastSequence mismatch、unsafe path 和 SQLite
+  index 写入/查询。
+- 尚未实现 GUI、可运行 core、真实站点 adapter、SQLite index 与 core/GUI
+  集成、FFmpeg command builder、真实媒体写入、媒体轨读取、archive
+  recovery/migration 或 replay player。
 - 本阶段的重点是先立稳工程边界、AI 维护规则、架构词汇、schema 草案、
   代码地图和交接文档。
 
@@ -98,6 +105,7 @@ small module boundaries.
 - [docs/APP_CODE_MAP.md](./docs/APP_CODE_MAP.md)：当前文件树和计划中的代码地图。
 - [docs/AI_HANDOFF.md](./docs/AI_HANDOFF.md)：给后续 AI 或开发者接手的当前状态、决策和下一步。
 - [docs/AI_CHANGE_INDEX.md](./docs/AI_CHANGE_INDEX.md)：AI 对话与结构性更改索引。
+- [docs/conversation-A01-documentation-and-initial-skeleton.md](./docs/conversation-A01-documentation-and-initial-skeleton.md)：A01 对话上下文维护文档。
 - [docs/plan/README.md](./docs/plan/README.md)：后续计划文档入口和命名规则。
 
 ## 设计边界
@@ -131,7 +139,7 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 增加 archive reader/validator，读取并校验 synthetic `.chron` package。
-2. 增加 timeline append/order 的边界测试，例如 sequence gap 和重复 event。
-3. 增加 SQLite index 的最小 schema 和从 synthetic archive 构建索引的测试。
+1. 增加 timeline append/order 的更细边界，例如乱序追加和跨 session 拒绝。
+2. 给 SQLite indexer 增加重建/清理策略和更清晰的 query contracts。
+3. 为 archive reader/validator 增加更完整的 fixture builder 和诊断样例。
 4. 扩展 Chaturbate fixture harness，但继续禁止真实站点连接和账号/session 处理。

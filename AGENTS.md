@@ -156,6 +156,34 @@ docs/plan/plan_archive_schema_v1.md
 Avoid vague root files such as `task_plan.md`, `progress.md`, or
 `implementation_plan.md`.
 
+For any non-trivial conversation, also create or update a conversation context
+document under `docs/` before or during implementation.
+
+Use this naming pattern:
+
+```text
+docs/conversation-<conversation-id>-<short-english-slug>.md
+```
+
+The document must record:
+
+- conversation topic and scope;
+- current status;
+- active constraints and safety boundaries;
+- decisions made in this conversation;
+- files changed or expected to change;
+- verification run or intentionally skipped;
+- next safe step for a future agent.
+
+Keep conversation context documents factual and current. Update them after
+structural changes and before final handoff when the task spans code, schemas,
+storage, protocols, security, adapters, or multiple documentation files.
+
+Conversation context documents are continuity aids, not a replacement for code,
+schemas, tests, or the core docs. Do not place secrets, cookies, headers,
+tokens, signed URLs, private room details, real captured media, or personal data
+in them.
+
 Update these docs after structural work:
 
 - `docs/APP_CODE_MAP.md` when files, modules, or boundaries change.

@@ -5,8 +5,9 @@ Status: initial executable workspace setup notes.
 ## Current State
 
 The repository now has a minimal TypeScript workspace skeleton, installed
-development dependencies, runtime schema validation, and a fixture-only archive
-writer path.
+development dependencies, runtime schema validation, a fixture-only archive
+writer path, a first fixture-safe archive reader/validator, and a first
+rebuildable SQLite indexer.
 
 It has:
 
@@ -19,14 +20,20 @@ It has:
   manifest, and adapter message boundaries;
 - a fixture-safe archive writer that writes `manifest.json`, appends
   `timeline.jsonl`, and creates top-level archive directories;
-- one Vitest behavior test for a synthetic `.chron` package.
+- a fixture-safe archive reader/validator that reads `manifest.json` and
+  `timeline.jsonl`;
+- a rebuildable SQLite indexer that derives archive metadata, timeline events,
+  and validation issues from synthetic `.chron` packages;
+- Vitest behavior tests for synthetic `.chron` writing, reading, and basic
+  timeline consistency failures, plus SQLite indexing.
 
 It does not yet have:
 
 - executable GUI;
 - core runtime implementation;
-- full archive reader/validator;
-- SQLite index implementation;
+- media-track archive reader/writer behavior;
+- archive recovery or migration behavior;
+- SQLite integration with core or GUI;
 - real site adapters;
 - FFmpeg / ffprobe command builders;
 - replay player.
@@ -40,6 +47,11 @@ Current tools:
 - TypeScript.
 - Vitest for fixture and unit tests.
 - Zod for runtime schema validation.
+- Node.js built-in `node:sqlite` for the first indexer package.
+
+`node:sqlite` is currently experimental in the local Node runtime and emits an
+ExperimentalWarning during tests. It is wrapped behind `@chronarium/indexer` so
+the SQLite binding can be replaced later without changing archive contracts.
 
 Planned tools:
 

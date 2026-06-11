@@ -5,6 +5,7 @@
     { "path": "packages/schemas" },
     { "path": "packages/archive" },
     { "path": "packages/core" },
+    { "path": "packages/indexer" },
     { "path": "packages/adapters/chaturbate" },
     { "path": "packages/testkit" }
   ]

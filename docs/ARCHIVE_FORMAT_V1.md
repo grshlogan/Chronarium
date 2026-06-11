@@ -2,8 +2,9 @@
 
 Status: draft storage contract. A fixture-safe writer now creates a minimal
 `.chron` package with `manifest.json`, `timeline.jsonl`, and top-level
-directories. Full reader, validator, media-track writing, recovery, and
-migration behavior are not implemented yet.
+directories. A first reader/validator now reads `manifest.json` and
+`timeline.jsonl` and reports basic consistency issues. Media-track writing,
+media-track reading, recovery, and migration behavior are not implemented yet.
 
 ## Purpose
 
@@ -113,6 +114,11 @@ are not the only replay truth.
 - Readers must reject or quarantine invalid lines instead of silently accepting
   corrupted facts.
 - Redacted fields must stay redacted when re-indexed or exported.
+
+The current fixture-safe validator reports invalid JSONL, schema-invalid lines,
+duplicate event IDs, sequence gaps, session mismatches, manifest event-count
+mismatches, manifest last-sequence mismatches, and unsafe archive-relative
+paths. It does not yet repair or quarantine corrupted records.
 
 ## Path Rules
 

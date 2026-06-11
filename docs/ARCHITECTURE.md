@@ -90,8 +90,9 @@ flowchart LR
 ## Replay Package Shape
 
 The first schema and fixture writer path now exists for `manifest.json`,
-`timeline.jsonl`, and top-level archive directories. The broader package shape
-is still the design target:
+`timeline.jsonl`, top-level archive directories, manifest/timeline
+reader-validation, and a rebuildable SQLite indexer derived from synthetic
+archives. The broader package shape is still the design target:
 
 ```text
 <session-id>.chron/
@@ -280,10 +281,12 @@ Recommended first MVP:
 2. Define core schemas for `LiveSession`, `ArchiveManifest`, `TimelineEvent`,
    `MediaTrack`, and adapter messages.
 3. Implement local `.chron` package writer with synthetic fixtures.
-4. Implement SQLite index creation from a replay package.
-5. Build a minimal React UI that opens a fixture package and shows timeline
+4. Implement `.chron` manifest/timeline reader-validation and a rebuildable
+   SQLite indexer from replay packages.
+5. Add index rebuild/query contracts before wiring SQLite into core or GUI.
+6. Build a minimal React UI that opens a fixture package and shows timeline
    events.
-6. Add a CB adapter fixture harness before connecting to live rooms.
+7. Add a CB adapter fixture harness before connecting to live rooms.
 
 ## Deferred Decisions
 
