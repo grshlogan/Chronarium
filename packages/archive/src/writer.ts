@@ -27,33 +27,56 @@ class FileArchiveWriter implements ArchiveWriter {
   private manifest: ArchiveManifest | undefined;
   private eventCount = 0;
   private lastSequence: number | undefined;
+  private finalizedManifest: ArchiveManifest | undefined;
+  private readonly eventIds = new Set<string>();
 
   constructor(rootPath: string) {
     this.rootPath = rootPath;
   }
 
   async writeManifest(manifest: ArchiveManifest): Promise<void> {
+    if (this.finalizedManifest) {
+      throw new Error("Cannot write archive manifest after finalization.");
+    }
+    if (this.eventCount > 0) {
+      throw new Error("Cannot rewrite archive manifest after timeline events.");
+    }
+
     const parsed = parseArchiveManifestV1(manifest);
     await this.ensureArchiveDirectories(parsed);
     await this.ensureTimelineFile(parsed.timeline.path);
-    await this.writeJsonFile(DEFAULT_ARCHIVE_LAYOUT.manifest, parsed);
+    await this.writeManifestFile(parsed);
     this.manifest = parsed;
   }
 
   async appendTimelineEvent(event: TimelineEventEnvelope): Promise<void> {
+    if (this.finalizedManifest) {
+      throw new Error("Cannot append timeline events after finalization.");
+    }
+    if (!this.manifest) {
+      throw new Error(
+        "Cannot append timeline events before a manifest is written."
+      );
+    }
+
     const parsed = parseTimelineEventEnvelopeV1(event);
-    const timelinePath = this.safePath(
-      this.manifest?.timeline.path ?? DEFAULT_ARCHIVE_LAYOUT.timeline
-    );
+    this.assertAppendableTimelineEvent(this.manifest, parsed);
+    const timelinePath = this.safePath(this.manifest.timeline.path);
+
     await writeFile(timelinePath, `${JSON.stringify(parsed)}\n`, {
       encoding: "utf8",
       flag: "a"
     });
+
+    this.eventIds.add(parsed.eventId);
     this.eventCount += 1;
     this.lastSequence = parsed.sequence;
   }
 
   async finalize(): Promise<ArchiveManifest> {
+    if (this.finalizedManifest) {
+      return this.finalizedManifest;
+    }
     if (!this.manifest) {
       throw new Error("Cannot finalize archive before a manifest is written.");
     }
@@ -69,7 +92,9 @@ class FileArchiveWriter implements ArchiveWriter {
       }
     };
 
-    await this.writeManifest(finalized);
+    await this.writeManifestFile(finalized);
+    this.manifest = finalized;
+    this.finalizedManifest = finalized;
     return finalized;
   }
 
@@ -89,6 +114,33 @@ class FileArchiveWriter implements ArchiveWriter {
       encoding: "utf8",
       flag: "a"
     });
+  }
+
+  private assertAppendableTimelineEvent(
+    manifest: ArchiveManifest,
+    event: TimelineEventEnvelope
+  ): void {
+    if (event.sessionId !== manifest.session.id) {
+      throw new Error(
+        `Timeline event sessionId ${event.sessionId} does not match manifest session ${manifest.session.id}.`
+      );
+    }
+
+    const expectedSequence =
+      this.lastSequence === undefined ? 1 : this.lastSequence + 1;
+    if (event.sequence !== expectedSequence) {
+      throw new Error(
+        `Timeline event sequence expected ${expectedSequence} but received ${event.sequence}.`
+      );
+    }
+
+    if (this.eventIds.has(event.eventId)) {
+      throw new Error(`Duplicate timeline eventId: ${event.eventId}`);
+    }
+  }
+
+  private async writeManifestFile(manifest: ArchiveManifest): Promise<void> {
+    await this.writeJsonFile(DEFAULT_ARCHIVE_LAYOUT.manifest, manifest);
   }
 
   private async writeJsonFile(

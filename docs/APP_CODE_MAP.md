@@ -45,6 +45,7 @@ docs/
     plan_runtime_schema_archive_fixture.md
     plan_archive_reader_validator.md
     plan_sqlite_index_foundation.md
+    plan_archive_writer_timeline_invariants.md
 packages/
   types/
   schemas/
@@ -259,6 +260,13 @@ Responsibility:
 Responsibility:
 
 - Plan, scope, and verification notes for the first rebuildable SQLite indexer.
+
+### `docs/plan/plan_archive_writer_timeline_invariants.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for writer-side timeline append
+  invariants.
 
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 
@@ -490,6 +498,9 @@ Current status:
 - Includes a fixture-safe file writer for synthetic `.chron` packages.
 - Writes `manifest.json`, appends `timeline.jsonl`, and creates top-level
   archive directories.
+- Rejects appending before manifest write, cross-session events,
+  non-contiguous sequence values, duplicate event IDs, and appends after
+  finalization for one writer session.
 - Includes a fixture-safe file reader for `manifest.json` and `timeline.jsonl`.
 - Includes a fixture-safe validator for invalid JSONL, schema-invalid timeline
   lines, duplicate event IDs, sequence gaps, session mismatches, manifest

@@ -29,10 +29,27 @@ describe("synthetic archive writer", () => {
     );
   });
 
+  it("rejects appending a timeline event before a manifest is written", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+    const event = createSyntheticTimelineEvent({
+      type: "session.created",
+      sequence: 1,
+      payload: {
+        status: "imported"
+      }
+    });
+
+    await expect(writer.appendTimelineEvent(event)).rejects.toThrow(
+      /before a manifest is written/
+    );
+  });
+
   it("writes a manifest and timeline for a synthetic .chron package", async () => {
-    const tempRoot = await mkdtemp(path.join(tmpdir(), "chronarium-test-"));
-    temporaryRoots.push(tempRoot);
-    const archiveRoot = path.join(tempRoot, "session-synthetic-001.chron");
+    const archiveRoot = await createTemporaryArchiveRoot();
     const manifest = createSyntheticArchiveManifest();
     const event = createSyntheticTimelineEvent({
       type: "session.created",
@@ -84,4 +101,120 @@ describe("synthetic archive writer", () => {
     const eventsDirectory = await stat(path.join(archiveRoot, "events"));
     expect(eventsDirectory.isDirectory()).toBe(true);
   });
+
+  it("rejects timeline events for another session", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+
+    await expect(
+      writer.appendTimelineEvent(
+        createSyntheticTimelineEvent({
+          type: "session.created",
+          sequence: 1,
+          sessionId: "session-other",
+          payload: {
+            status: "imported"
+          }
+        })
+      )
+    ).rejects.toThrow(/does not match manifest session/);
+  });
+
+  it("rejects non-contiguous timeline sequences", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+    await writer.appendTimelineEvent(
+      createSyntheticTimelineEvent({
+        type: "session.created",
+        sequence: 1,
+        payload: {
+          status: "imported"
+        }
+      })
+    );
+
+    await expect(
+      writer.appendTimelineEvent(
+        createSyntheticTimelineEvent({
+          type: "adapter.started",
+          sequence: 3,
+          payload: {
+            adapterId: "fixture"
+          }
+        })
+      )
+    ).rejects.toThrow(/expected 2 but received 3/);
+  });
+
+  it("rejects duplicate timeline event IDs", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+    await writer.appendTimelineEvent(
+      createSyntheticTimelineEvent({
+        type: "session.created",
+        sequence: 1,
+        eventId: "event-duplicate",
+        payload: {
+          status: "imported"
+        }
+      })
+    );
+
+    await expect(
+      writer.appendTimelineEvent(
+        createSyntheticTimelineEvent({
+          type: "adapter.started",
+          sequence: 2,
+          eventId: "event-duplicate",
+          payload: {
+            adapterId: "fixture"
+          }
+        })
+      )
+    ).rejects.toThrow(/Duplicate timeline eventId/);
+  });
+
+  it("rejects appending timeline events after finalization", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+    await writer.finalize();
+
+    await expect(
+      writer.appendTimelineEvent(
+        createSyntheticTimelineEvent({
+          type: "session.created",
+          sequence: 1,
+          payload: {
+            status: "imported"
+          }
+        })
+      )
+    ).rejects.toThrow(/after finalization/);
+  });
 });
+
+async function createTemporaryArchiveRoot(): Promise<string> {
+  const tempRoot = await mkdtemp(path.join(tmpdir(), "chronarium-test-"));
+  temporaryRoots.push(tempRoot);
+  return path.join(tempRoot, "session-synthetic-001.chron");
+}

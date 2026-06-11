@@ -33,6 +33,9 @@ Current state:
 - `packages/archive` has a fixture-safe file writer that writes
   `manifest.json`, appends `timeline.jsonl`, and creates top-level archive
   directories.
+- The archive writer enforces append-time invariants for manifest-before-append,
+  session match, contiguous sequences, duplicate event IDs, and appends after
+  finalization.
 - `packages/archive` has a fixture-safe reader/validator for `manifest.json`
   and `timeline.jsonl`, including basic timeline consistency diagnostics.
 - `packages/indexer` has a rebuildable SQLite indexer for synthetic `.chron`
@@ -69,6 +72,7 @@ docs/plan/plan_license_apache_2.md
 docs/plan/plan_runtime_schema_archive_fixture.md
 docs/plan/plan_archive_reader_validator.md
 docs/plan/plan_sqlite_index_foundation.md
+docs/plan/plan_archive_writer_timeline_invariants.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 .gitattributes
 .gitignore
@@ -147,12 +151,11 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Add more timeline append/order tests, such as out-of-order append and cross
-   session rejection.
-2. Add rebuild/clear/query contracts around `packages/indexer` before wiring it
+1. Add rebuild/clear/query contracts around `packages/indexer` before wiring it
    into core.
-3. Add media-track archive IO only after the manifest/timeline validator remains
+2. Add media-track archive IO only after the manifest/timeline validator remains
    stable.
+3. Add recovery behavior for interrupted archive writes.
 4. Only after archive/timeline validation works, expand the CB adapter fixture
    harness.
 
@@ -205,6 +208,20 @@ SQLite indexer continuation checks:
 
 - `pnpm typecheck`: passed across all workspace packages.
 - `pnpm test`: passed 3 Vitest files and 12 tests.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed across all workspace packages.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
+  output.
+- JSON parse scan with `ConvertFrom-Json`: all `package.json` and `tsconfig`
+  files parsed successfully.
+
+Archive writer timeline invariants continuation checks:
+
+- `pnpm typecheck`: passed across all workspace packages.
+- Targeted archive writer and indexer tests passed.
+- `pnpm test`: passed 3 Vitest files and 17 tests.
 - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
   passed.
 - `pnpm build`: passed across all workspace packages.

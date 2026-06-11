@@ -256,3 +256,43 @@ unimplemented ideas as completed work.
   - JSON parse scan with `ConvertFrom-Json` succeeded for all package and
     TypeScript config JSON files.
 - Next: add rebuild/clear/query contracts or timeline append/order tests.
+
+## 2026-06-11: Archive writer timeline invariants
+
+- Conversation: after pushing the SQLite indexer commit, continued with
+  writer-side timeline correctness checks.
+- Landed: archive writer now rejects appends before manifest write,
+  cross-session events, non-contiguous sequences, duplicate event IDs, and
+  appends after finalization. Indexer invalid-archive tests now use manual bad
+  fixtures rather than writer-generated invalid packages.
+- Files:
+  - `README.md`
+  - `docs/ARCHIVE_FORMAT_V1.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_archive_writer_timeline_invariants.md`
+  - `packages/archive/src/writer.ts`
+  - `packages/archive/tests/syntheticArchiveWriter.test.ts`
+  - `packages/indexer/tests/archiveIndexer.test.ts`
+- Decisions:
+  - Writer invariants prevent Chronarium-generated archives from creating
+    avoidable timeline errors.
+  - Validator/indexer diagnostics still handle corrupted, external, or manually
+    crafted bad archives.
+- Verification:
+  - `pnpm typecheck` passed across all workspace packages.
+  - Targeted archive writer and indexer tests passed.
+  - `pnpm test` passed 3 Vitest files and 17 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed across all workspace packages.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan with `Select-String -Pattern '[ \t]$'` produced no
+    output.
+  - JSON parse scan with `ConvertFrom-Json` succeeded for all package and
+    TypeScript config JSON files.
+- Next: continue with index rebuild/query contracts or media-track archive IO
+  planning.

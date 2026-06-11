@@ -1,10 +1,14 @@
-import { createFileArchiveWriter } from "@chronarium/archive";
+import {
+  createFileArchiveWriter,
+  DEFAULT_ARCHIVE_LAYOUT
+} from "@chronarium/archive";
 import { openChronariumIndex } from "@chronarium/indexer";
+import type { TimelineEventEnvelope } from "@chronarium/types";
 import {
   createSyntheticArchiveManifest,
   createSyntheticTimelineEvent
 } from "@chronarium/testkit";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -93,10 +97,6 @@ describe("SQLite archive indexer", () => {
 
   it("indexes validation issues for an archive with a timeline gap", async () => {
     const { archiveRoot, databasePath } = await createTemporaryPaths();
-    const writer = await createFileArchiveWriter({
-      rootPath: archiveRoot,
-      createIfMissing: true
-    });
     const firstEvent = createSyntheticTimelineEvent({
       type: "session.created",
       sequence: 1,
@@ -112,10 +112,7 @@ describe("SQLite archive indexer", () => {
       }
     });
 
-    await writer.writeManifest(createSyntheticArchiveManifest());
-    await writer.appendTimelineEvent(firstEvent);
-    await writer.appendTimelineEvent(secondEvent);
-    await writer.finalize();
+    await writeArchiveFixture(archiveRoot, [firstEvent, secondEvent]);
 
     const index = openChronariumIndex({
       databasePath
@@ -145,10 +142,6 @@ describe("SQLite archive indexer", () => {
 
   it("indexes validation issues when timeline event IDs are duplicated", async () => {
     const { archiveRoot, databasePath } = await createTemporaryPaths();
-    const writer = await createFileArchiveWriter({
-      rootPath: archiveRoot,
-      createIfMissing: true
-    });
     const firstEvent = createSyntheticTimelineEvent({
       type: "session.created",
       sequence: 1,
@@ -166,10 +159,7 @@ describe("SQLite archive indexer", () => {
       }
     });
 
-    await writer.writeManifest(createSyntheticArchiveManifest());
-    await writer.appendTimelineEvent(firstEvent);
-    await writer.appendTimelineEvent(secondEvent);
-    await writer.finalize();
+    await writeArchiveFixture(archiveRoot, [firstEvent, secondEvent]);
 
     const index = openChronariumIndex({
       databasePath
@@ -209,4 +199,42 @@ async function createTemporaryPaths(): Promise<{
     archiveRoot: path.join(tempRoot, "session-synthetic-001.chron"),
     databasePath: path.join(tempRoot, "chronarium.sqlite")
   };
+}
+
+async function writeArchiveFixture(
+  archiveRoot: string,
+  timelineEvents: readonly TimelineEventEnvelope[]
+): Promise<void> {
+  await mkdir(archiveRoot, {
+    recursive: true
+  });
+  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.events));
+  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.tracks));
+  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.diagnostics));
+  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.exports));
+
+  const manifest = createSyntheticArchiveManifest();
+  const lastSequence = timelineEvents.at(-1)?.sequence;
+  await writeFile(
+    path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.manifest),
+    `${JSON.stringify(
+      {
+        ...manifest,
+        timeline: {
+          ...manifest.timeline,
+          eventCount: timelineEvents.length,
+          ...(lastSequence === undefined ? {} : { lastSequence })
+        }
+      },
+      null,
+      2
+    )}\n`,
+    "utf8"
+  );
+
+  await writeFile(
+    path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.timeline),
+    `${timelineEvents.map((event) => JSON.stringify(event)).join("\n")}\n`,
+    "utf8"
+  );
 }

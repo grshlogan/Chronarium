@@ -19,13 +19,15 @@ It has:
 - runtime schemas for the first session, media track, timeline event, archive
   manifest, and adapter message boundaries;
 - a fixture-safe archive writer that writes `manifest.json`, appends
-  `timeline.jsonl`, and creates top-level archive directories;
+  `timeline.jsonl`, creates top-level archive directories, and enforces basic
+  append-time timeline invariants;
 - a fixture-safe archive reader/validator that reads `manifest.json` and
   `timeline.jsonl`;
 - a rebuildable SQLite indexer that derives archive metadata, timeline events,
   and validation issues from synthetic `.chron` packages;
 - Vitest behavior tests for synthetic `.chron` writing, reading, and basic
-  timeline consistency failures, plus SQLite indexing.
+  timeline consistency failures, writer append-time rejection, plus SQLite
+  indexing.
 
 It does not yet have:
 

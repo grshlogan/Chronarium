@@ -53,6 +53,8 @@ AI 可以快速接手局部问题
 - 已实现 `packages/schemas` 的首批 Zod runtime schemas。
 - 已实现 `packages/archive` 的 fixture-safe `.chron` writer，可写
   `manifest.json`、`timeline.jsonl` 和顶层目录骨架。
+- archive writer 已开始在 append-time 主动拒绝未写 manifest、跨 session、
+  sequence 不连续、重复 eventId 和 finalize 后追加等基础 timeline 错误。
 - 已实现 `packages/archive` 的首个 fixture-safe reader/validator，可读取
   `manifest.json` 和 `timeline.jsonl`，并报告 timeline 一致性问题。
 - 已实现 `packages/indexer` 的首个 rebuildable SQLite index，可从
@@ -139,7 +141,7 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 增加 timeline append/order 的更细边界，例如乱序追加和跨 session 拒绝。
-2. 给 SQLite indexer 增加重建/清理策略和更清晰的 query contracts。
-3. 为 archive reader/validator 增加更完整的 fixture builder 和诊断样例。
+1. 给 SQLite indexer 增加重建/清理策略和更清晰的 query contracts。
+2. 为 archive reader/validator 增加更完整的 fixture builder 和诊断样例。
+3. 设计 media-track archive IO 的 fixture-first 边界。
 4. 扩展 Chaturbate fixture harness，但继续禁止真实站点连接和账号/session 处理。

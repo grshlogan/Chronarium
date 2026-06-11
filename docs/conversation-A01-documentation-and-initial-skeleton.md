@@ -21,13 +21,18 @@ Chronarium now has:
   `timeline.jsonl`;
 - two archive behavior test files covering writer, reader, and validator paths;
 - a rebuildable SQLite indexer package for synthetic archive metadata,
-  timeline events, and validation issues.
+  timeline events, and validation issues;
+- archive writer append-time invariants for manifest ordering, session match,
+  sequence continuity, duplicate event IDs, and finalization.
 
 The current A01 continuation added archive reader/validator foundations before
 any real site adapter work.
 
 The A01 continuation also added a minimal rebuildable SQLite index package that
 derives rows from synthetic `.chron` archives.
+
+The active follow-up moved basic timeline append invariants into the archive
+writer so Chronarium-generated archives avoid preventable timeline errors.
 
 ## Active Constraints
 
@@ -71,6 +76,7 @@ Expected documentation changes:
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
 - `docs/plan/plan_archive_reader_validator.md`
 - `docs/plan/plan_sqlite_index_foundation.md`
+- `docs/plan/plan_archive_writer_timeline_invariants.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
@@ -114,6 +120,17 @@ Checks already run during this continuation:
 - trailing whitespace scan: produced no output after SQLite indexer docs
   updates.
 - JSON/package config parse scan: succeeded after adding `packages/indexer`.
+- `pnpm typecheck`: passed after archive writer timeline invariants.
+- targeted archive writer and indexer tests: passed.
+- `pnpm test`: passed 3 Vitest files and 17 tests after archive writer
+  timeline invariants.
+- `pnpm build`: passed after archive writer timeline invariants.
+- `git diff --check`: produced no output after archive writer timeline
+  invariants.
+- trailing whitespace scan: produced no output after archive writer timeline
+  invariants.
+- JSON/package config parse scan: succeeded after archive writer timeline
+  invariants.
 
 ## Next Safe Step
 

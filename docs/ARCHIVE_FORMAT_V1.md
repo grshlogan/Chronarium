@@ -120,6 +120,10 @@ duplicate event IDs, sequence gaps, session mismatches, manifest event-count
 mismatches, manifest last-sequence mismatches, and unsafe archive-relative
 paths. It does not yet repair or quarantine corrupted records.
 
+The current fixture-safe writer rejects preventable timeline errors before
+writing: missing manifest, session mismatch, non-contiguous sequence, duplicate
+event ID, and appends after finalization.
+
 ## Path Rules
 
 - Archive-relative paths must use forward slashes.
@@ -131,11 +135,18 @@ paths. It does not yet repair or quarantine corrupted records.
 
 ## Write Safety
 
-The future writer should use:
+The current writer already uses or enforces:
 
 - create-new semantics for package roots;
 - temporary files in the same filesystem when replacing small metadata files;
 - append-only writes for JSONL streams;
+- manifest-before-timeline ordering;
+- contiguous timeline sequences for one writer session;
+- duplicate event ID rejection for one writer session;
+- no appends after finalization.
+
+Future writer work should add:
+
 - atomic finalization for `manifest.json` updates where feasible;
 - explicit recovery behavior for interrupted writes.
 
