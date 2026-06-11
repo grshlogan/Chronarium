@@ -35,6 +35,12 @@ importers:
 
   packages/core:
     dependencies:
+      '@chronarium/archive':
+        specifier: workspace:*
+        version: link:../archive
+      '@chronarium/indexer':
+        specifier: workspace:*
+        version: link:../indexer
       '@chronarium/types':
         specifier: workspace:*
         version: link:../types

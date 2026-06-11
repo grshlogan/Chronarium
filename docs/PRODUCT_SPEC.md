@@ -109,9 +109,11 @@ synthetic fixture data can be runtime-validated and written into a local
 `manifest.json`, `timeline.jsonl`, and synthetic media-track metadata, then
 report basic timeline and track consistency issues. The first SQLite indexer
 can derive query rows from synthetic archives for archive metadata, timeline
-events, and validation issues. GUI, runnable core, SQLite integration with
-core/GUI, media tooling, real media segment writing/probing, archive
-recovery/migration, replay player, and real adapters remain unimplemented.
+events, and validation issues. The first core archive/index service can call
+archive validation, archive reading, reindex, and index queries. GUI, full
+runnable core runtime, SQLite integration with GUI, media tooling, real media
+segment writing/probing, archive recovery/migration, replay player, and real
+adapters remain unimplemented.
 
 ## Open Product Decisions
 

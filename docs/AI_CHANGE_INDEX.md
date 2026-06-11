@@ -373,3 +373,42 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan succeeded.
 - Next: plan `packages/indexer` integration with `packages/core`, or add
   recovery behavior for interrupted archive metadata writes.
+
+## 2026-06-11: Core archive/index service
+
+- Conversation: user asked to continue work, push when appropriate, and report
+  simply.
+- Landed: added the first `packages/core` service that coordinates archive
+  validation, archive reading, SQLite reindexing, and index queries.
+- Files:
+  - `README.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_core_archive_index_service.md`
+  - `packages/core/package.json`
+  - `packages/core/tsconfig.json`
+  - `packages/core/src/index.ts`
+  - `packages/core/src/archiveIndexService.ts`
+  - `packages/core/tests/archiveIndexService.test.ts`
+  - `pnpm-lock.yaml`
+- Decisions:
+  - Core delegates validation and reading to `packages/archive`.
+  - Core delegates indexing and query storage to `packages/indexer`.
+  - This is not a full core runtime and does not start adapters, capture jobs,
+    GUI, FFmpeg, or real media work.
+- Verification:
+  - `pnpm exec vitest run packages/core/tests` passed 1 file and 2 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 4 files and 30 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan succeeded.
+- Next: add a minimal core runtime lifecycle shell around the core service, or
+  add archive recovery behavior for interrupted metadata writes.

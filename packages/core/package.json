@@ -16,6 +16,8 @@
     "typecheck": "tsc -b tsconfig.json --pretty false"
   },
   "dependencies": {
+    "@chronarium/archive": "workspace:*",
+    "@chronarium/indexer": "workspace:*",
     "@chronarium/types": "workspace:*"
   }
 }

@@ -6,10 +6,10 @@ does not replace `docs/ARCHITECTURE.md`.
 ## Current State
 
 Chronarium now has documentation plus a minimal executable TypeScript validation
-chain. The package code is still early and fixture-first. No GUI, runnable core,
-real site capture, SQLite integration with core/GUI, FFmpeg command builder,
-real media segment writer/prober, archive recovery/migration, or replay player
-exists yet.
+chain. The package code is still early and fixture-first. No GUI, full runnable
+core runtime, real site capture, SQLite integration with GUI, FFmpeg command
+builder, real media segment writer/prober, archive recovery/migration, or
+replay player exists yet.
 
 Current files:
 
@@ -48,6 +48,7 @@ docs/
     plan_archive_writer_timeline_invariants.md
     plan_indexer_rebuild_query_contracts.md
     plan_media_track_archive_io.md
+    plan_core_archive_index_service.md
 packages/
   types/
   schemas/
@@ -284,6 +285,12 @@ Responsibility:
 - Plan, scope, and verification notes for fixture-safe media-track archive
   metadata IO.
 
+### `docs/plan/plan_core_archive_index_service.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first core archive/index service.
+
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 
 Responsibility:
@@ -333,8 +340,11 @@ packages/
     package.json
     tsconfig.json
     src/
+      archiveIndexService.ts
       index.ts
       runtime.ts
+    tests/
+      archiveIndexService.test.ts
   adapters/
     chaturbate/
       package.json
@@ -477,8 +487,10 @@ Owns:
 
 Current status:
 
-- Exists as a runtime contract skeleton only.
-- Does not start tasks, adapters, archives, SQLite, or exports yet.
+- Exists with a runtime contract skeleton and a first archive/index service.
+- The archive/index service validates archives, reads valid archives, reindexes
+  archives, and exposes index queries through core.
+- Does not start tasks, adapters, capture jobs, exports, or a full runtime yet.
 
 ### `packages/adapters/<site>`
 

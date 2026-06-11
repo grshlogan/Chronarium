@@ -46,13 +46,15 @@ Current state:
   archive metadata, timeline events, and validation issues.
 - `packages/indexer` has explicit reindex, archive removal, clear-all, and
   filtered query contracts.
+- `packages/core` has a first archive/index service that coordinates archive
+  validation, archive reading, reindexing, and index queries.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
-- Three Vitest behavior test files exercise synthetic archive writing, reading,
-  validation failures, and SQLite indexing.
-- No GUI, runnable core, SQLite integration with core/GUI, FFmpeg command
-  builder, real media segment writer/prober, archive recovery/migration,
-  replay player, or real capture exists yet.
+- Four Vitest behavior test files exercise synthetic archive writing, reading,
+  validation failures, SQLite indexing, and the core archive/index service.
+- No GUI, full runnable core runtime, SQLite integration with GUI, FFmpeg
+  command builder, real media segment writer/prober, archive
+  recovery/migration, replay player, or real capture exists yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
 
@@ -81,6 +83,7 @@ docs/plan/plan_sqlite_index_foundation.md
 docs/plan/plan_archive_writer_timeline_invariants.md
 docs/plan/plan_indexer_rebuild_query_contracts.md
 docs/plan/plan_media_track_archive_io.md
+docs/plan/plan_core_archive_index_service.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 .gitattributes
 .gitignore
@@ -159,7 +162,8 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Plan `packages/indexer` integration with `packages/core`.
+1. Add a minimal core runtime lifecycle shell around the existing core service,
+   but do not start real adapters yet.
 2. Add real media segment IO only after the media-track metadata validator
    remains stable.
 3. Add recovery behavior for interrupted archive writes.
@@ -260,6 +264,25 @@ Media-track archive metadata IO continuation checks:
   using explicit `"issue" in metadataPath` guards.
 - `pnpm typecheck`: passed across all workspace packages.
 - `pnpm test`: passed 3 Vitest files and 28 tests.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed across all workspace packages.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
+  output.
+- JSON parse scan with `ConvertFrom-Json`: all `package.json` and `tsconfig`
+  files parsed successfully.
+
+Core archive/index service continuation checks:
+
+- `pnpm exec vitest run packages/core/tests`: passed 1 Vitest file and 2 tests.
+- First `pnpm typecheck` during this continuation failed because tests were
+  included in `packages/core/tsconfig.json` while `rootDir` was `src`; fixed by
+  keeping package typecheck focused on `src`.
+- Untracked generated files appeared under package source/test folders after
+  check runs; removed only the explicit generated files.
+- `pnpm typecheck`: passed across all workspace packages.
+- `pnpm test`: passed 4 Vitest files and 30 tests.
 - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
   passed.
 - `pnpm build`: passed across all workspace packages.

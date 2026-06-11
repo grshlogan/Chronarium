@@ -7,7 +7,8 @@ Status: initial executable workspace setup notes.
 The repository now has a minimal TypeScript workspace skeleton, installed
 development dependencies, runtime schema validation, a fixture-only archive
 writer path, a first fixture-safe archive reader/validator, and a first
-rebuildable SQLite indexer.
+rebuildable SQLite indexer. `packages/core` now has a first small archive/index
+service, but not a full runtime.
 
 It has:
 
@@ -28,17 +29,20 @@ It has:
 - a rebuildable SQLite indexer that derives archive metadata, timeline events,
   and validation issues from synthetic `.chron` packages, with reindex,
   remove, clear, and filtered query contracts;
+- a core archive/index service that validates archives, reads valid archives,
+  reindexes archives, and exposes index queries through `packages/core`;
 - Vitest behavior tests for synthetic `.chron` writing, reading, and basic
   timeline consistency failures, writer append-time rejection, media track
-  metadata diagnostics, plus SQLite indexing.
+  metadata diagnostics, SQLite indexing, plus core archive/index service
+  coordination.
 
 It does not yet have:
 
 - executable GUI;
-- core runtime implementation;
+- full core runtime implementation;
 - real media segment writing or probing;
 - archive recovery or migration behavior;
-- SQLite integration with core or GUI;
+- SQLite integration with GUI;
 - real site adapters;
 - FFmpeg / ffprobe command builders;
 - replay player.

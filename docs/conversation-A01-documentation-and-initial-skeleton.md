@@ -27,6 +27,8 @@ Chronarium now has:
 - indexer rebuild, removal, clear, and filtered query contracts.
 - fixture-safe media-track metadata IO for `tracks/<track-id>/track.json`;
 - archive reader/validator support for manifest-declared media track metadata.
+- a first core archive index service that coordinates archive validation,
+  archive reading, and rebuildable SQLite indexing.
 
 The current A01 continuation added archive reader/validator foundations before
 any real site adapter work.
@@ -37,7 +39,7 @@ derives rows from synthetic `.chron` archives.
 The active follow-up moved basic timeline append invariants into the archive
 writer so Chronarium-generated archives avoid preventable timeline errors.
 
-The active follow-up added fixture-safe media-track archive metadata IO.
+The active follow-up is adding a first core archive index service.
 
 ## Active Constraints
 
@@ -67,30 +69,21 @@ The active follow-up added fixture-safe media-track archive metadata IO.
 
 Expected code changes:
 
-- `packages/archive/src/reader.ts`
-- `packages/archive/src/validator.ts`
-- `packages/archive/src/index.ts`
-- `packages/archive/tests/*`
-- `packages/archive/src/layout.ts`
-- `packages/archive/src/writer.ts`
-- `packages/archive/src/reader.ts`
-- `packages/archive/src/validator.ts`
-- `packages/archive/tests/*`
-- `packages/testkit/src/fixtures.ts`
+- `packages/core/package.json`
+- `packages/core/tsconfig.json`
+- `packages/core/src/index.ts`
+- `packages/core/src/archiveIndexService.ts`
+- `packages/core/tests/*`
 
 Expected documentation changes:
 
-- `AGENTS.md`
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
-- `docs/plan/plan_archive_reader_validator.md`
-- `docs/plan/plan_sqlite_index_foundation.md`
-- `docs/plan/plan_archive_writer_timeline_invariants.md`
-- `docs/plan/plan_indexer_rebuild_query_contracts.md`
-- `docs/plan/plan_media_track_archive_io.md`
+- `docs/plan/plan_core_archive_index_service.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
-- possibly `docs/ARCHIVE_FORMAT_V1.md` and `docs/DEVELOPMENT_SETUP.md`
+- possibly `README.md`, `docs/PRODUCT_SPEC.md`, and
+  `docs/DEVELOPMENT_SETUP.md`
 
 ## Verification Log
 
@@ -166,8 +159,26 @@ Checks already run during this continuation:
   metadata IO.
 - JSON/package config parse scan: succeeded after media-track archive metadata
   IO.
+- `pnpm exec vitest run packages/core/tests`: passed 1 file and 2 tests after
+  core archive/index service.
+- First `pnpm typecheck` during core service work failed because tests were
+  included in the package `tsconfig` while `rootDir` was `src`; fixed by keeping
+  package typecheck focused on `src`.
+- Untracked generated files appeared under package source/test folders after
+  check runs; removed only the explicit generated files.
+- `pnpm typecheck`: passed after core archive/index service.
+- `pnpm test`: passed 4 Vitest files and 30 tests after core archive/index
+  service.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed after core archive/index service.
+- `git diff --check`: produced no output after core archive/index service.
+- trailing whitespace scan: produced no output after core archive/index
+  service.
+- JSON/package config parse scan: succeeded after core archive/index service.
 
 ## Next Safe Step
 
-Continue with `packages/indexer` integration planning for `packages/core`, or
-add archive recovery behavior for interrupted metadata writes.
+Continue with a minimal core runtime lifecycle shell around the core
+archive/index service, or add archive recovery behavior for interrupted
+metadata writes.
