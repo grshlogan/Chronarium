@@ -3,9 +3,13 @@ import {
   DEFAULT_ARCHIVE_LAYOUT
 } from "@chronarium/archive";
 import { openChronariumIndex } from "@chronarium/indexer";
-import type { TimelineEventEnvelope } from "@chronarium/types";
+import type {
+  ArchiveManifest,
+  TimelineEventEnvelope
+} from "@chronarium/types";
 import {
   createSyntheticArchiveManifest,
+  createSyntheticSession,
   createSyntheticTimelineEvent
 } from "@chronarium/testkit";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -90,6 +94,201 @@ describe("SQLite archive indexer", () => {
         state: "online"
       });
       expect(issues).toEqual([]);
+    } finally {
+      index.close();
+    }
+  });
+
+  it("reindexes an archive path by replacing stale rows", async () => {
+    const { archiveRoot, databasePath } = await createTemporaryPaths();
+    const firstEvent = createSyntheticTimelineEvent({
+      type: "session.created",
+      sequence: 1,
+      payload: {
+        status: "imported"
+      }
+    });
+    const secondEvent = createSyntheticTimelineEvent({
+      type: "room.state",
+      sequence: 2,
+      payload: {
+        state: "online"
+      }
+    });
+
+    await writeArchiveFixture(archiveRoot, [firstEvent, secondEvent]);
+
+    const index = openChronariumIndex({
+      databasePath
+    });
+
+    try {
+      await index.indexArchiveFromPath(archiveRoot);
+
+      await writeArchiveFixture(archiveRoot, [firstEvent]);
+      const summary = await index.reindexArchiveFromPath(archiveRoot);
+      const events = index.listTimelineEvents({
+        sessionId: summary.sessionId
+      });
+
+      expect(summary.timelineEventCount).toBe(1);
+      expect(events.map((event) => event.type)).toEqual(["session.created"]);
+    } finally {
+      index.close();
+    }
+  });
+
+  it("removes an indexed archive and its child rows", async () => {
+    const { archiveRoot, databasePath } = await createTemporaryPaths();
+    const event = createSyntheticTimelineEvent({
+      type: "session.created",
+      sequence: 1,
+      payload: {
+        status: "imported"
+      }
+    });
+
+    await writeArchiveFixture(archiveRoot, [event]);
+
+    const index = openChronariumIndex({
+      databasePath
+    });
+
+    try {
+      const summary = await index.indexArchiveFromPath(archiveRoot);
+      const removal = index.removeArchiveFromIndex({
+        archiveId: summary.archiveId
+      });
+
+      expect(removal.removedArchiveCount).toBe(1);
+      expect(index.getArchive(summary.archiveId)).toBeUndefined();
+      expect(
+        index.listTimelineEvents({
+          sessionId: summary.sessionId
+        })
+      ).toEqual([]);
+      expect(
+        index.listValidationIssues({
+          archiveId: summary.archiveId
+        })
+      ).toEqual([]);
+    } finally {
+      index.close();
+    }
+  });
+
+  it("clears the rebuildable index", async () => {
+    const { archiveRoot, databasePath } = await createTemporaryPaths();
+    const event = createSyntheticTimelineEvent({
+      type: "session.created",
+      sequence: 1,
+      payload: {
+        status: "imported"
+      }
+    });
+
+    await writeArchiveFixture(archiveRoot, [event]);
+
+    const index = openChronariumIndex({
+      databasePath
+    });
+
+    try {
+      await index.indexArchiveFromPath(archiveRoot);
+      const clearSummary = index.clearIndex();
+
+      expect(clearSummary.removedArchiveCount).toBe(1);
+      expect(index.listArchives()).toEqual([]);
+      expect(
+        index.listTimelineEvents({
+          sessionId: "session-synthetic-001"
+        })
+      ).toEqual([]);
+    } finally {
+      index.close();
+    }
+  });
+
+  it("filters archives, timeline events, and validation issues", async () => {
+    const tempRoot = await mkdtemp(path.join(tmpdir(), "chronarium-index-"));
+    temporaryRoots.push(tempRoot);
+    const firstArchiveRoot = path.join(tempRoot, "session-synthetic-001.chron");
+    const secondArchiveRoot = path.join(tempRoot, "session-synthetic-002.chron");
+    const databasePath = path.join(tempRoot, "chronarium.sqlite");
+    const firstSession = createSyntheticSession({
+      id: "session-synthetic-001",
+      site: {
+        siteId: "synthetic",
+        redactionStatus: "synthetic"
+      }
+    });
+    const secondSession = createSyntheticSession({
+      id: "session-synthetic-002",
+      site: {
+        siteId: "other-synthetic",
+        redactionStatus: "synthetic"
+      }
+    });
+    const firstEvent = createSyntheticTimelineEvent({
+      type: "session.created",
+      sequence: 1,
+      sessionId: firstSession.id,
+      payload: {
+        status: "imported"
+      }
+    });
+    const secondEvent = createSyntheticTimelineEvent({
+      type: "room.state",
+      sequence: 1,
+      sessionId: secondSession.id,
+      payload: {
+        state: "online"
+      }
+    });
+    const skippedEvent = createSyntheticTimelineEvent({
+      type: "room.state",
+      sequence: 3,
+      sessionId: firstSession.id,
+      payload: {
+        state: "online"
+      }
+    });
+
+    await writeArchiveFixture(firstArchiveRoot, [firstEvent, skippedEvent], {
+      archiveId: "archive-synthetic-001",
+      session: firstSession
+    });
+    await writeArchiveFixture(secondArchiveRoot, [secondEvent], {
+      archiveId: "archive-synthetic-002",
+      session: secondSession
+    });
+
+    const index = openChronariumIndex({
+      databasePath
+    });
+
+    try {
+      await index.indexArchiveFromPath(firstArchiveRoot);
+      await index.indexArchiveFromPath(secondArchiveRoot);
+
+      expect(index.listArchives({ siteId: "synthetic" })).toHaveLength(1);
+      expect(index.listArchives({ validationOk: false })).toHaveLength(1);
+      expect(
+        index.listTimelineEvents({
+          type: "room.state"
+        })
+      ).toHaveLength(2);
+      expect(
+        index.listTimelineEvents({
+          sessionId: firstSession.id,
+          type: "room.state"
+        })
+      ).toHaveLength(1);
+      expect(
+        index.listValidationIssues({
+          code: "timeline.sequence_gap"
+        })
+      ).toHaveLength(1);
     } finally {
       index.close();
     }
@@ -203,17 +402,32 @@ async function createTemporaryPaths(): Promise<{
 
 async function writeArchiveFixture(
   archiveRoot: string,
-  timelineEvents: readonly TimelineEventEnvelope[]
+  timelineEvents: readonly TimelineEventEnvelope[],
+  options: {
+    readonly archiveId?: string;
+    readonly session?: ArchiveManifest["session"];
+  } = {}
 ): Promise<void> {
   await mkdir(archiveRoot, {
     recursive: true
   });
-  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.events));
-  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.tracks));
-  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.diagnostics));
-  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.exports));
+  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.events), {
+    recursive: true
+  });
+  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.tracks), {
+    recursive: true
+  });
+  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.diagnostics), {
+    recursive: true
+  });
+  await mkdir(path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.exports), {
+    recursive: true
+  });
 
-  const manifest = createSyntheticArchiveManifest();
+  const manifest = createSyntheticArchiveManifest({
+    archiveId: options.archiveId,
+    session: options.session
+  });
   const lastSequence = timelineEvents.at(-1)?.sequence;
   await writeFile(
     path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.manifest),

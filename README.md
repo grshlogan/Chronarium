@@ -60,6 +60,8 @@ AI 可以快速接手局部问题
 - 已实现 `packages/indexer` 的首个 rebuildable SQLite index，可从
   synthetic `.chron` archive 派生 archive metadata、timeline events 和
   validation issues。
+- `packages/indexer` 已提供 reindex、remove、clear 和按 archive/session/
+  site/type/code 过滤查询的初版契约。
 - 已添加 Vitest 行为测试，覆盖 synthetic session/timeline 写入 `.chron`
   package、读取 `.chron` package，以及 invalid JSONL、重复 eventId、
   sequence gap、manifest count/lastSequence mismatch、unsafe path 和 SQLite
@@ -141,7 +143,7 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 给 SQLite indexer 增加重建/清理策略和更清晰的 query contracts。
+1. 设计 media-track archive IO 的 fixture-first 边界。
 2. 为 archive reader/validator 增加更完整的 fixture builder 和诊断样例。
-3. 设计 media-track archive IO 的 fixture-first 边界。
+3. 规划 `packages/indexer` 接入 `packages/core` 的边界。
 4. 扩展 Chaturbate fixture harness，但继续禁止真实站点连接和账号/session 处理。

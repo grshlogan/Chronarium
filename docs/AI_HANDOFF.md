@@ -40,6 +40,8 @@ Current state:
   and `timeline.jsonl`, including basic timeline consistency diagnostics.
 - `packages/indexer` has a rebuildable SQLite indexer for synthetic `.chron`
   archive metadata, timeline events, and validation issues.
+- `packages/indexer` has explicit reindex, archive removal, clear-all, and
+  filtered query contracts.
 - `packages/testkit` has synthetic session, timeline event, and archive
   manifest helpers.
 - Three Vitest behavior test files exercise synthetic archive writing, reading,
@@ -73,6 +75,7 @@ docs/plan/plan_runtime_schema_archive_fixture.md
 docs/plan/plan_archive_reader_validator.md
 docs/plan/plan_sqlite_index_foundation.md
 docs/plan/plan_archive_writer_timeline_invariants.md
+docs/plan/plan_indexer_rebuild_query_contracts.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 .gitattributes
 .gitignore
@@ -151,10 +154,9 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Add rebuild/clear/query contracts around `packages/indexer` before wiring it
-   into core.
-2. Add media-track archive IO only after the manifest/timeline validator remains
+1. Add media-track archive IO only after the manifest/timeline validator remains
    stable.
+2. Plan `packages/indexer` integration with `packages/core`.
 3. Add recovery behavior for interrupted archive writes.
 4. Only after archive/timeline validation works, expand the CB adapter fixture
    harness.
@@ -222,6 +224,19 @@ Archive writer timeline invariants continuation checks:
 - `pnpm typecheck`: passed across all workspace packages.
 - Targeted archive writer and indexer tests passed.
 - `pnpm test`: passed 3 Vitest files and 17 tests.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed across all workspace packages.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
+  output.
+- JSON parse scan with `ConvertFrom-Json`: all `package.json` and `tsconfig`
+  files parsed successfully.
+
+Indexer rebuild/query contracts continuation checks:
+
+- `pnpm typecheck`: passed across all workspace packages.
+- `pnpm test`: passed 3 Vitest files and 21 tests.
 - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
   passed.
 - `pnpm build`: passed across all workspace packages.

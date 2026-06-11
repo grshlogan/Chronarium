@@ -59,17 +59,54 @@ export interface IndexedArchiveValidationIssue {
   readonly sequence?: number;
 }
 
+export interface ArchiveIndexQuery {
+  readonly sessionId?: string;
+  readonly siteId?: string;
+  readonly validationOk?: boolean;
+}
+
+export interface TimelineEventIndexQuery {
+  readonly archiveId?: string;
+  readonly sessionId?: string;
+  readonly type?: string;
+}
+
+export interface ValidationIssueIndexQuery {
+  readonly archiveId?: string;
+  readonly sessionId?: string;
+  readonly severity?: string;
+  readonly code?: string;
+}
+
+export interface RemoveArchiveFromIndexInput {
+  readonly archiveId?: string;
+  readonly archiveRootPath?: string;
+}
+
+export interface ArchiveIndexRemovalSummary {
+  readonly removedArchiveCount: number;
+}
+
+export interface ArchiveIndexClearSummary {
+  readonly removedArchiveCount: number;
+}
+
 export interface ChronariumIndex {
   readonly databasePath: string;
   indexArchiveFromPath(archiveRootPath: string): Promise<ArchiveIndexSummary>;
+  reindexArchiveFromPath(archiveRootPath: string): Promise<ArchiveIndexSummary>;
+  removeArchiveFromIndex(
+    input: RemoveArchiveFromIndexInput
+  ): ArchiveIndexRemovalSummary;
+  clearIndex(): ArchiveIndexClearSummary;
   getArchive(archiveId: string): IndexedArchive | undefined;
-  listArchives(): readonly IndexedArchive[];
-  listTimelineEvents(input: {
-    readonly sessionId: string;
-  }): readonly IndexedTimelineEvent[];
-  listValidationIssues(input: {
-    readonly archiveId: string;
-  }): readonly IndexedArchiveValidationIssue[];
+  listArchives(input?: ArchiveIndexQuery): readonly IndexedArchive[];
+  listTimelineEvents(
+    input?: TimelineEventIndexQuery
+  ): readonly IndexedTimelineEvent[];
+  listValidationIssues(
+    input?: ValidationIssueIndexQuery
+  ): readonly IndexedArchiveValidationIssue[];
   close(): void;
 }
 
@@ -93,6 +130,12 @@ class SqliteChronariumIndex implements ChronariumIndex {
   }
 
   async indexArchiveFromPath(
+    archiveRootPath: string
+  ): Promise<ArchiveIndexSummary> {
+    return this.reindexArchiveFromPath(archiveRootPath);
+  }
+
+  async reindexArchiveFromPath(
     archiveRootPath: string
   ): Promise<ArchiveIndexSummary> {
     const report = await validateFileArchive({
@@ -171,6 +214,47 @@ class SqliteChronariumIndex implements ChronariumIndex {
     };
   }
 
+  removeArchiveFromIndex(
+    input: RemoveArchiveFromIndexInput
+  ): ArchiveIndexRemovalSummary {
+    const where = buildWhereClause([
+      input.archiveId
+        ? {
+            sql: "archive_id = ?",
+            value: input.archiveId
+          }
+        : undefined,
+      input.archiveRootPath
+        ? {
+            sql: "archive_root_path = ?",
+            value: input.archiveRootPath
+          }
+        : undefined
+    ]);
+
+    if (!where) {
+      throw new Error(
+        "removeArchiveFromIndex requires archiveId or archiveRootPath."
+      );
+    }
+
+    const removedArchiveCount = this.countArchives(where);
+    this.database.prepare(`DELETE FROM archives ${where.sql}`).run(...where.values);
+
+    return {
+      removedArchiveCount
+    };
+  }
+
+  clearIndex(): ArchiveIndexClearSummary {
+    const removedArchiveCount = this.countArchives();
+    this.database.prepare("DELETE FROM archives").run();
+
+    return {
+      removedArchiveCount
+    };
+  }
+
   getArchive(archiveId: string): IndexedArchive | undefined {
     const row = this.database
       .prepare("SELECT * FROM archives WHERE archive_id = ?")
@@ -179,50 +263,117 @@ class SqliteChronariumIndex implements ChronariumIndex {
     return row ? mapArchiveRow(row) : undefined;
   }
 
-  listArchives(): readonly IndexedArchive[] {
+  listArchives(input: ArchiveIndexQuery = {}): readonly IndexedArchive[] {
+    const where = buildWhereClause([
+      input.sessionId
+        ? {
+            sql: "session_id = ?",
+            value: input.sessionId
+          }
+        : undefined,
+      input.siteId
+        ? {
+            sql: "site_id = ?",
+            value: input.siteId
+          }
+        : undefined,
+      input.validationOk === undefined
+        ? undefined
+        : {
+            sql: "validation_ok = ?",
+            value: input.validationOk ? 1 : 0
+          }
+    ]);
     const rows = this.database
       .prepare(
         `
           SELECT *
           FROM archives
+          ${where?.sql ?? ""}
           ORDER BY archive_created_at, archive_id
         `
       )
-      .all();
+      .all(...(where?.values ?? []));
 
     return rows.map(mapArchiveRow);
   }
 
-  listTimelineEvents(input: {
-    readonly sessionId: string;
-  }): readonly IndexedTimelineEvent[] {
+  listTimelineEvents(
+    input: TimelineEventIndexQuery = {}
+  ): readonly IndexedTimelineEvent[] {
+    const where = buildWhereClause([
+      input.archiveId
+        ? {
+            sql: "archive_id = ?",
+            value: input.archiveId
+          }
+        : undefined,
+      input.sessionId
+        ? {
+            sql: "session_id = ?",
+            value: input.sessionId
+          }
+        : undefined,
+      input.type
+        ? {
+            sql: "type = ?",
+            value: input.type
+          }
+        : undefined
+    ]);
     const rows = this.database
       .prepare(
         `
           SELECT *
           FROM timeline_events
-          WHERE session_id = ?
+          ${where?.sql ?? ""}
           ORDER BY sequence, id
         `
       )
-      .all(input.sessionId);
+      .all(...(where?.values ?? []));
 
     return rows.map(mapTimelineEventRow);
   }
 
-  listValidationIssues(input: {
-    readonly archiveId: string;
-  }): readonly IndexedArchiveValidationIssue[] {
+  listValidationIssues(
+    input: ValidationIssueIndexQuery = {}
+  ): readonly IndexedArchiveValidationIssue[] {
+    const where = buildWhereClause([
+      input.archiveId
+        ? {
+            sql: "archive_id = ?",
+            value: input.archiveId
+          }
+        : undefined,
+      input.sessionId
+        ? {
+            sql: "session_id = ?",
+            value: input.sessionId
+          }
+        : undefined,
+      input.severity
+        ? {
+            sql: "severity = ?",
+            value: input.severity
+          }
+        : undefined,
+      input.code
+        ? {
+            sql: "code = ?",
+            value: input.code
+          }
+        : undefined
+    ]);
     const rows = this.database
       .prepare(
         `
           SELECT *
           FROM archive_validation_issues
-          WHERE archive_id = ?
+          ${where?.sql ?? ""}
           ORDER BY id
         `
       )
-      .all(input.archiveId);
+      .all(...(where?.values ?? []));
 
     return rows.map(mapValidationIssueRow);
   }
@@ -303,6 +454,50 @@ class SqliteChronariumIndex implements ChronariumIndex {
       );
     });
   }
+
+  private countArchives(where?: WhereClause): number {
+    const row = this.database
+      .prepare(
+        `
+          SELECT COUNT(*) AS count
+          FROM archives
+          ${where?.sql ?? ""}
+        `
+      )
+      .get(...(where?.values ?? []));
+    const record = requireRecord(row);
+
+    return requireNumber(record.count);
+  }
+}
+
+interface WherePredicate {
+  readonly sql: string;
+  readonly value: string | number;
+}
+
+interface WhereClause {
+  readonly sql: string;
+  readonly values: readonly (string | number)[];
+}
+
+function buildWhereClause(
+  predicates: readonly (WherePredicate | undefined)[]
+): WhereClause | undefined {
+  const activePredicates = predicates.filter(
+    (predicate): predicate is WherePredicate => predicate !== undefined
+  );
+
+  if (activePredicates.length === 0) {
+    return undefined;
+  }
+
+  return {
+    sql: `WHERE ${activePredicates
+      .map((predicate) => predicate.sql)
+      .join(" AND ")}`,
+    values: activePredicates.map((predicate) => predicate.value)
+  };
 }
 
 function mapArchiveRow(row: unknown): IndexedArchive {

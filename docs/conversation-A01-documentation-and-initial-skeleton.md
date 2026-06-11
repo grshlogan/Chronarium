@@ -23,7 +23,8 @@ Chronarium now has:
 - a rebuildable SQLite indexer package for synthetic archive metadata,
   timeline events, and validation issues;
 - archive writer append-time invariants for manifest ordering, session match,
-  sequence continuity, duplicate event IDs, and finalization.
+  sequence continuity, duplicate event IDs, and finalization;
+- indexer rebuild, removal, clear, and filtered query contracts.
 
 The current A01 continuation added archive reader/validator foundations before
 any real site adapter work.
@@ -33,6 +34,9 @@ derives rows from synthetic `.chron` archives.
 
 The active follow-up moved basic timeline append invariants into the archive
 writer so Chronarium-generated archives avoid preventable timeline errors.
+
+The active follow-up is now clarifying `packages/indexer` rebuild, removal,
+clear, and filtered query contracts.
 
 ## Active Constraints
 
@@ -77,6 +81,7 @@ Expected documentation changes:
 - `docs/plan/plan_archive_reader_validator.md`
 - `docs/plan/plan_sqlite_index_foundation.md`
 - `docs/plan/plan_archive_writer_timeline_invariants.md`
+- `docs/plan/plan_indexer_rebuild_query_contracts.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
@@ -131,8 +136,17 @@ Checks already run during this continuation:
   invariants.
 - JSON/package config parse scan: succeeded after archive writer timeline
   invariants.
+- `pnpm typecheck`: passed after index rebuild/query contracts.
+- `pnpm test`: passed 3 Vitest files and 21 tests after index rebuild/query
+  contracts.
+- `pnpm build`: passed after index rebuild/query contracts.
+- `git diff --check`: produced no output after index rebuild/query contracts.
+- trailing whitespace scan: produced no output after index rebuild/query
+  contracts.
+- JSON/package config parse scan: succeeded after index rebuild/query
+  contracts.
 
 ## Next Safe Step
 
-Continue with either index rebuild/query contracts or timeline append/order
-behavior tests.
+Continue with either media-track archive IO planning or `packages/indexer`
+integration with `packages/core`.

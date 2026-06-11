@@ -24,7 +24,8 @@ It has:
 - a fixture-safe archive reader/validator that reads `manifest.json` and
   `timeline.jsonl`;
 - a rebuildable SQLite indexer that derives archive metadata, timeline events,
-  and validation issues from synthetic `.chron` packages;
+  and validation issues from synthetic `.chron` packages, with reindex,
+  remove, clear, and filtered query contracts;
 - Vitest behavior tests for synthetic `.chron` writing, reading, and basic
   timeline consistency failures, writer append-time rejection, plus SQLite
   indexing.

@@ -296,3 +296,36 @@ unimplemented ideas as completed work.
     TypeScript config JSON files.
 - Next: continue with index rebuild/query contracts or media-track archive IO
   planning.
+
+## 2026-06-11: Indexer rebuild and query contracts
+
+- Conversation: after pushing writer timeline invariants, continued with the
+  SQLite indexer's rebuild and query boundaries.
+- Landed: added explicit reindex, archive removal, clear-all, and filtered
+  archive/timeline/validation-issue query contracts.
+- Files:
+  - `README.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_indexer_rebuild_query_contracts.md`
+  - `packages/indexer/src/archiveIndexer.ts`
+  - `packages/indexer/tests/archiveIndexer.test.ts`
+- Decisions:
+  - Reindexing is explicit and replaces stale rows derived from an archive.
+  - Archive removal and clear-all operate only on the rebuildable SQLite index.
+  - Query filters are fixed, parameterized fields rather than arbitrary SQL.
+- Verification:
+  - `pnpm typecheck` passed across all workspace packages.
+  - `pnpm test` passed 3 Vitest files and 21 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed across all workspace packages.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan with `Select-String -Pattern '[ \t]$'` produced no
+    output.
+  - JSON parse scan with `ConvertFrom-Json` succeeded for all package and
+    TypeScript config JSON files.
+- Next: plan media-track archive IO or core integration.

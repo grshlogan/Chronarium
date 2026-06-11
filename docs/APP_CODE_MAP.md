@@ -46,6 +46,7 @@ docs/
     plan_archive_reader_validator.md
     plan_sqlite_index_foundation.md
     plan_archive_writer_timeline_invariants.md
+    plan_indexer_rebuild_query_contracts.md
 packages/
   types/
   schemas/
@@ -267,6 +268,13 @@ Responsibility:
 
 - Plan, scope, and verification notes for writer-side timeline append
   invariants.
+
+### `docs/plan/plan_indexer_rebuild_query_contracts.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for indexer rebuild, removal, clear, and
+  filtered query contracts.
 
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 
@@ -525,6 +533,8 @@ Current status:
   local runtime.
 - Can index synthetic `.chron` archives from `packages/archive`.
 - Stores archive rows, timeline event rows, and archive validation issue rows.
+- Supports explicit reindex, archive removal, clear-all, and filtered archive,
+  timeline event, and validation issue queries.
 - SQLite is still a rebuildable cache/index, not the source of replay truth.
 - Not yet integrated with `packages/core` or any GUI.
 
