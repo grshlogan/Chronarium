@@ -115,6 +115,7 @@ small module boundaries.
 - [docs/ADAPTER_PROTOCOL.md](./docs/ADAPTER_PROTOCOL.md)：core 与 adapter worker 的消息协议草案。
 - [docs/SECURITY_PRIVACY.md](./docs/SECURITY_PRIVACY.md)：安全、隐私、fixture 和敏感数据规则。
 - [docs/MAINTENANCE_OPS_DESIGN.md](./docs/MAINTENANCE_OPS_DESIGN.md)：maintenance / ops 巡检系统设计草案和项目引用。
+- [docs/CB_RECORDING_REFERENCES.md](./docs/CB_RECORDING_REFERENCES.md)：CB 分离音视频录播参考项目和 Chronarium 设计取舍。
 - [docs/DEVELOPMENT_SETUP.md](./docs/DEVELOPMENT_SETUP.md)：当前开发环境、依赖、脚本和安全检查说明。
 - [docs/APP_CODE_MAP.md](./docs/APP_CODE_MAP.md)：当前文件树和计划中的代码地图。
 - [docs/AI_HANDOFF.md](./docs/AI_HANDOFF.md)：给后续 AI 或开发者接手的当前状态、决策和下一步。
@@ -155,5 +156,6 @@ Chronarium 目标 GitHub 仓库：
 
 1. 设计 maintenance / ops 巡检模型，但先只用确定性检查，不接真实 AI 执行。
 2. 为 archive reader/validator 增加更完整的 fixture builder 和诊断样例。
-3. 设计真实媒体分片写入前的 FFmpeg / segment 边界。
-4. 扩展 Chaturbate fixture harness，但继续禁止真实站点连接和账号/session 处理。
+3. 根据 CB 参考文档设计 split audio/video fixture 和 media-tool 边界。
+4. 设计真实媒体分片写入前的 FFmpeg / segment 边界。
+5. 扩展 Chaturbate fixture harness，但继续禁止真实站点连接和账号/session 处理。

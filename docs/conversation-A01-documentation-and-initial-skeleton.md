@@ -32,6 +32,8 @@ Chronarium now has:
 - a minimal core runtime lifecycle shell for start/stop/health and archive
   index service ownership.
 - a maintenance / ops inspection design draft with external project references.
+- a CB recording reference design doc covering public GitHub projects and
+  split audio/video LL-HLS/CMAF lessons.
 
 The current A01 continuation added archive reader/validator foundations before
 any real site adapter work.
@@ -43,6 +45,9 @@ The active follow-up moved basic timeline append invariants into the archive
 writer so Chronarium-generated archives avoid preventable timeline errors.
 
 The active follow-up added a maintenance / ops design draft.
+
+The active follow-up also added a CB recording reference design document before
+any live CB adapter work.
 
 ## Active Constraints
 
@@ -77,14 +82,12 @@ Expected code changes:
 Expected documentation changes:
 
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
-- `docs/MAINTENANCE_OPS_DESIGN.md`
-- `docs/plan/plan_maintenance_ops_design.md`
+- `docs/CB_RECORDING_REFERENCES.md`
+- `docs/plan/plan_cb_recording_references.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
 - `README.md`
-- possibly `README.md`, `docs/PRODUCT_SPEC.md`, and
-  `docs/DEVELOPMENT_SETUP.md`
 
 ## Verification Log
 
@@ -194,9 +197,12 @@ Checks already run during this continuation:
   draft.
 - JSON/package config parse scan: succeeded after maintenance / ops design
   draft.
+- `git diff --check`: produced no output after CB recording references.
+- trailing whitespace scan: produced no output after CB recording references.
+- JSON/package config parse scan: succeeded after CB recording references.
 
 ## Next Safe Step
 
-Implement the first deterministic maintenance inspection types and archive
-inspector under core, or add archive recovery behavior for interrupted metadata
-writes.
+Add offline split audio/video CB-like fixtures and schema drafts, implement the
+first deterministic maintenance inspection types under core, or add archive
+recovery behavior for interrupted metadata writes.

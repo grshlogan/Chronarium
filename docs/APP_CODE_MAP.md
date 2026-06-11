@@ -34,6 +34,7 @@ docs/
   ADAPTER_PROTOCOL.md
   SECURITY_PRIVACY.md
   MAINTENANCE_OPS_DESIGN.md
+  CB_RECORDING_REFERENCES.md
   DEVELOPMENT_SETUP.md
   APP_CODE_MAP.md
   AI_HANDOFF.md
@@ -52,6 +53,7 @@ docs/
     plan_core_archive_index_service.md
     plan_core_runtime_lifecycle_shell.md
     plan_maintenance_ops_design.md
+    plan_cb_recording_references.md
 packages/
   types/
   schemas/
@@ -209,6 +211,21 @@ Boundary:
 - Does not claim maintenance runtime, AI agent, scheduler, GUI, or automatic
   repair exists.
 
+### `docs/CB_RECORDING_REFERENCES.md`
+
+Responsibility:
+
+- Design reference for GitHub projects related to Chaturbate-style recording.
+- Records split audio/video LL-HLS/CMAF lessons and what Chronarium should
+  borrow.
+- Connects external project references to Chronarium archive, timeline,
+  adapter, media-tool, and diagnostics boundaries.
+
+Boundary:
+
+- Does not implement live CB capture, downloader integration, cookies, headers,
+  sessions, or real media recording.
+
 ### `docs/DEVELOPMENT_SETUP.md`
 
 Responsibility:
@@ -321,6 +338,13 @@ Responsibility:
 Responsibility:
 
 - Plan, scope, and verification notes for the maintenance / ops design draft.
+
+### `docs/plan/plan_cb_recording_references.md`
+
+Responsibility:
+
+- Plan, scope, references, and verification notes for the CB recording
+  reference design document.
 
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 

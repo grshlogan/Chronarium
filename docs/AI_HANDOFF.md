@@ -53,6 +53,9 @@ Current state:
   archive/index service while running.
 - `docs/MAINTENANCE_OPS_DESIGN.md` records the draft maintenance / ops
   inspection model and external project references.
+- `docs/CB_RECORDING_REFERENCES.md` records public GitHub project references
+  for Chaturbate-style split audio/video recording and the design boundaries
+  Chronarium should keep before real CB adapter work.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
 - Five Vitest behavior test files exercise synthetic archive writing, reading,
@@ -77,6 +80,7 @@ docs/TIMELINE_SCHEMA_V1.md
 docs/ADAPTER_PROTOCOL.md
 docs/SECURITY_PRIVACY.md
 docs/MAINTENANCE_OPS_DESIGN.md
+docs/CB_RECORDING_REFERENCES.md
 docs/DEVELOPMENT_SETUP.md
 docs/APP_CODE_MAP.md
 docs/AI_HANDOFF.md
@@ -93,6 +97,7 @@ docs/plan/plan_media_track_archive_io.md
 docs/plan/plan_core_archive_index_service.md
 docs/plan/plan_core_runtime_lifecycle_shell.md
 docs/plan/plan_maintenance_ops_design.md
+docs/plan/plan_cb_recording_references.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 .gitattributes
 .gitignore
@@ -171,13 +176,13 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Implement the first deterministic maintenance inspection types and archive
+1. Add offline split audio/video CB-like fixtures and schema drafts, without
+   connecting to Chaturbate.
+2. Implement the first deterministic maintenance inspection types and archive
    inspector under core, without AI calls or destructive actions.
-2. Add real media segment IO only after the media-track metadata validator
+3. Add real media segment IO only after the media-track metadata validator
    remains stable.
-3. Add recovery behavior for interrupted archive writes.
-4. Only after archive/timeline validation works, expand the CB adapter fixture
-   harness.
+4. Add recovery behavior for interrupted archive writes.
 
 ## Verification Status
 
@@ -315,3 +320,10 @@ Core runtime lifecycle shell continuation checks:
   output.
 - JSON parse scan with `ConvertFrom-Json`: all `package.json` and `tsconfig`
   files parsed successfully.
+
+CB recording references continuation checks:
+
+- `git diff --check`: produced no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
+  output.
+- JSON/package config parse scan succeeded.

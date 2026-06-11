@@ -484,3 +484,39 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan succeeded.
 - Next: implement first deterministic maintenance inspection types and archive
   inspector under core.
+
+## 2026-06-12: CB recording references
+
+- Conversation: user asked whether GitHub has projects close to Chronarium,
+  especially Chaturbate-style split audio/video recording projects, and asked
+  to add the reference document.
+- Landed: added a CB recording reference design document and linked it from the
+  docs.
+- Files:
+  - `README.md`
+  - `docs/CB_RECORDING_REFERENCES.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_cb_recording_references.md`
+- References:
+  - `Despernal/Recordurbate-Docker`
+  - `KFERMercer/ctbcap`
+  - `lossless1024/StreaMonitor`
+  - `nilaoda/N_m3u8DL-RE`
+  - `raccommode/P-StreamRec`
+  - `teacat/chaturbate-dvr`
+  - `oliverjrose99/Recordurbate`
+- Decisions:
+  - Future CB work should preserve split-track facts and mux diagnostics.
+  - A final video file is a derived artifact, not the only archive truth.
+  - `N_m3u8DL-RE` is a future external-tool candidate, not an approved
+    dependency yet.
+  - CB work stays fixture-first and offline before any real capture.
+- Verification:
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan succeeded.
+- Next: add offline split audio/video fixtures and schema drafts, or implement
+  deterministic maintenance inspection types under core.
