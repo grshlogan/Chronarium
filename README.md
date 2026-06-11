@@ -55,8 +55,12 @@ AI 可以快速接手局部问题
   `manifest.json`、`timeline.jsonl` 和顶层目录骨架。
 - archive writer 已开始在 append-time 主动拒绝未写 manifest、跨 session、
   sequence 不连续、重复 eventId 和 finalize 后追加等基础 timeline 错误。
+- archive writer 已支持 fixture-safe media track metadata 写入：更新
+  manifest track inventory，写 `tracks/<track-id>/track.json`，并创建空的
+  `tracks/<track-id>/segments/` 边界目录。
 - 已实现 `packages/archive` 的首个 fixture-safe reader/validator，可读取
-  `manifest.json` 和 `timeline.jsonl`，并报告 timeline 一致性问题。
+  `manifest.json`、`timeline.jsonl` 和 media track metadata，并报告
+  timeline / track 一致性问题。
 - 已实现 `packages/indexer` 的首个 rebuildable SQLite index，可从
   synthetic `.chron` archive 派生 archive metadata、timeline events 和
   validation issues。
@@ -64,10 +68,10 @@ AI 可以快速接手局部问题
   site/type/code 过滤查询的初版契约。
 - 已添加 Vitest 行为测试，覆盖 synthetic session/timeline 写入 `.chron`
   package、读取 `.chron` package，以及 invalid JSONL、重复 eventId、
-  sequence gap、manifest count/lastSequence mismatch、unsafe path 和 SQLite
-  index 写入/查询。
+  sequence gap、manifest count/lastSequence mismatch、unsafe path、media track
+  metadata 缺失/不一致和 SQLite index 写入/查询。
 - 尚未实现 GUI、可运行 core、真实站点 adapter、SQLite index 与 core/GUI
-  集成、FFmpeg command builder、真实媒体写入、媒体轨读取、archive
+  集成、FFmpeg command builder、真实媒体分片写入、archive
   recovery/migration 或 replay player。
 - 本阶段的重点是先立稳工程边界、AI 维护规则、架构词汇、schema 草案、
   代码地图和交接文档。
@@ -143,7 +147,7 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 设计 media-track archive IO 的 fixture-first 边界。
+1. 规划 `packages/indexer` 接入 `packages/core` 的边界。
 2. 为 archive reader/validator 增加更完整的 fixture builder 和诊断样例。
-3. 规划 `packages/indexer` 接入 `packages/core` 的边界。
+3. 设计真实媒体分片写入前的 FFmpeg / segment 边界。
 4. 扩展 Chaturbate fixture harness，但继续禁止真实站点连接和账号/session 处理。

@@ -1,4 +1,8 @@
-import type { ArchiveManifest, TimelineEventEnvelope } from "@chronarium/types";
+import type {
+  ArchiveManifest,
+  MediaTrack,
+  TimelineEventEnvelope
+} from "@chronarium/types";
 import {
   type ArchiveValidationReport,
   validateFileArchive
@@ -11,6 +15,7 @@ export interface ArchiveReaderOptions {
 export interface ArchiveSnapshot {
   readonly rootPath: string;
   readonly manifest: ArchiveManifest;
+  readonly mediaTracks: readonly MediaTrack[];
   readonly timelineEvents: readonly TimelineEventEnvelope[];
   readonly validation: ArchiveValidationReport;
 }
@@ -34,6 +39,7 @@ export async function readFileArchive(
   return {
     rootPath: options.rootPath,
     manifest: validation.manifest,
+    mediaTracks: validation.mediaTracks,
     timelineEvents: validation.timelineEvents,
     validation
   };

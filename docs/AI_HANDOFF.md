@@ -36,19 +36,23 @@ Current state:
 - The archive writer enforces append-time invariants for manifest-before-append,
   session match, contiguous sequences, duplicate event IDs, and appends after
   finalization.
-- `packages/archive` has a fixture-safe reader/validator for `manifest.json`
-  and `timeline.jsonl`, including basic timeline consistency diagnostics.
+- `packages/archive` has fixture-safe media track metadata IO for
+  `tracks/<track-id>/track.json` and empty `tracks/<track-id>/segments/`
+  boundary directories.
+- `packages/archive` has a fixture-safe reader/validator for `manifest.json`,
+  `timeline.jsonl`, and manifest-declared media track metadata, including basic
+  timeline and track consistency diagnostics.
 - `packages/indexer` has a rebuildable SQLite indexer for synthetic `.chron`
   archive metadata, timeline events, and validation issues.
 - `packages/indexer` has explicit reindex, archive removal, clear-all, and
   filtered query contracts.
-- `packages/testkit` has synthetic session, timeline event, and archive
-  manifest helpers.
+- `packages/testkit` has synthetic session, timeline event, archive manifest,
+  and media track helpers.
 - Three Vitest behavior test files exercise synthetic archive writing, reading,
   validation failures, and SQLite indexing.
 - No GUI, runnable core, SQLite integration with core/GUI, FFmpeg command
-  builder, media-track archive IO, archive recovery/migration, real media
-  writer, replay player, or real capture exists yet.
+  builder, real media segment writer/prober, archive recovery/migration,
+  replay player, or real capture exists yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
 
@@ -76,6 +80,7 @@ docs/plan/plan_archive_reader_validator.md
 docs/plan/plan_sqlite_index_foundation.md
 docs/plan/plan_archive_writer_timeline_invariants.md
 docs/plan/plan_indexer_rebuild_query_contracts.md
+docs/plan/plan_media_track_archive_io.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 .gitattributes
 .gitignore
@@ -154,9 +159,9 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Add media-track archive IO only after the manifest/timeline validator remains
-   stable.
-2. Plan `packages/indexer` integration with `packages/core`.
+1. Plan `packages/indexer` integration with `packages/core`.
+2. Add real media segment IO only after the media-track metadata validator
+   remains stable.
 3. Add recovery behavior for interrupted archive writes.
 4. Only after archive/timeline validation works, expand the CB adapter fixture
    harness.
@@ -237,6 +242,24 @@ Indexer rebuild/query contracts continuation checks:
 
 - `pnpm typecheck`: passed across all workspace packages.
 - `pnpm test`: passed 3 Vitest files and 21 tests.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed across all workspace packages.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
+  output.
+- JSON parse scan with `ConvertFrom-Json`: all `package.json` and `tsconfig`
+  files parsed successfully.
+
+Media-track archive metadata IO continuation checks:
+
+- `pnpm exec vitest run packages/archive/tests`: passed 2 Vitest files and 21
+  tests.
+- First `pnpm typecheck` during this continuation failed because TypeScript did
+  not narrow an optional union in `packages/archive/src/validator.ts`; fixed by
+  using explicit `"issue" in metadataPath` guards.
+- `pnpm typecheck`: passed across all workspace packages.
+- `pnpm test`: passed 3 Vitest files and 28 tests.
 - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
   passed.
 - `pnpm build`: passed across all workspace packages.

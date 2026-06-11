@@ -8,8 +8,8 @@ does not replace `docs/ARCHITECTURE.md`.
 Chronarium now has documentation plus a minimal executable TypeScript validation
 chain. The package code is still early and fixture-first. No GUI, runnable core,
 real site capture, SQLite integration with core/GUI, FFmpeg command builder,
-media-track archive reader/writer behavior, archive recovery/migration, real
-media writer, or replay player exists yet.
+real media segment writer/prober, archive recovery/migration, or replay player
+exists yet.
 
 Current files:
 
@@ -47,6 +47,7 @@ docs/
     plan_sqlite_index_foundation.md
     plan_archive_writer_timeline_invariants.md
     plan_indexer_rebuild_query_contracts.md
+    plan_media_track_archive_io.md
 packages/
   types/
   schemas/
@@ -150,7 +151,7 @@ Responsibility:
 
 Boundary:
 
-- Does not claim media-track archive IO, recovery, or migration exists.
+- Does not claim real media segment IO, recovery, or migration exists.
 
 ### `docs/TIMELINE_SCHEMA_V1.md`
 
@@ -276,6 +277,13 @@ Responsibility:
 - Plan, scope, and verification notes for indexer rebuild, removal, clear, and
   filtered query contracts.
 
+### `docs/plan/plan_media_track_archive_io.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for fixture-safe media-track archive
+  metadata IO.
+
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 
 Responsibility:
@@ -395,7 +403,7 @@ packages/
       tests/
   archive/
     tests/
-      media-track archive IO tests
+      media segment archive IO tests
       recovery/migration tests
   player/
     src/
@@ -506,16 +514,21 @@ Current status:
 - Includes a fixture-safe file writer for synthetic `.chron` packages.
 - Writes `manifest.json`, appends `timeline.jsonl`, and creates top-level
   archive directories.
+- Writes fixture-safe media track metadata to
+  `tracks/<track-id>/track.json`, updates manifest track inventory, and creates
+  empty `tracks/<track-id>/segments/` boundary directories.
 - Rejects appending before manifest write, cross-session events,
   non-contiguous sequence values, duplicate event IDs, and appends after
   finalization for one writer session.
-- Includes a fixture-safe file reader for `manifest.json` and `timeline.jsonl`.
+- Includes a fixture-safe file reader for `manifest.json`, `timeline.jsonl`,
+  and manifest-declared media track metadata.
 - Includes a fixture-safe validator for invalid JSONL, schema-invalid timeline
   lines, duplicate event IDs, sequence gaps, session mismatches, manifest
   event-count mismatches, manifest last-sequence mismatches, timeline path
-  mismatches, and unsafe archive-relative paths.
-- Media-track writing/reading, recovery, migration, and real media behavior are
-  still pending.
+  mismatches, missing/invalid media track metadata, track manifest mismatches,
+  and unsafe archive-relative paths.
+- Real media segment writing/reading/probing, recovery, and migration are still
+  pending.
 
 ### `packages/indexer`
 
@@ -560,6 +573,7 @@ Current status:
 
 - Exists with helpers for synthetic sessions and timeline events.
 - Includes a helper for synthetic archive manifests.
+- Includes a helper for synthetic media tracks.
 
 ## Root Workspace Files
 

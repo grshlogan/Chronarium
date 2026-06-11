@@ -23,18 +23,20 @@ It has:
   append-time timeline invariants;
 - a fixture-safe archive reader/validator that reads `manifest.json` and
   `timeline.jsonl`;
+- fixture-safe media track metadata IO for `tracks/<track-id>/track.json` plus
+  empty `tracks/<track-id>/segments/` boundary directories;
 - a rebuildable SQLite indexer that derives archive metadata, timeline events,
   and validation issues from synthetic `.chron` packages, with reindex,
   remove, clear, and filtered query contracts;
 - Vitest behavior tests for synthetic `.chron` writing, reading, and basic
-  timeline consistency failures, writer append-time rejection, plus SQLite
-  indexing.
+  timeline consistency failures, writer append-time rejection, media track
+  metadata diagnostics, plus SQLite indexing.
 
 It does not yet have:
 
 - executable GUI;
 - core runtime implementation;
-- media-track archive reader/writer behavior;
+- real media segment writing or probing;
 - archive recovery or migration behavior;
 - SQLite integration with core or GUI;
 - real site adapters;

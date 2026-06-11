@@ -1,10 +1,20 @@
-import type { ArchiveManifest, TimelineEventEnvelope } from "@chronarium/types";
+import type {
+  ArchiveManifest,
+  MediaTrack,
+  TimelineEventEnvelope
+} from "@chronarium/types";
 import {
   parseArchiveManifestV1,
+  parseMediaTrackV1,
   parseTimelineEventEnvelopeV1
 } from "@chronarium/schemas";
 import { readFile, stat } from "node:fs/promises";
-import { DEFAULT_ARCHIVE_LAYOUT, resolveArchivePath } from "./layout.js";
+import {
+  DEFAULT_ARCHIVE_LAYOUT,
+  getMediaTrackMetadataPath,
+  getMediaTrackSegmentsPath,
+  resolveArchivePath
+} from "./layout.js";
 
 export type ArchiveValidationSeverity = "error" | "warning";
 
@@ -15,6 +25,13 @@ export type ArchiveValidationIssueCode =
   | "manifest.invalid_json"
   | "manifest.schema_invalid"
   | "manifest.timeline_path_mismatch"
+  | "track.missing_file"
+  | "track.invalid_json"
+  | "track.schema_invalid"
+  | "track.session_mismatch"
+  | "track.manifest_mismatch"
+  | "track.segments_path_mismatch"
+  | "track.unsafe_path"
   | "timeline.invalid_jsonl"
   | "timeline.schema_invalid"
   | "timeline.duplicate_event_id"
@@ -29,6 +46,7 @@ export interface ArchiveValidationIssue {
   readonly message: string;
   readonly path?: string;
   readonly line?: number;
+  readonly trackId?: string;
   readonly eventId?: string;
   readonly sequence?: number;
 }
@@ -37,6 +55,7 @@ export interface ArchiveValidationReport {
   readonly ok: boolean;
   readonly rootPath: string;
   readonly manifest?: ArchiveManifest;
+  readonly mediaTracks: readonly MediaTrack[];
   readonly timelineEvents: readonly TimelineEventEnvelope[];
   readonly issues: readonly ArchiveValidationIssue[];
 }
@@ -47,6 +66,11 @@ export interface ArchiveValidationOptions {
 
 interface TimelineParseResult {
   readonly events: readonly TimelineEventEnvelope[];
+  readonly issues: readonly ArchiveValidationIssue[];
+}
+
+interface MediaTrackParseResult {
+  readonly tracks: readonly MediaTrack[];
   readonly issues: readonly ArchiveValidationIssue[];
 }
 
@@ -63,7 +87,7 @@ export async function validateFileArchive(
         code: "archive.root_not_directory",
         message: `Archive root is not a directory: ${options.rootPath}`
       });
-      return createReport(options.rootPath, undefined, [], issues);
+      return createReport(options.rootPath, undefined, [], [], issues);
     }
   } catch (error) {
     issues.push({
@@ -71,20 +95,26 @@ export async function validateFileArchive(
       code: "archive.missing_file",
       message: `Archive root could not be read: ${describeError(error)}`
     });
-    return createReport(options.rootPath, undefined, [], issues);
+    return createReport(options.rootPath, undefined, [], [], issues);
   }
 
   const manifestResult = await readManifest(options.rootPath);
   issues.push(...manifestResult.issues);
 
   if (!manifestResult.manifest) {
-    return createReport(options.rootPath, undefined, [], issues);
+    return createReport(options.rootPath, undefined, [], [], issues);
   }
 
   const timelinePathIssue = compareTimelinePaths(manifestResult.manifest);
   if (timelinePathIssue) {
     issues.push(timelinePathIssue);
   }
+
+  const mediaTrackResult = await readMediaTracks(
+    options.rootPath,
+    manifestResult.manifest
+  );
+  issues.push(...mediaTrackResult.issues);
 
   const timelineResult = await readTimeline(
     options.rootPath,
@@ -101,6 +131,7 @@ export async function validateFileArchive(
   return createReport(
     options.rootPath,
     manifestResult.manifest,
+    mediaTrackResult.tracks,
     timelineResult.events,
     issues
   );
@@ -109,15 +140,19 @@ export async function validateFileArchive(
 export function validateArchiveSnapshot(input: {
   readonly rootPath: string;
   readonly manifest: ArchiveManifest;
+  readonly mediaTracks?: readonly MediaTrack[];
   readonly timelineEvents: readonly TimelineEventEnvelope[];
 }): ArchiveValidationReport {
+  const mediaTracks = input.mediaTracks ?? input.manifest.tracks;
   const issues = [
+    ...validateMediaTrackConsistency(input.manifest, mediaTracks),
     ...validateTimelineConsistency(input.manifest, input.timelineEvents)
   ];
 
   return createReport(
     input.rootPath,
     input.manifest,
+    mediaTracks,
     input.timelineEvents,
     issues
   );
@@ -126,6 +161,7 @@ export function validateArchiveSnapshot(input: {
 function createReport(
   rootPath: string,
   manifest: ArchiveManifest | undefined,
+  mediaTracks: readonly MediaTrack[],
   timelineEvents: readonly TimelineEventEnvelope[],
   issues: readonly ArchiveValidationIssue[]
 ): ArchiveValidationReport {
@@ -133,6 +169,7 @@ function createReport(
     ok: issues.every((issue) => issue.severity !== "error"),
     rootPath,
     ...(manifest ? { manifest } : {}),
+    mediaTracks,
     timelineEvents,
     issues
   };
@@ -197,6 +234,87 @@ async function readManifest(rootPath: string): Promise<{
       ]
     };
   }
+}
+
+async function readMediaTracks(
+  rootPath: string,
+  manifest: ArchiveManifest
+): Promise<MediaTrackParseResult> {
+  const tracks: MediaTrack[] = [];
+  const issues: ArchiveValidationIssue[] = [];
+
+  for (const manifestTrack of manifest.tracks) {
+    const metadataPath = getDeclaredMediaTrackMetadataPath(manifestTrack);
+
+    if ("issue" in metadataPath) {
+      issues.push(metadataPath.issue);
+      continue;
+    }
+
+    issues.push(
+      ...validateManifestMediaTrack(manifest, manifestTrack, metadataPath.path)
+    );
+
+    let trackText: string;
+    try {
+      trackText = await readFile(
+        resolveArchivePath(rootPath, metadataPath.path),
+        "utf8"
+      );
+    } catch (error) {
+      issues.push({
+        severity: "error",
+        code: "track.missing_file",
+        path: metadataPath.path,
+        trackId: manifestTrack.id,
+        message: `Media track metadata could not be read: ${describeError(error)}`
+      });
+      continue;
+    }
+
+    let trackJson: unknown;
+    try {
+      trackJson = JSON.parse(trackText);
+    } catch (error) {
+      issues.push({
+        severity: "error",
+        code: "track.invalid_json",
+        path: metadataPath.path,
+        trackId: manifestTrack.id,
+        message: `Media track metadata is not valid JSON: ${describeError(error)}`
+      });
+      continue;
+    }
+
+    let parsedTrack: MediaTrack;
+    try {
+      parsedTrack = parseMediaTrackV1(trackJson);
+    } catch (error) {
+      issues.push({
+        severity: "error",
+        code: "track.schema_invalid",
+        path: metadataPath.path,
+        trackId: manifestTrack.id,
+        message: `Media track metadata failed schema validation: ${describeError(error)}`
+      });
+      continue;
+    }
+
+    tracks.push(parsedTrack);
+    issues.push(
+      ...validateMediaTrackAgainstManifest(
+        manifest,
+        manifestTrack,
+        parsedTrack,
+        metadataPath.path
+      )
+    );
+  }
+
+  return {
+    tracks,
+    issues
+  };
 }
 
 async function readTimeline(
@@ -372,6 +490,165 @@ function validateTimelineConsistency(
   return issues;
 }
 
+function validateMediaTrackConsistency(
+  manifest: ArchiveManifest,
+  mediaTracks: readonly MediaTrack[]
+): readonly ArchiveValidationIssue[] {
+  const issues: ArchiveValidationIssue[] = [];
+
+  manifest.tracks.forEach((manifestTrack) => {
+    const metadataPath = getDeclaredMediaTrackMetadataPath(manifestTrack);
+    if ("issue" in metadataPath) {
+      issues.push(metadataPath.issue);
+      return;
+    }
+
+    issues.push(
+      ...validateManifestMediaTrack(manifest, manifestTrack, metadataPath.path)
+    );
+
+    const mediaTrack = mediaTracks.find((track) => track.id === manifestTrack.id);
+    if (!mediaTrack) {
+      issues.push({
+        severity: "error",
+        code: "track.manifest_mismatch",
+        path: metadataPath.path,
+        trackId: manifestTrack.id,
+        message: `Manifest track ${manifestTrack.id} has no matching media track metadata.`
+      });
+      return;
+    }
+
+    issues.push(
+      ...validateMediaTrackAgainstManifest(
+        manifest,
+        manifestTrack,
+        mediaTrack,
+        metadataPath.path
+      )
+    );
+  });
+
+  return issues;
+}
+
+function validateManifestMediaTrack(
+  manifest: ArchiveManifest,
+  track: MediaTrack,
+  metadataPath: string
+): readonly ArchiveValidationIssue[] {
+  const issues: ArchiveValidationIssue[] = [];
+
+  if (track.sessionId !== manifest.session.id) {
+    issues.push({
+      severity: "error",
+      code: "track.session_mismatch",
+      path: metadataPath,
+      trackId: track.id,
+      message: `Manifest media track sessionId ${track.sessionId} does not match manifest session ${manifest.session.id}.`
+    });
+  }
+
+  const expectedSegmentsPath = getMediaTrackSegmentsPath(track.id);
+  if (track.segmentsPath !== expectedSegmentsPath) {
+    issues.push({
+      severity: "error",
+      code: "track.segments_path_mismatch",
+      path: metadataPath,
+      trackId: track.id,
+      message: `Manifest media track segmentsPath ${track.segmentsPath} does not match expected ${expectedSegmentsPath}.`
+    });
+  }
+
+  return issues;
+}
+
+function validateMediaTrackAgainstManifest(
+  manifest: ArchiveManifest,
+  manifestTrack: MediaTrack,
+  mediaTrack: MediaTrack,
+  metadataPath: string
+): readonly ArchiveValidationIssue[] {
+  const issues: ArchiveValidationIssue[] = [];
+
+  if (mediaTrack.sessionId !== manifest.session.id) {
+    issues.push({
+      severity: "error",
+      code: "track.session_mismatch",
+      path: metadataPath,
+      trackId: manifestTrack.id,
+      message: `Media track sessionId ${mediaTrack.sessionId} does not match manifest session ${manifest.session.id}.`
+    });
+  }
+
+  if (mediaTrack.id !== manifestTrack.id || mediaTrack.kind !== manifestTrack.kind) {
+    issues.push({
+      severity: "error",
+      code: "track.manifest_mismatch",
+      path: metadataPath,
+      trackId: manifestTrack.id,
+      message: `Media track metadata id/kind does not match manifest track ${manifestTrack.id}.`
+    });
+  }
+
+  if (mediaTrack.segmentsPath !== manifestTrack.segmentsPath) {
+    issues.push({
+      severity: "error",
+      code: "track.manifest_mismatch",
+      path: metadataPath,
+      trackId: manifestTrack.id,
+      message: `Media track segmentsPath ${mediaTrack.segmentsPath} does not match manifest track ${manifestTrack.segmentsPath}.`
+    });
+  }
+
+  let expectedSegmentsPath: string;
+  try {
+    expectedSegmentsPath = getMediaTrackSegmentsPath(mediaTrack.id);
+  } catch (error) {
+    issues.push({
+      severity: "error",
+      code: "track.unsafe_path",
+      path: metadataPath,
+      trackId: manifestTrack.id,
+      message: describeError(error)
+    });
+    return issues;
+  }
+
+  if (mediaTrack.segmentsPath !== expectedSegmentsPath) {
+    issues.push({
+      severity: "error",
+      code: "track.segments_path_mismatch",
+      path: metadataPath,
+      trackId: manifestTrack.id,
+      message: `Media track segmentsPath ${mediaTrack.segmentsPath} does not match expected ${expectedSegmentsPath}.`
+    });
+  }
+
+  return issues;
+}
+
+function getDeclaredMediaTrackMetadataPath(
+  track: MediaTrack
+):
+  | { readonly path: string; readonly issue?: never }
+  | { readonly path?: never; readonly issue: ArchiveValidationIssue } {
+  try {
+    return {
+      path: getMediaTrackMetadataPath(track.id)
+    };
+  } catch (error) {
+    return {
+      issue: {
+        severity: "error",
+        code: "track.unsafe_path",
+        trackId: track.id,
+        message: describeError(error)
+      }
+    };
+  }
+}
+
 function compareTimelinePaths(
   manifest: ArchiveManifest
 ): ArchiveValidationIssue | undefined {
@@ -410,6 +687,19 @@ function findUnsafeManifestPathIssues(
         }
       }
     );
+  }
+
+  const tracks = manifestJson.tracks;
+  if (Array.isArray(tracks)) {
+    tracks.forEach((track, index) => {
+      if (isRecord(track) && typeof track.segmentsPath === "string") {
+        collectUnsafePathIssue(
+          issues,
+          `tracks[${index}].segmentsPath`,
+          track.segmentsPath
+        );
+      }
+    });
   }
 
   return issues;

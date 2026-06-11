@@ -1,6 +1,7 @@
 import {
   createFileArchiveWriter,
-  DEFAULT_ARCHIVE_LAYOUT
+  DEFAULT_ARCHIVE_LAYOUT,
+  getMediaTrackMetadataPath
 } from "@chronarium/archive";
 import {
   parseArchiveManifestV1,
@@ -8,6 +9,7 @@ import {
 } from "@chronarium/schemas";
 import {
   createSyntheticArchiveManifest,
+  createSyntheticMediaTrack,
   createSyntheticTimelineEvent
 } from "@chronarium/testkit";
 import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
@@ -46,6 +48,18 @@ describe("synthetic archive writer", () => {
     await expect(writer.appendTimelineEvent(event)).rejects.toThrow(
       /before a manifest is written/
     );
+  });
+
+  it("rejects writing media tracks before a manifest is written", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await expect(
+      writer.writeMediaTrack(createSyntheticMediaTrack())
+    ).rejects.toThrow(/before a manifest is written/);
   });
 
   it("writes a manifest and timeline for a synthetic .chron package", async () => {
@@ -102,6 +116,41 @@ describe("synthetic archive writer", () => {
     expect(eventsDirectory.isDirectory()).toBe(true);
   });
 
+  it("writes media track metadata and updates the manifest inventory", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+    const track = createSyntheticMediaTrack();
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+    await writer.writeMediaTrack(track);
+    const finalized = await writer.finalize();
+
+    const manifestText = await readFile(
+      path.join(archiveRoot, DEFAULT_ARCHIVE_LAYOUT.manifest),
+      "utf8"
+    );
+    const trackText = await readFile(
+      path.join(archiveRoot, ...getMediaTrackMetadataPath(track.id).split("/")),
+      "utf8"
+    );
+    const segmentsDirectory = await stat(
+      path.join(archiveRoot, "tracks", track.id, "segments")
+    );
+
+    expect(JSON.parse(manifestText).tracks).toHaveLength(1);
+    expect(JSON.parse(trackText)).toMatchObject({
+      id: track.id,
+      sessionId: track.sessionId,
+      kind: "video",
+      segmentsPath: `tracks/${track.id}/segments`
+    });
+    expect(finalized.tracks).toHaveLength(1);
+    expect(segmentsDirectory.isDirectory()).toBe(true);
+  });
+
   it("rejects timeline events for another session", async () => {
     const archiveRoot = await createTemporaryArchiveRoot();
     const writer = await createFileArchiveWriter({
@@ -123,6 +172,40 @@ describe("synthetic archive writer", () => {
         })
       )
     ).rejects.toThrow(/does not match manifest session/);
+  });
+
+  it("rejects media tracks for another session", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+
+    await expect(
+      writer.writeMediaTrack(
+        createSyntheticMediaTrack({
+          sessionId: "session-other"
+        })
+      )
+    ).rejects.toThrow(/does not match manifest session/);
+  });
+
+  it("rejects duplicate media track IDs", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+    const track = createSyntheticMediaTrack();
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+    await writer.writeMediaTrack(track);
+
+    await expect(writer.writeMediaTrack(track)).rejects.toThrow(
+      /Duplicate media track id/
+    );
   });
 
   it("rejects non-contiguous timeline sequences", async () => {
@@ -209,6 +292,21 @@ describe("synthetic archive writer", () => {
           }
         })
       )
+    ).rejects.toThrow(/after finalization/);
+  });
+
+  it("rejects writing media tracks after finalization", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+    await writer.finalize();
+
+    await expect(
+      writer.writeMediaTrack(createSyntheticMediaTrack())
     ).rejects.toThrow(/after finalization/);
   });
 });

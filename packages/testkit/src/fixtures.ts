@@ -2,6 +2,7 @@ import type {
   ArchiveManifest,
   JsonObject,
   LiveSession,
+  MediaTrack,
   TimelineEventEnvelope,
   TimelineEventType
 } from "@chronarium/types";
@@ -86,5 +87,31 @@ export function createSyntheticArchiveManifest(input: {
     generator: {
       name: "chronarium"
     }
+  };
+}
+
+export function createSyntheticMediaTrack(
+  overrides: Partial<MediaTrack> = {}
+): MediaTrack {
+  const id = overrides.id ?? "track-synthetic-video-001";
+  const sessionId = overrides.sessionId ?? "session-synthetic-001";
+
+  return {
+    id,
+    sessionId,
+    kind: "video",
+    label: "Synthetic video",
+    codec: "h264",
+    container: "mp4",
+    timeBase: "1/1000",
+    source: {
+      adapterId: "fixture",
+      siteId: "synthetic",
+      sourceIdHash: "synthetic-source-hash",
+      redactionStatus: "synthetic"
+    },
+    segmentsPath: `tracks/${id}/segments`,
+    createdAt: SYNTHETIC_TIME,
+    ...overrides
   };
 }

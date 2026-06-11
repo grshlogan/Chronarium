@@ -25,6 +25,8 @@ Chronarium now has:
 - archive writer append-time invariants for manifest ordering, session match,
   sequence continuity, duplicate event IDs, and finalization;
 - indexer rebuild, removal, clear, and filtered query contracts.
+- fixture-safe media-track metadata IO for `tracks/<track-id>/track.json`;
+- archive reader/validator support for manifest-declared media track metadata.
 
 The current A01 continuation added archive reader/validator foundations before
 any real site adapter work.
@@ -35,8 +37,7 @@ derives rows from synthetic `.chron` archives.
 The active follow-up moved basic timeline append invariants into the archive
 writer so Chronarium-generated archives avoid preventable timeline errors.
 
-The active follow-up is now clarifying `packages/indexer` rebuild, removal,
-clear, and filtered query contracts.
+The active follow-up added fixture-safe media-track archive metadata IO.
 
 ## Active Constraints
 
@@ -72,7 +73,10 @@ Expected code changes:
 - `packages/archive/tests/*`
 - `packages/archive/src/layout.ts`
 - `packages/archive/src/writer.ts`
-- `packages/indexer/*`
+- `packages/archive/src/reader.ts`
+- `packages/archive/src/validator.ts`
+- `packages/archive/tests/*`
+- `packages/testkit/src/fixtures.ts`
 
 Expected documentation changes:
 
@@ -82,6 +86,7 @@ Expected documentation changes:
 - `docs/plan/plan_sqlite_index_foundation.md`
 - `docs/plan/plan_archive_writer_timeline_invariants.md`
 - `docs/plan/plan_indexer_rebuild_query_contracts.md`
+- `docs/plan/plan_media_track_archive_io.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
@@ -145,8 +150,24 @@ Checks already run during this continuation:
   contracts.
 - JSON/package config parse scan: succeeded after index rebuild/query
   contracts.
+- `pnpm exec vitest run packages/archive/tests`: passed 2 files and 21 tests
+  after media-track archive metadata IO.
+- First `pnpm typecheck` during media-track work failed because TypeScript did
+  not narrow an optional union in `validator.ts`; fixed with explicit
+  `"issue" in metadataPath` guards.
+- `pnpm typecheck`: passed after media-track archive metadata IO.
+- `pnpm test`: passed 3 Vitest files and 28 tests after media-track archive
+  metadata IO.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed after media-track archive metadata IO.
+- `git diff --check`: produced no output after media-track archive metadata IO.
+- trailing whitespace scan: produced no output after media-track archive
+  metadata IO.
+- JSON/package config parse scan: succeeded after media-track archive metadata
+  IO.
 
 ## Next Safe Step
 
-Continue with either media-track archive IO planning or `packages/indexer`
-integration with `packages/core`.
+Continue with `packages/indexer` integration planning for `packages/core`, or
+add archive recovery behavior for interrupted metadata writes.

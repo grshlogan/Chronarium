@@ -1,10 +1,21 @@
-import type { ArchiveManifest, TimelineEventEnvelope } from "@chronarium/types";
+import type {
+  ArchiveManifest,
+  MediaTrack,
+  TimelineEventEnvelope
+} from "@chronarium/types";
 import {
   parseArchiveManifestV1,
+  parseMediaTrackV1,
   parseTimelineEventEnvelopeV1
 } from "@chronarium/schemas";
 import { mkdir, rename, stat, writeFile } from "node:fs/promises";
-import { DEFAULT_ARCHIVE_LAYOUT, resolveArchivePath } from "./layout.js";
+import {
+  DEFAULT_ARCHIVE_LAYOUT,
+  getMediaTrackDirectoryPath,
+  getMediaTrackMetadataPath,
+  getMediaTrackSegmentsPath,
+  resolveArchivePath
+} from "./layout.js";
 
 export interface ArchiveWriterOptions {
   readonly rootPath: string;
@@ -14,6 +25,7 @@ export interface ArchiveWriterOptions {
 export interface ArchiveWriter {
   readonly rootPath: string;
   writeManifest(manifest: ArchiveManifest): Promise<void>;
+  writeMediaTrack(track: MediaTrack): Promise<void>;
   appendTimelineEvent(event: TimelineEventEnvelope): Promise<void>;
   finalize(): Promise<ArchiveManifest>;
 }
@@ -29,6 +41,8 @@ class FileArchiveWriter implements ArchiveWriter {
   private lastSequence: number | undefined;
   private finalizedManifest: ArchiveManifest | undefined;
   private readonly eventIds = new Set<string>();
+  private readonly trackIds = new Set<string>();
+  private wroteMediaTrack = false;
 
   constructor(rootPath: string) {
     this.rootPath = rootPath;
@@ -41,12 +55,46 @@ class FileArchiveWriter implements ArchiveWriter {
     if (this.eventCount > 0) {
       throw new Error("Cannot rewrite archive manifest after timeline events.");
     }
+    if (this.wroteMediaTrack) {
+      throw new Error("Cannot rewrite archive manifest after media tracks.");
+    }
 
     const parsed = parseArchiveManifestV1(manifest);
+    this.resetMediaTrackInventory(parsed);
     await this.ensureArchiveDirectories(parsed);
     await this.ensureTimelineFile(parsed.timeline.path);
     await this.writeManifestFile(parsed);
     this.manifest = parsed;
+  }
+
+  async writeMediaTrack(track: MediaTrack): Promise<void> {
+    if (this.finalizedManifest) {
+      throw new Error("Cannot write media tracks after finalization.");
+    }
+    if (!this.manifest) {
+      throw new Error("Cannot write media tracks before a manifest is written.");
+    }
+
+    const parsed = parseMediaTrackV1(track);
+    this.assertWritableMediaTrack(this.manifest, parsed);
+
+    await mkdir(this.safePath(getMediaTrackDirectoryPath(parsed.id)), {
+      recursive: true
+    });
+    await mkdir(this.safePath(getMediaTrackSegmentsPath(parsed.id)), {
+      recursive: true
+    });
+    await this.writeJsonFile(getMediaTrackMetadataPath(parsed.id), parsed);
+
+    const nextManifest: ArchiveManifest = {
+      ...this.manifest,
+      tracks: [...this.manifest.tracks, parsed]
+    };
+
+    await this.writeManifestFile(nextManifest);
+    this.manifest = nextManifest;
+    this.trackIds.add(parsed.id);
+    this.wroteMediaTrack = true;
   }
 
   async appendTimelineEvent(event: TimelineEventEnvelope): Promise<void> {
@@ -136,6 +184,39 @@ class FileArchiveWriter implements ArchiveWriter {
 
     if (this.eventIds.has(event.eventId)) {
       throw new Error(`Duplicate timeline eventId: ${event.eventId}`);
+    }
+  }
+
+  private resetMediaTrackInventory(manifest: ArchiveManifest): void {
+    this.trackIds.clear();
+
+    manifest.tracks.forEach((track) => {
+      if (this.trackIds.has(track.id)) {
+        throw new Error(`Duplicate media track id in manifest: ${track.id}`);
+      }
+      this.trackIds.add(track.id);
+    });
+  }
+
+  private assertWritableMediaTrack(
+    manifest: ArchiveManifest,
+    track: MediaTrack
+  ): void {
+    if (track.sessionId !== manifest.session.id) {
+      throw new Error(
+        `Media track sessionId ${track.sessionId} does not match manifest session ${manifest.session.id}.`
+      );
+    }
+
+    if (this.trackIds.has(track.id)) {
+      throw new Error(`Duplicate media track id: ${track.id}`);
+    }
+
+    const expectedSegmentsPath = getMediaTrackSegmentsPath(track.id);
+    if (track.segmentsPath !== expectedSegmentsPath) {
+      throw new Error(
+        `Media track segmentsPath expected ${expectedSegmentsPath} but received ${track.segmentsPath}.`
+      );
     }
   }
 

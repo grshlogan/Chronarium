@@ -329,3 +329,47 @@ unimplemented ideas as completed work.
   - JSON parse scan with `ConvertFrom-Json` succeeded for all package and
     TypeScript config JSON files.
 - Next: plan media-track archive IO or core integration.
+
+## 2026-06-11: Media-track archive metadata IO
+
+- Conversation: user approved starting the next stage after the indexer rebuild
+  and query contracts landed.
+- Landed: added fixture-safe media-track metadata write/read/validation behavior
+  for `.chron` archives.
+- Files:
+  - `README.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/ARCHIVE_FORMAT_V1.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_media_track_archive_io.md`
+  - `packages/testkit/src/fixtures.ts`
+  - `packages/archive/src/layout.ts`
+  - `packages/archive/src/writer.ts`
+  - `packages/archive/src/reader.ts`
+  - `packages/archive/src/validator.ts`
+  - `packages/archive/tests/syntheticArchiveWriter.test.ts`
+  - `packages/archive/tests/archiveReaderValidator.test.ts`
+- Decisions:
+  - Track metadata lives at `tracks/<track-id>/track.json`.
+  - Future media files belong under `tracks/<track-id>/segments/`.
+  - The current stage writes only synthetic metadata and empty segment
+    directories, not real media segments.
+  - Reader snapshots now expose validated `mediaTracks`.
+  - Validator reports missing, invalid, unsafe, or manifest-mismatched track
+    metadata.
+- Verification:
+  - `pnpm exec vitest run packages/archive/tests` passed 2 files and 21 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 3 files and 28 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan succeeded.
+- Next: plan `packages/indexer` integration with `packages/core`, or add
+  recovery behavior for interrupted archive metadata writes.

@@ -3,8 +3,10 @@
 Status: draft storage contract. A fixture-safe writer now creates a minimal
 `.chron` package with `manifest.json`, `timeline.jsonl`, and top-level
 directories. A first reader/validator now reads `manifest.json` and
-`timeline.jsonl` and reports basic consistency issues. Media-track writing,
-media-track reading, recovery, and migration behavior are not implemented yet.
+`timeline.jsonl` and reports basic consistency issues. The writer/reader now
+support fixture-safe media-track metadata at `tracks/<track-id>/track.json`.
+Real media segment writing, recovery, and migration behavior are not
+implemented yet.
 
 ## Purpose
 
@@ -31,10 +33,7 @@ The suffix is a directory convention, not a compressed format.
   manifest.json
   timeline.jsonl
   tracks/
-    video/
-      track.json
-      segments/
-    audio/
+    <track-id>/
       track.json
       segments/
   events/
@@ -57,8 +56,9 @@ path is reserved by v1.
 - `manifest.json` describes stable package metadata, schema versions, path
   locations, session identity, track inventory, and generation metadata.
 - `timeline.jsonl` is the session-level fact stream and primary replay input.
-- `tracks/**/track.json` describes track-level metadata.
-- `tracks/**/segments/` stores media segment files or synthetic placeholders.
+- `tracks/<track-id>/track.json` describes track-level metadata.
+- `tracks/<track-id>/segments/` stores future media segment files or synthetic
+  placeholders.
 - `events/*.jsonl` stores domain-specific event streams when splitting improves
   inspection or replay.
 - `diagnostics/*.jsonl` stores diagnostic facts.
@@ -117,12 +117,35 @@ are not the only replay truth.
 
 The current fixture-safe validator reports invalid JSONL, schema-invalid lines,
 duplicate event IDs, sequence gaps, session mismatches, manifest event-count
-mismatches, manifest last-sequence mismatches, and unsafe archive-relative
-paths. It does not yet repair or quarantine corrupted records.
+mismatches, manifest last-sequence mismatches, missing or invalid media-track
+metadata, media-track manifest mismatches, and unsafe archive-relative paths.
+It does not yet repair or quarantine corrupted records.
 
 The current fixture-safe writer rejects preventable timeline errors before
 writing: missing manifest, session mismatch, non-contiguous sequence, duplicate
 event ID, and appends after finalization.
+
+## Media Track Metadata
+
+The current fixture-safe writer can write synthetic track metadata:
+
+```text
+tracks/<track-id>/track.json
+tracks/<track-id>/segments/
+```
+
+`manifest.json` keeps the track inventory in `tracks`, and each declared track
+must have matching metadata at `tracks/<track-id>/track.json`.
+
+The first implementation enforces:
+
+- track `sessionId` must match the manifest session;
+- track IDs must not repeat in one writer session;
+- `segmentsPath` must be `tracks/<track-id>/segments`;
+- track metadata must match the manifest-declared track identity and kind;
+- `segments/` is only a boundary directory for future media segment files.
+
+It does not write, read, hash, probe, or remux real media segments yet.
 
 ## Path Rules
 
@@ -141,6 +164,7 @@ The current writer already uses or enforces:
 - temporary files in the same filesystem when replacing small metadata files;
 - append-only writes for JSONL streams;
 - manifest-before-timeline ordering;
+- fixture-safe media-track metadata writes;
 - contiguous timeline sequences for one writer session;
 - duplicate event ID rejection for one writer session;
 - no appends after finalization.

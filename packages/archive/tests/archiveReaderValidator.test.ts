@@ -1,6 +1,7 @@
 import {
   createFileArchiveWriter,
   DEFAULT_ARCHIVE_LAYOUT,
+  getMediaTrackMetadataPath,
   readFileArchive,
   validateFileArchive
 } from "@chronarium/archive";
@@ -10,6 +11,7 @@ import type {
 } from "@chronarium/types";
 import {
   createSyntheticArchiveManifest as createBaseSyntheticArchiveManifest,
+  createSyntheticMediaTrack,
   createSyntheticTimelineEvent
 } from "@chronarium/testkit";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -52,8 +54,10 @@ describe("archive reader and validator", () => {
         adapterId: "fixture"
       }
     });
+    const mediaTrack = createSyntheticMediaTrack();
 
     await writer.writeManifest(manifest);
+    await writer.writeMediaTrack(mediaTrack);
     await writer.appendTimelineEvent(firstEvent);
     await writer.appendTimelineEvent(secondEvent);
     await writer.finalize();
@@ -66,6 +70,7 @@ describe("archive reader and validator", () => {
     expect(snapshot.validation.issues).toEqual([]);
     expect(snapshot.manifest.timeline.eventCount).toBe(2);
     expect(snapshot.manifest.timeline.lastSequence).toBe(2);
+    expect(snapshot.mediaTracks).toEqual([mediaTrack]);
     expect(snapshot.timelineEvents.map((event) => event.type)).toEqual([
       "session.created",
       "adapter.started"
@@ -113,6 +118,64 @@ describe("archive reader and validator", () => {
 
     expect(report.ok).toBe(false);
     expect(issueCodes(report)).toContain("timeline.invalid_jsonl");
+  });
+
+  it("reports missing media track metadata files", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const mediaTrack = createSyntheticMediaTrack();
+
+    await writeArchiveFiles({
+      archiveRoot,
+      manifest: {
+        ...createArchiveManifestWithTimelineIndex(),
+        tracks: [mediaTrack]
+      },
+      timelineText: ""
+    });
+
+    const report = await validateFileArchive({
+      rootPath: archiveRoot
+    });
+
+    expect(report.ok).toBe(false);
+    expect(issueCodes(report)).toContain("track.missing_file");
+  });
+
+  it("reports media track metadata mismatches", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const mediaTrack = createSyntheticMediaTrack();
+    const trackMetadataPath = getMediaTrackMetadataPath(mediaTrack.id);
+
+    await writeArchiveFiles({
+      archiveRoot,
+      manifest: {
+        ...createArchiveManifestWithTimelineIndex(),
+        tracks: [mediaTrack]
+      },
+      timelineText: ""
+    });
+    await mkdir(path.join(archiveRoot, "tracks", mediaTrack.id), {
+      recursive: true
+    });
+    await writeFile(
+      path.join(archiveRoot, ...trackMetadataPath.split("/")),
+      `${JSON.stringify(
+        {
+          ...mediaTrack,
+          kind: "audio"
+        },
+        null,
+        2
+      )}\n`,
+      "utf8"
+    );
+
+    const report = await validateFileArchive({
+      rootPath: archiveRoot
+    });
+
+    expect(report.ok).toBe(false);
+    expect(issueCodes(report)).toContain("track.manifest_mismatch");
   });
 
   it("reports duplicate event IDs", async () => {
