@@ -15,6 +15,7 @@ import {
   getMediaTrackSegmentsPath,
   resolveArchivePath
 } from "./layout.js";
+import { validateTimelineMediaSegments } from "./segmentValidation.js";
 
 export type ArchiveValidationSeverity = "error" | "warning";
 
@@ -32,6 +33,12 @@ export type ArchiveValidationIssueCode =
   | "track.manifest_mismatch"
   | "track.segments_path_mismatch"
   | "track.unsafe_path"
+  | "segment.schema_invalid"
+  | "segment.track_unknown"
+  | "segment.unsafe_path"
+  | "segment.path_mismatch"
+  | "segment.missing_file"
+  | "segment.byte_length_mismatch"
   | "timeline.invalid_jsonl"
   | "timeline.schema_invalid"
   | "timeline.duplicate_event_id"
@@ -126,6 +133,14 @@ export async function validateFileArchive(
       manifestResult.manifest,
       timelineResult.events
     )
+  );
+  issues.push(
+    ...(await validateTimelineMediaSegments({
+      rootPath: options.rootPath,
+      manifest: manifestResult.manifest,
+      mediaTracks: mediaTrackResult.tracks,
+      timelineEvents: timelineResult.events
+    }))
   );
 
   return createReport(

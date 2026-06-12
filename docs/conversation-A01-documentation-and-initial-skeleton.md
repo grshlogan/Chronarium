@@ -133,6 +133,14 @@ declared `tracks/<track-id>/segments/<segment-name>` paths and rejects
 undeclared tracks, unsafe segment names, existing segment files, and writes
 after finalization. This is not real FFmpeg capture or media probing yet.
 
+The current A01 archive validation pass added basic media segment referenced-file
+checks. `media.segment.*` timeline facts that include `relativePath` now have
+their payload schema, track id, path safety, owning `segmentsPath`, file
+existence, and declared `byteLength` checked by both snapshot validation and
+streaming validation. Segment facts without `relativePath` remain valid
+observations for discovered-but-not-yet-downloaded segments. Hash, duration,
+container, codec, and FFmpeg/ffprobe validation remain pending.
+
 The current A01 GUI pass added the first Web-first React/Vite recording
 dashboard shell under `apps/desktop`. It follows the streamer-maintenance
 layout direction: maintained streamers on the left, selected streamer recording
@@ -276,10 +284,14 @@ Documentation changes for this continuation:
 - `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
 - `tools/benchmarks/timeline-scan-benchmark.mjs`
 - `packages/archive/src/timelineReader.ts`
+- `packages/archive/src/segmentValidation.ts`
 - `packages/archive/src/streamingValidator.ts`
 - `packages/testkit/src/largeTimeline.ts`
 - `packages/indexer/src/archiveIndexer.ts`
 - `packages/archive/src/writer.ts`
+- `packages/schemas/src/mediaSchemas.ts`
+- `packages/schemas/src/primitiveSchemas.ts`
+- `docs/plan/plan_media_segment_reader_validator.md`
 - `tdd-tests/packages/archive/timeline-reader/timelineReader.test.ts`
 - `tdd-tests/packages/indexer/timeline-batches/indexerTimelineBatches.test.ts`
 - `tdd-tests/packages/testkit/large-timeline/largeSyntheticTimeline.test.ts`
@@ -516,6 +528,24 @@ Checks already run during this continuation:
 - GREEN for media segment writer: added fixture-safe media segment byte writes
   and rejection tests for undeclared tracks, unsafe segment names, and writes
   after finalization.
+- TDD RED for media segment referenced-file validation:
+  `pnpm exec vitest run packages/archive/tests/archiveReaderValidator.test.ts`
+  failed because a timeline fact referencing a missing segment file still
+  validated successfully.
+- GREEN for snapshot media segment validation: added `MediaSegmentFact` runtime
+  schema and `validateTimelineMediaSegments`; the targeted archive validator
+  test passed.
+- TDD RED for streaming media segment validation: targeted archive validator
+  test failed because `validateFileArchiveStreaming` did not report
+  `segment.missing_file`.
+- GREEN for streaming media segment validation: connected streaming validation
+  to the shared segment validator; targeted archive validator tests passed.
+- Targeted archive/adapter/indexer regression:
+  `pnpm exec vitest run packages/archive/tests packages/adapters/chaturbate/tests
+  packages/indexer/tests
+  tdd-tests/packages/indexer/timeline-batches/indexerTimelineBatches.test.ts`
+  passed 8 files and 54 tests, with the known Node `node:sqlite`
+  ExperimentalWarning.
 - TDD RED for the Web-first recording dashboard:
   `pnpm exec vitest run
   tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
@@ -621,9 +651,8 @@ Checks already run during this continuation:
 
 ## Next Safe Step
 
-Add media segment reader/validator coverage so archive validation can report
-missing or unsafe segment files before real media probing exists; or add
-ffprobe/ffmpeg output parser fixtures without executing real tools. GUI visual
-polish is now intended for A03, while A01 should keep working on lower-level
-archive/core foundations unless the user redirects. Keep A02 independent and do
-not create extra A01 pseudo-conversation files.
+Add media segment hash/duration validation fixtures or ffprobe/ffmpeg output
+parser fixtures without executing real tools. GUI visual polish is now intended
+for A03, while A01 should keep working on lower-level archive/core foundations
+unless the user redirects. Keep A02 independent and do not create extra A01
+pseudo-conversation files.

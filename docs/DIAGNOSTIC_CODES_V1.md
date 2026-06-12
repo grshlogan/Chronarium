@@ -106,7 +106,7 @@ Deprecation is the only allowed end state. There is no removal.
 
 ## Implemented Registry
 
-These twenty codes are exactly the members of `ArchiveValidationIssueCode`
+These twenty-six codes are exactly the members of `ArchiveValidationIssueCode`
 in `packages/archive/src/validator.ts`. Two validator entry points emit
 them: `validateFileArchive` (reads a Replay Package from disk) and
 `validateArchiveSnapshot` (checks already-parsed in-memory data).
@@ -151,6 +151,26 @@ them: `validateFileArchive` (reads a Replay Package from disk) and
   path that would escape the archive root. Emitted by `validateFileArchive`
   and `validateArchiveSnapshot`.
 
+### segment.*
+
+- `segment.schema_invalid`: a `media.segment.*` timeline event that references
+  a segment file has a payload that does not match the `MediaSegmentFact`
+  schema. Emitted by `validateFileArchive` and `validateFileArchiveStreaming`.
+- `segment.track_unknown`: a referenced segment file belongs to a track id not
+  declared by the manifest and validated track metadata. Emitted by
+  `validateFileArchive` and `validateFileArchiveStreaming`.
+- `segment.unsafe_path`: a referenced segment `relativePath` is absolute or
+  escapes the archive root. Emitted by `validateFileArchive` and
+  `validateFileArchiveStreaming`.
+- `segment.path_mismatch`: a referenced segment path is not under the owning
+  track's `segmentsPath`. Emitted by `validateFileArchive` and
+  `validateFileArchiveStreaming`.
+- `segment.missing_file`: a referenced segment path could not be read as a
+  file. Emitted by `validateFileArchive` and `validateFileArchiveStreaming`.
+- `segment.byte_length_mismatch`: a referenced segment file exists, but its
+  byte size does not match the timeline fact's `byteLength`. Emitted by
+  `validateFileArchive` and `validateFileArchiveStreaming`.
+
 ### timeline.*
 
 - `timeline.invalid_jsonl`: a timeline line is empty or is not valid JSON.
@@ -180,10 +200,10 @@ Candidate names listed here are drafts unless they are also listed in the
 Timeline Diagnostic Payload Code Registry below; only the area tokens
 themselves are reserved.
 
-- `segment.*`: future MediaSegment integrity checks, such as missing segment
-  files, hash mismatches, or duration anomalies. Related design context
-  lives in `docs/CB_RECORDING_REFERENCES.md` and
-  `docs/MEDIA_TOOLS_BOUNDARY.md`.
+- `segment.*`: now implemented for basic referenced-file existence, path, and
+  byte-length checks. Future segment checks may add hash mismatches, duration
+  anomalies, and media probing diagnostics. Related design context lives in
+  `docs/CB_RECORDING_REFERENCES.md` and `docs/MEDIA_TOOLS_BOUNDARY.md`.
 - `recovery.*`: interrupted-write recovery diagnostics for `.chron`
   packages, such as detected partial writes or recovered timelines. See
   `docs/plan/plan_archive_recovery.md`.

@@ -26,6 +26,8 @@ export const relativeArchivePathSchema = z
     message: "Archive paths must not escape the archive root."
   });
 
+export const sha256HexSchema = z.string().regex(/^[a-fA-F0-9]{64}$/);
+
 export const jsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
   z.union([
     z.string(),

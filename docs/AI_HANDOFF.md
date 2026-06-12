@@ -44,6 +44,9 @@ Current state:
   tracks. It writes caller-provided synthetic bytes under
   `tracks/<track-id>/segments/<segment-name>` and rejects undeclared tracks,
   unsafe segment names, and writes after finalization.
+- `packages/archive` validates `media.segment.*` timeline facts that declare a
+  `relativePath`: payload schema, declared track, archive-relative path safety,
+  owning track `segmentsPath`, file existence, and declared byte length.
 - `packages/archive` has a fixture-safe reader/validator for `manifest.json`,
   `timeline.jsonl`, and manifest-declared media track metadata, including basic
   timeline and track consistency diagnostics.
@@ -130,7 +133,7 @@ Current state:
   mirroring `docs/ADAPTER_PROTOCOL.md`; no Electron/preload/IPC or live
   GUI-core binding exists.
 - `docs/DIAGNOSTIC_CODES_V1.md` records the diagnostic code registry: the
-  twenty implemented archive validation issue codes plus naming, stability,
+  twenty-six implemented archive validation issue codes plus naming, stability,
   and reserved-area rules.
 - `docs/MEDIA_TOOLS_BOUNDARY.md` records the typed external media tool
   contract promoted from the CB reference document; `packages/media-tools`
@@ -325,8 +328,8 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Add media segment reader/validator coverage so archive validation can report
-   missing or unsafe segment files before real media probing exists.
+1. Add media segment hash and duration validation fixtures, still without
+   executing media tools.
 2. Continue WebUI behavior with add-link form validation and clearer
    pause/resume/check state feedback, still synthetic-only.
 3. Replace the browser-only offline self-test action with a real GUI-facing
@@ -340,8 +343,9 @@ The project should optimize for AI-assisted long-term maintenance:
    archive list, timeline facts, validation, recovery, and maintenance status.
 7. Extend the maintenance inspector with index freshness comparison, keeping
    writes as explicit safe-rebuild suggestions rather than automatic actions.
-8. Add real media segment IO only after segment reader/validator coverage and
-   media-track metadata validation remain stable.
+8. Add real media segment IO only after segment reader/validator coverage,
+   media-track metadata validation, and media-tool fixture parsing remain
+   stable.
 9. If real Chaturbate behavior needs validation, first prepare separately
    approved redacted evidence or synthetic reproductions derived from approved
    local samples.

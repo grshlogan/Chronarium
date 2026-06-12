@@ -73,6 +73,7 @@ docs/
     plan_archive_recovery_and_gui_core_facade.md
     plan_backend_task_adapter_media_skeleton.md
     plan_offline_fixture_capture_pipeline.md
+    plan_media_segment_reader_validator.md
     plan_streaming_archive_io_and_benchmarks.md
     plan_web_dashboard_offline_behavior.md
     plan_web_dashboard_monitoring_semantics.md
@@ -494,6 +495,16 @@ Responsibility:
   `.chron` archives, reindexes SQLite, maps adapter lifecycle failures to task
   failures, and remains free of live site capture or real media IO.
 
+### `docs/plan/plan_media_segment_reader_validator.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for basic media segment referenced-file
+  validation.
+- Records that archive validation checks `media.segment.*` facts with
+  `relativePath` for schema, track, path, file existence, and declared byte
+  length, without hash, duration, media probing, or repair.
+
 ### `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
 
 Responsibility:
@@ -714,6 +725,7 @@ packages/
       layout.ts
       reader.ts
       recovery.ts
+      segmentValidation.ts
       streamingValidator.ts
       timelineReader.ts
       validator.ts
@@ -991,6 +1003,9 @@ Current status:
   empty `tracks/<track-id>/segments/` boundary directories.
 - Writes fixture-safe synthetic media segment bytes under declared
   `tracks/<track-id>/segments/<segment-name>` paths.
+- Validates `media.segment.*` timeline facts that reference stored segment
+  files: payload schema, known track, path safety, owning track `segmentsPath`,
+  file existence, and declared byte length.
 - Rejects appending before manifest write, cross-session events,
   non-contiguous sequence values, duplicate event IDs, and appends after
   finalization for one writer session.
@@ -1014,8 +1029,8 @@ Current status:
 - Full snapshot archive validation still exists for small fixture workflows.
   Replay, GUI, and maintenance consumers have not yet been migrated to the new
   timeline batch reader.
-- Real media segment reading/probing, archive repair, and migration are still
-  pending.
+- Real media probing, hash validation, duration validation, archive repair, and
+  migration are still pending.
 
 ### `packages/indexer`
 

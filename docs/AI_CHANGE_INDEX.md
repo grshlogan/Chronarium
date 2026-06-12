@@ -1255,3 +1255,58 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan parsed 21 JSON files.
 - Next: add media segment reader/validator coverage so archive validation can
   report missing or unsafe segment files before real media probing exists.
+
+## 2026-06-13: Media segment referenced-file validation
+
+- Conversation: user asked to add media segment reader/validator coverage so
+  archive validation can check segment file existence, path safety, and size.
+- Landed: added `MediaSegmentFact` runtime schema validation and shared archive
+  segment referenced-file validation for snapshot and streaming archive
+  validators.
+- Files:
+  - `docs/ARCHIVE_FORMAT_V1.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/DIAGNOSTIC_CODES_V1.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_media_segment_reader_validator.md`
+  - `packages/schemas/src/mediaSchemas.ts`
+  - `packages/schemas/src/primitiveSchemas.ts`
+  - `packages/archive/src/segmentValidation.ts`
+  - `packages/archive/src/streamingValidator.ts`
+  - `packages/archive/src/validator.ts`
+  - `packages/archive/tests/archiveReaderValidator.test.ts`
+- Decisions:
+  - `media.segment.*` timeline facts with `relativePath` are treated as
+    references to stored segment files and get file checks.
+  - `media.segment.*` facts without `relativePath` remain valid observations,
+    because adapters may record discovered-but-not-yet-downloaded segments.
+  - Segment validation checks payload schema, declared track id, archive path
+    safety, ownership under the track `segmentsPath`, file existence, and
+    declared byte length.
+  - Hash validation, duration validation, media probing, FFmpeg/ffprobe
+    execution, segment repair, and manifest segment inventory remain pending.
+- Verification:
+  - TDD RED: snapshot archive validation initially let a missing referenced
+    segment file pass.
+  - GREEN: targeted archive validator tests passed after adding segment schema
+    and shared referenced-file validation.
+  - TDD RED: streaming archive validation initially let a missing referenced
+    segment file pass.
+  - GREEN: targeted archive validator tests passed after connecting streaming
+    validation to the shared segment validator.
+  - Targeted archive/adapter/indexer regression passed 8 files and 54 tests,
+    with the known Node `node:sqlite` ExperimentalWarning.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 19 files and 90 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed as a
+    local smoke run.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan parsed 21 JSON files.
+- Next: add hash/duration validation fixtures or media-tool output parser
+  fixtures without executing real tools.

@@ -7,6 +7,7 @@ import {
   getMediaTrackSegmentsPath,
   resolveArchivePath
 } from "./layout.js";
+import { validateTimelineMediaSegments } from "./segmentValidation.js";
 import { readTimelineEventBatches } from "./timelineReader.js";
 import type { ArchiveValidationIssue } from "./validator.js";
 
@@ -86,6 +87,7 @@ export async function validateFileArchiveStreaming(
   const timelineScan = await scanTimeline(
     options.rootPath,
     manifestResult.manifest,
+    mediaTrackResult.tracks,
     options.timelineBatchSize ?? 1024
   );
   issues.push(...timelineScan.issues);
@@ -261,6 +263,7 @@ async function readMediaTracks(
 async function scanTimeline(
   rootPath: string,
   manifest: ArchiveManifest,
+  mediaTracks: readonly MediaTrack[],
   batchSize: number
 ): Promise<TimelineScanResult> {
   const issues: ArchiveValidationIssue[] = [];
@@ -275,6 +278,14 @@ async function scanTimeline(
     batchSize
   })) {
     issues.push(...batch.issues);
+    issues.push(
+      ...(await validateTimelineMediaSegments({
+        rootPath,
+        manifest,
+        mediaTracks,
+        timelineEvents: batch.events
+      }))
+    );
 
     batch.events.forEach((event) => {
       eventCount += 1;

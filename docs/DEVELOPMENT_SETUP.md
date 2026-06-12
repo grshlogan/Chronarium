@@ -32,6 +32,8 @@ It has:
   empty `tracks/<track-id>/segments/` boundary directories;
 - fixture-safe media segment byte writing under declared track `segments/`
   directories;
+- basic media segment referenced-file validation for `media.segment.*` facts
+  that include `relativePath`;
 - a rebuildable SQLite indexer that derives archive metadata, timeline events,
   and validation issues from synthetic `.chron` packages, with reindex,
   remove, clear, and filtered query contracts;
@@ -60,7 +62,7 @@ It does not yet have:
 
 - Electron shell, preload, or IPC;
 - live GUI binding to core/archive/indexer data;
-- real media probing;
+- real media probing, hash validation, or duration validation;
 - archive repair or migration behavior;
 - maintenance background loop, AI operations, or automatic repair;
 - real site adapters;

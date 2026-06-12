@@ -63,6 +63,9 @@ AI 可以快速接手局部问题
 - 已实现 `packages/archive` 的首个 fixture-safe reader/validator，可读取
   `manifest.json`、`timeline.jsonl` 和 media track metadata，并报告
   timeline / track 一致性问题。
+- archive validation 已能检查带 `relativePath` 的 `media.segment.*` facts：
+  track 是否声明、路径是否安全、是否位于所属 track 的 `segments/` 目录、
+  文件是否存在，以及声明的 byteLength 是否匹配。
 - `packages/archive` 已增加第一版 timeline 流式/分批读取入口：
   `iterateTimelineRecords` 和 `readTimelineEventBatches`，供未来 GUI、replay
   和 maintenance 避免只依赖完整 `timelineEvents` 数组。
@@ -216,8 +219,8 @@ Chronarium 目标 GitHub 仓库：
 下一步适合先做这些基础工作：
 
 1. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
-2. 增加 media segment reader/validator，检查 segment 文件存在、大小和路径
-   安全，仍不探测真实媒体内容。
+2. 给 media segment 增加 hash/duration validation fixtures，仍不探测真实媒体
+   内容、不执行 FFmpeg。
 3. 继续推进 Web-first 录制工作台的信息密度和行为入口：添加链接表单、
    监控暂停/恢复/立即检查的状态反馈，以及 offline self-test 诊断结果。
 4. 把 Web-first 录制工作台里的浏览器 self-test action 替换成 GUI-facing

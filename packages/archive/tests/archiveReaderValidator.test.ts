@@ -1,9 +1,11 @@
 import {
   createFileArchiveWriter,
   DEFAULT_ARCHIVE_LAYOUT,
+  getMediaTrackSegmentsPath,
   getMediaTrackMetadataPath,
   readFileArchive,
-  validateFileArchive
+  validateFileArchive,
+  validateFileArchiveStreaming
 } from "@chronarium/archive";
 import type {
   ArchiveManifest,
@@ -176,6 +178,218 @@ describe("archive reader and validator", () => {
 
     expect(report.ok).toBe(false);
     expect(issueCodes(report)).toContain("track.manifest_mismatch");
+  });
+
+  it("reports missing media segment files referenced by timeline facts", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const mediaTrack = createSyntheticMediaTrack();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createArchiveManifestWithTimelineIndex());
+    await writer.writeMediaTrack(mediaTrack);
+    await writer.appendTimelineEvent(
+      createSyntheticTimelineEvent({
+        type: "media.segment.downloaded",
+        sequence: 1,
+        payload: {
+          trackId: mediaTrack.id,
+          segmentId: "segment-000001",
+          relativePath: `${getMediaTrackSegmentsPath(mediaTrack.id)}/segment-000001.m4s`,
+          byteLength: 17,
+          redactionStatus: "synthetic"
+        }
+      })
+    );
+    await writer.finalize();
+
+    const report = await validateFileArchive({
+      rootPath: archiveRoot
+    });
+
+    expect(report.ok).toBe(false);
+    expect(issueCodes(report)).toContain("segment.missing_file");
+  });
+
+  it("accepts media segment files with matching byte length", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const mediaTrack = createSyntheticMediaTrack();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+    const segment = await createSegmentFile(writer, mediaTrack.id);
+
+    await writer.appendTimelineEvent(
+      createSyntheticTimelineEvent({
+        type: "media.segment.downloaded",
+        sequence: 1,
+        payload: {
+          trackId: mediaTrack.id,
+          segmentId: "segment-000001",
+          relativePath: segment.relativePath,
+          byteLength: segment.byteLength,
+          redactionStatus: "synthetic"
+        }
+      })
+    );
+    await writer.finalize();
+
+    const report = await validateFileArchive({
+      rootPath: archiveRoot
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.issues).toEqual([]);
+  });
+
+  it("reports media segment byte length mismatches", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const mediaTrack = createSyntheticMediaTrack();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+    const segment = await createSegmentFile(writer, mediaTrack.id);
+
+    await writer.appendTimelineEvent(
+      createSyntheticTimelineEvent({
+        type: "media.segment.downloaded",
+        sequence: 1,
+        payload: {
+          trackId: mediaTrack.id,
+          segmentId: "segment-000001",
+          relativePath: segment.relativePath,
+          byteLength: segment.byteLength + 1,
+          redactionStatus: "synthetic"
+        }
+      })
+    );
+    await writer.finalize();
+
+    const report = await validateFileArchive({
+      rootPath: archiveRoot
+    });
+
+    expect(report.ok).toBe(false);
+    expect(issueCodes(report)).toContain("segment.byte_length_mismatch");
+  });
+
+  it("reports media segment paths outside the owning track segments directory", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const videoTrack = createSyntheticMediaTrack({
+      id: "track-video-main"
+    });
+    const audioTrack = createSyntheticMediaTrack({
+      id: "track-audio-main",
+      kind: "audio",
+      label: "Synthetic audio",
+      segmentsPath: "tracks/track-audio-main/segments"
+    });
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createArchiveManifestWithTimelineIndex());
+    await writer.writeMediaTrack(videoTrack);
+    await writer.writeMediaTrack(audioTrack);
+    const segment = await writer.writeMediaSegment({
+      trackId: videoTrack.id,
+      segmentName: "segment-000001.m4s",
+      data: Buffer.from("synthetic segment")
+    });
+    await writer.appendTimelineEvent(
+      createSyntheticTimelineEvent({
+        type: "media.segment.downloaded",
+        sequence: 1,
+        payload: {
+          trackId: audioTrack.id,
+          segmentId: "segment-000001",
+          relativePath: segment.relativePath,
+          byteLength: segment.byteLength,
+          redactionStatus: "synthetic"
+        }
+      })
+    );
+    await writer.finalize();
+
+    const report = await validateFileArchive({
+      rootPath: archiveRoot
+    });
+
+    expect(report.ok).toBe(false);
+    expect(issueCodes(report)).toContain("segment.path_mismatch");
+  });
+
+  it("reports invalid media segment fact payloads", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const mediaTrack = createSyntheticMediaTrack();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createArchiveManifestWithTimelineIndex());
+    await writer.writeMediaTrack(mediaTrack);
+    await writer.appendTimelineEvent(
+      createSyntheticTimelineEvent({
+        type: "media.segment.downloaded",
+        sequence: 1,
+        payload: {
+          trackId: mediaTrack.id,
+          segmentId: "segment-000001",
+          relativePath: `${getMediaTrackSegmentsPath(mediaTrack.id)}/segment-000001.m4s`,
+          byteLength: 17
+        }
+      })
+    );
+    await writer.finalize();
+
+    const report = await validateFileArchive({
+      rootPath: archiveRoot
+    });
+
+    expect(report.ok).toBe(false);
+    expect(issueCodes(report)).toContain("segment.schema_invalid");
+  });
+
+  it("reports media segment file issues through streaming validation", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const mediaTrack = createSyntheticMediaTrack();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createArchiveManifestWithTimelineIndex());
+    await writer.writeMediaTrack(mediaTrack);
+    await writer.appendTimelineEvent(
+      createSyntheticTimelineEvent({
+        type: "media.segment.downloaded",
+        sequence: 1,
+        payload: {
+          trackId: mediaTrack.id,
+          segmentId: "segment-000001",
+          relativePath: `${getMediaTrackSegmentsPath(mediaTrack.id)}/segment-000001.m4s`,
+          byteLength: 17,
+          redactionStatus: "synthetic"
+        }
+      })
+    );
+    await writer.finalize();
+
+    const report = await validateFileArchiveStreaming({
+      rootPath: archiveRoot,
+      timelineBatchSize: 1
+    });
+
+    expect(report.ok).toBe(false);
+    expect(report.issues.map((issue) => issue.code)).toContain(
+      "segment.missing_file"
+    );
   });
 
   it("reports duplicate event IDs", async () => {
@@ -406,4 +620,25 @@ function createArchiveManifestWithTimelineIndex(input: {
 
 function issueCodes(report: Awaited<ReturnType<typeof validateFileArchive>>) {
   return report.issues.map((issue) => issue.code);
+}
+
+async function createSegmentFile(
+  writer: Awaited<ReturnType<typeof createFileArchiveWriter>>,
+  trackId: string
+): Promise<{
+  readonly relativePath: string;
+  readonly byteLength: number;
+}> {
+  await writer.writeManifest(createArchiveManifestWithTimelineIndex());
+  await writer.writeMediaTrack(createSyntheticMediaTrack({ id: trackId }));
+  const result = await writer.writeMediaSegment({
+    trackId,
+    segmentName: "segment-000001.m4s",
+    data: Buffer.from("synthetic segment")
+  });
+
+  return {
+    relativePath: result.relativePath,
+    byteLength: result.byteLength
+  };
 }

@@ -122,7 +122,12 @@ The current fixture-safe validator reports invalid JSONL, schema-invalid lines,
 duplicate event IDs, sequence gaps, session mismatches, manifest event-count
 mismatches, manifest last-sequence mismatches, missing or invalid media-track
 metadata, media-track manifest mismatches, and unsafe archive-relative paths.
-It does not yet repair or quarantine corrupted records.
+It also checks `media.segment.*` timeline facts that declare a `relativePath`:
+the referenced path must stay under the owning track's `segmentsPath`, the file
+must exist, and declared `byteLength` must match the file size. Segment facts
+without `relativePath` remain valid observations for discovered-but-not-yet
+downloaded segments. The validator does not yet repair or quarantine corrupted
+records.
 
 For large archives, callers should prefer the streaming-shaped timeline entry
 points:
@@ -166,6 +171,18 @@ The first implementation enforces:
 The current segment write boundary can write caller-provided synthetic bytes to
 `tracks/<track-id>/segments/<segment-name>`. It does not read, hash, probe, or
 remux real media segments yet.
+
+Archive validation now performs basic referenced-file checks for segment facts
+that point at a stored file:
+
+- `trackId` must reference a declared and valid media track;
+- `relativePath` must be archive-relative;
+- `relativePath` must be under the owning track's `segmentsPath`;
+- the referenced path must exist and be a file;
+- declared `byteLength` must match the file size.
+
+Validation does not yet calculate hashes, validate durations, parse container
+metadata, or call media tools.
 
 ## Path Rules
 
