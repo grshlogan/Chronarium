@@ -2,6 +2,7 @@ import { useState, type ReactElement } from "react";
 import {
   createInitialRecordingDashboard,
   getSelectedStreamer,
+  getSelectedStreamerContext,
   reduceRecordingDashboard,
   runOfflineSelfTestDemo,
   type RecordingDashboardState
@@ -17,6 +18,8 @@ export function App(props: AppProps = {}): ReactElement {
   );
   const dashboard = props.dashboard ?? interactiveDashboard;
   const selectedStreamer = getSelectedStreamer(dashboard);
+  const selectedContext = getSelectedStreamerContext(dashboard);
+  const currentSession = selectedContext.currentSession;
   const selectedMonitoringPaused =
     selectedStreamer.monitoringState === "paused";
 
@@ -90,8 +93,8 @@ export function App(props: AppProps = {}): ReactElement {
               </div>
               <div>
                 <strong>{streamer.name}</strong>
-                <span>{streamer.site}</span>
-                <small>Last check {streamer.lastCheck}</small>
+                <span className="site-code">{streamer.site}</span>
+                <small className="last-check">Last check {streamer.lastCheck}</small>
               </div>
               <div className="streamer-state">
                 <span className={`dot ${streamer.status}`} />
@@ -192,16 +195,21 @@ export function App(props: AppProps = {}): ReactElement {
 
         <section className="main-surface">
           <div className="capture-metrics">
-            <span>Room state: LIVE</span>
+            <span>Room state: {selectedContext.roomState}</span>
             <span>Monitor: {selectedMonitoringPaused ? "Paused" : "Active"}</span>
             <span>Auto capture: {formatSelectedCaptureState(selectedStreamer)}</span>
           </div>
           <div className="preview-disabled">
             <div className="preview-icon" aria-hidden="true" />
-            <h3>Preview disabled during recording</h3>
+            <h3>
+              {currentSession === undefined
+                ? selectedContext.summary.idleLabel
+                : "Preview disabled during recording"}
+            </h3>
             <p>
-              Capture facts are being preserved. A future delayed preview can use
-              a separate optional surface.
+              {currentSession === undefined
+                ? selectedContext.summary.idleDetail
+                : "Capture facts are being preserved. A future delayed preview can use a separate optional surface."}
             </p>
           </div>
         </section>
@@ -209,30 +217,34 @@ export function App(props: AppProps = {}): ReactElement {
         <section className="recording-detail">
           <div>
             <p className="eyebrow">Recording information</p>
-            <h2>{dashboard.currentSession.duration}</h2>
+            <h2>{currentSession?.duration ?? "No current recording"}</h2>
             <dl className="metric-grid">
               <div>
                 <dt>Written size</dt>
-                <dd>{dashboard.currentSession.size}</dd>
+                <dd>{selectedContext.summary.writtenSize}</dd>
               </div>
               <div>
                 <dt>Segments</dt>
-                <dd>29</dd>
+                <dd>{selectedContext.summary.segments}</dd>
               </div>
               <div>
                 <dt>Video track</dt>
-                <dd className="good">Healthy · 6.0 Mbps</dd>
+                <dd className={currentSession === undefined ? "warn" : "good"}>
+                  {selectedContext.summary.videoTrack}
+                </dd>
               </div>
               <div>
                 <dt>Audio track</dt>
-                <dd className="good">Healthy · 160 kbps</dd>
+                <dd className={currentSession === undefined ? "warn" : "good"}>
+                  {selectedContext.summary.audioTrack}
+                </dd>
               </div>
             </dl>
           </div>
           <div className="facts-panel">
             <h3>Latest facts</h3>
             <ol>
-              {dashboard.facts.map((fact) => (
+              {selectedContext.facts.map((fact) => (
                 <li className={fact.level} key={`${fact.time}-${fact.label}`}>
                   <span>{fact.label}</span>
                   <time>{fact.time}</time>
@@ -262,40 +274,53 @@ export function App(props: AppProps = {}): ReactElement {
       </section>
 
       <aside className="history-rail" aria-label="Selected streamer history">
-        <section className="pinned-session">
-          <p className="eyebrow">Current session (pinned)</p>
-          <h2>Recording Now</h2>
-          <span className="lock">Locked at top</span>
-          <dl>
-            <div>
-              <dt>Started</dt>
-              <dd>{dashboard.currentSession.startedAt}</dd>
-            </div>
-            <div>
-              <dt>Duration</dt>
-              <dd>{dashboard.currentSession.duration}</dd>
-            </div>
-            <div>
-              <dt>Size</dt>
-              <dd>{dashboard.currentSession.size}</dd>
-            </div>
-          </dl>
-        </section>
+        {currentSession === undefined ? (
+          <section className="pinned-session idle-session">
+            <p className="eyebrow">Current session</p>
+            <h2>No current recording</h2>
+            <span className="lock">Waiting</span>
+            <p>{selectedContext.summary.idleDetail}</p>
+          </section>
+        ) : (
+          <section className="pinned-session">
+            <p className="eyebrow">Current session (pinned)</p>
+            <h2>{currentSession.label}</h2>
+            <span className="lock">Locked at top</span>
+            <dl>
+              <div>
+                <dt>Started</dt>
+                <dd>{currentSession.startedAt}</dd>
+              </div>
+              <div>
+                <dt>Duration</dt>
+                <dd>{currentSession.duration}</dd>
+              </div>
+              <div>
+                <dt>Size</dt>
+                <dd>{currentSession.size}</dd>
+              </div>
+            </dl>
+          </section>
+        )}
 
         <section className="history-list">
           <h2>History</h2>
-          {dashboard.history.map((session) => (
-            <article className="history-row" key={session.id}>
-              <div>
-                <strong>{session.label}</strong>
-                <span>{session.startedAt}</span>
-              </div>
-              <div>
-                <span>{session.duration}</span>
-                <b className={session.status}>{session.status}</b>
-              </div>
-            </article>
-          ))}
+          {selectedContext.history.length === 0 ? (
+            <p className="empty-history">No sessions archived yet.</p>
+          ) : (
+            selectedContext.history.map((session) => (
+              <article className="history-row" key={session.id}>
+                <div>
+                  <strong>{session.label}</strong>
+                  <span>{session.startedAt}</span>
+                </div>
+                <div>
+                  <span>{session.duration}</span>
+                  <b className={session.status}>{session.status}</b>
+                </div>
+              </article>
+            ))
+          )}
         </section>
 
         <section className="streamer-info">
@@ -303,19 +328,19 @@ export function App(props: AppProps = {}): ReactElement {
           <dl>
             <div>
               <dt>Frequency</dt>
-              <dd>Every stream</dd>
+              <dd>{selectedContext.summary.frequency}</dd>
             </div>
             <div>
               <dt>Disk usage 7d</dt>
-              <dd>8.9 TB</dd>
+              <dd>{selectedContext.summary.diskUsage7d}</dd>
             </div>
             <div>
               <dt>Retention</dt>
-              <dd>1 / 3 / 7 days</dd>
+              <dd>{selectedContext.summary.retention}</dd>
             </div>
             <div>
               <dt>Last summary</dt>
-              <dd>12:10:42</dd>
+              <dd>{selectedContext.summary.lastSummary}</dd>
             </div>
           </dl>
         </section>

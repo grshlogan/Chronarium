@@ -25,6 +25,14 @@ describe("desktop recording dashboard", () => {
     expect(html).not.toContain("Run fixture capture");
   });
 
+  it("renders streamer site and last-check time on separate lines", () => {
+    const html = renderToStaticMarkup(<App />);
+
+    expect(html).toContain(
+      '<span class="site-code">CB</span><small class="last-check">Last check 12:24:18</small>'
+    );
+  });
+
   it("renders the offline self-test result after the demo action completes", () => {
     const started = reduceRecordingDashboard(
       createInitialRecordingDashboard(),
@@ -62,5 +70,42 @@ describe("desktop recording dashboard", () => {
     expect(html).toContain("VelvetMoth");
     expect(html).toContain("Monitoring paused");
     expect(html).toContain("Paused");
+  });
+
+  it("renders paused streamer context without a current recording card", () => {
+    const selected = reduceRecordingDashboard(
+      createInitialRecordingDashboard(),
+      {
+        type: "streamer.select",
+        streamerId: "velvet"
+      }
+    );
+
+    const html = renderToStaticMarkup(<App dashboard={selected} />);
+
+    expect(html).toContain("VelvetMoth idle");
+    expect(html).toContain("No current recording");
+    expect(html).toContain("Monitoring is paused for this streamer.");
+    expect(html).toContain("VelvetMoth Jun 10");
+    expect(html).not.toContain("Recording Now");
+    expect(html).not.toContain("12.46 GB");
+  });
+
+  it("renders offline streamer context with empty history", () => {
+    const selected = reduceRecordingDashboard(
+      createInitialRecordingDashboard(),
+      {
+        type: "streamer.select",
+        streamerId: "cyber"
+      }
+    );
+
+    const html = renderToStaticMarkup(<App dashboard={selected} />);
+
+    expect(html).toContain("CyberCyan offline");
+    expect(html).toContain("Room state: OFFLINE");
+    expect(html).toContain("No sessions archived yet.");
+    expect(html).toContain("No current recording");
+    expect(html).not.toContain("Recording Now");
   });
 });

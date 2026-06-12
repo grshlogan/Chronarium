@@ -1,6 +1,9 @@
 import {
   dashboardViewModel,
   type DashboardViewModel,
+  type RecordingFact,
+  type SessionSummary,
+  type StreamerContext,
   type StreamerSummary
 } from "./mockDashboard.js";
 
@@ -82,14 +85,18 @@ export function reduceRecordingDashboard(
           monitoringState: "paused",
           captureState: "waiting"
         }),
-        facts: [
-          {
-            time: "now",
-            label: "Monitoring paused",
-            level: "warn"
-          },
-          ...state.facts
-        ]
+        streamerContexts: updateSelectedStreamerContext(state, {
+          roomState: "UNKNOWN",
+          currentSession: null,
+          facts: [
+            {
+              time: "now",
+              label: "Monitoring paused",
+              level: "warn"
+            },
+            ...getSelectedStreamerContext(state).facts
+          ]
+        })
       };
     case "monitoring.resumeSelected":
       return {
@@ -97,14 +104,16 @@ export function reduceRecordingDashboard(
         streamers: updateSelectedStreamer(state, {
           monitoringState: "active"
         }),
-        facts: [
-          {
-            time: "now",
-            label: "Monitoring resumed",
-            level: "ok"
-          },
-          ...state.facts
-        ]
+        streamerContexts: updateSelectedStreamerContext(state, {
+          facts: [
+            {
+              time: "now",
+              label: "Monitoring resumed",
+              level: "ok"
+            },
+            ...getSelectedStreamerContext(state).facts
+          ]
+        })
       };
     case "monitoring.checkNow":
       return {
@@ -112,14 +121,16 @@ export function reduceRecordingDashboard(
         streamers: updateSelectedStreamer(state, {
           lastCheck: "now"
         }),
-        facts: [
-          {
-            time: "now",
-            label: "Manual state check queued",
-            level: "ok"
-          },
-          ...state.facts
-        ]
+        streamerContexts: updateSelectedStreamerContext(state, {
+          facts: [
+            {
+              time: "now",
+              label: "Manual state check queued",
+              level: "ok"
+            },
+            ...getSelectedStreamerContext(state).facts
+          ]
+        })
       };
     case "offlineSelfTest.started":
       return {
@@ -128,7 +139,9 @@ export function reduceRecordingDashboard(
           status: "running"
         }
       };
-    case "offlineSelfTest.completed":
+    case "offlineSelfTest.completed": {
+      const selectedContext = getSelectedStreamerContext(state);
+
       return {
         ...state,
         offlineSelfTest: {
@@ -137,26 +150,29 @@ export function reduceRecordingDashboard(
           factLabel: action.factLabel,
           timelineEventCount: action.timelineEventCount
         },
-        facts: [
-          {
-            time: "now",
-            label: action.factLabel,
-            level: "ok"
-          },
-          ...state.facts
-        ],
-        history: [
-          {
-            id: "synthetic-offline-self-test",
-            label: action.archiveLabel,
-            startedAt: "demo",
-            duration: "00:00:03",
-            size: "synthetic",
-            status: "healthy"
-          },
-          ...state.history
-        ]
+        streamerContexts: updateSelectedStreamerContext(state, {
+          facts: [
+            {
+              time: "now",
+              label: action.factLabel,
+              level: "ok"
+            },
+            ...selectedContext.facts
+          ],
+          history: [
+            {
+              id: "synthetic-offline-self-test",
+              label: action.archiveLabel,
+              startedAt: "demo",
+              duration: "00:00:03",
+              size: "synthetic",
+              status: "healthy"
+            },
+            ...selectedContext.history
+          ]
+        })
       };
+    }
     case "offlineSelfTest.failed":
       return {
         ...state,
@@ -193,6 +209,18 @@ export function getSelectedStreamer(
   return selectedStreamer;
 }
 
+export function getSelectedStreamerContext(
+  dashboard: RecordingDashboardState
+): StreamerContext {
+  const context = dashboard.streamerContexts[dashboard.selectedStreamerId];
+
+  if (context === undefined) {
+    throw new Error("Selected streamer context is missing from the dashboard.");
+  }
+
+  return context;
+}
+
 function updateSelectedStreamer(
   state: RecordingDashboardState,
   patch: Partial<StreamerSummary>
@@ -205,4 +233,42 @@ function updateSelectedStreamer(
         }
       : streamer
   );
+}
+
+function updateSelectedStreamerContext(
+  state: RecordingDashboardState,
+  patch: StreamerContextPatch
+): RecordingDashboardState["streamerContexts"] {
+  const selectedContext = getSelectedStreamerContext(state);
+  const { currentSession, ...restPatch } = patch;
+  const nextContext =
+    currentSession === null
+      ? omitCurrentSession({
+          ...selectedContext,
+          ...restPatch
+        })
+      : {
+          ...selectedContext,
+          ...restPatch,
+          ...(currentSession === undefined ? {} : { currentSession })
+        };
+
+  return {
+    ...state.streamerContexts,
+    [state.selectedStreamerId]: nextContext
+  };
+}
+
+type StreamerContextPatch = Partial<Omit<StreamerContext, "currentSession">> & {
+  readonly currentSession?: SessionSummary | null;
+};
+
+function omitCurrentSession(
+  context: Omit<StreamerContext, "currentSession"> & {
+    readonly currentSession?: SessionSummary | null;
+  }
+): StreamerContext {
+  const { currentSession: _currentSession, ...withoutCurrentSession } = context;
+
+  return withoutCurrentSession;
 }

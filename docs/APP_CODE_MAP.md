@@ -77,6 +77,7 @@ docs/
     plan_web_dashboard_offline_behavior.md
     plan_web_dashboard_monitoring_semantics.md
     plan_web_dashboard_streamer_selection.md
+    plan_web_dashboard_streamer_context.md
     plan_web_first_recording_dashboard.md
 apps/
   desktop/
@@ -528,6 +529,15 @@ Responsibility:
 - Records that selection is browser-local synthetic state only and does not
   persist streamer records or call core.
 
+### `docs/plan/plan_web_dashboard_streamer_context.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for making the selected streamer drive
+  center workspace and right-side session context.
+- Records the left-list check-time wrapping fix and synthetic per-streamer
+  current session, history, latest facts, and empty states.
+
 ### `docs/plan/plan_web_first_recording_dashboard.md`
 
 Responsibility:
@@ -812,6 +822,12 @@ Current status:
   monitoring actions, and synthetic offline self-test action.
 - The left maintained-streamer list is clickable and updates the selected
   workspace using browser-local synthetic state.
+- Each synthetic streamer now has its own selected context: room state, current
+  session or no-current-recording state, latest facts, history, and summary
+  metrics. The center workspace and right-side history read from that selected
+  context.
+- Streamer list rows render site and last-check time as separate lines to avoid
+  inconsistent wrapping.
 - The UI exposes pause monitoring, resume monitoring, and check now controls for
   the selected streamer. The synthetic demo is presented as an offline
   self-test under maintenance diagnostics, not as a recording start action.

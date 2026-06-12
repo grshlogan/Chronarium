@@ -150,6 +150,14 @@ streamer updates the browser-local selected workspace. This remains synthetic
 state only; it does not persist streamer records, parse real links, call core,
 or connect to live sites.
 
+The current A01 UI continuation fixed the left streamer list check-time
+wrapping and added per-streamer synthetic contexts. Each maintained streamer now
+has its own room state, current session or no-current-recording state, history,
+latest facts, and summary metrics. Selecting a streamer updates the center
+workspace and right-side session context. This remains browser-local synthetic
+state only and still does not call core, archive, SQLite, Electron, adapters, or
+real sites.
+
 ## Active Constraints
 
 - Work only inside `D:\live\Chronarium`.
@@ -227,6 +235,7 @@ Documentation changes for this continuation:
 - `docs/plan/plan_web_dashboard_offline_behavior.md`
 - `docs/plan/plan_web_dashboard_monitoring_semantics.md`
 - `docs/plan/plan_web_dashboard_streamer_selection.md`
+- `docs/plan/plan_web_dashboard_streamer_context.md`
 - `docs/plan/plan_web_first_recording_dashboard.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
@@ -458,6 +467,26 @@ Checks already run during this continuation:
   failed because selecting `velvet` did not update the selected workspace.
 - GREEN for Web dashboard streamer selection: the targeted TDD file passed
   after adding `streamer.select` and clickable streamer rows.
+- TDD RED for Web dashboard streamer context:
+  `pnpm exec vitest run
+  tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+  failed because the left list did not expose separate check-time elements and
+  paused streamer selection still reused Luna's current recording context.
+- GREEN for Web dashboard streamer context: the targeted TDD file passed after
+  adding per-streamer context data and selected-context rendering.
+- `pnpm typecheck`: passed after fixing optional current-session updates.
+- `pnpm test`: passed 16 files and 69 tests after the Web dashboard streamer
+  context update.
+- `pnpm build`: passed after the Web dashboard streamer context update.
+- Browser smoke on `http://127.0.0.1:5187/` confirmed site/check-time block
+  display, `VelvetMoth` no-current-recording context, and `CyberCyan` offline
+  empty-history context.
+- `git diff --check`: produced no output after the Web dashboard streamer
+  context update.
+- trailing whitespace scan: produced no output after the Web dashboard streamer
+  context update.
+- JSON/package config parse scan: parsed 24 JSON files after the Web dashboard
+  streamer context update.
 - Browser smoke on `http://127.0.0.1:5187/` confirmed pause/resume/check and
   `Run offline self-test` render, old `Run fixture capture` is absent, `Check
   now` queues a visible fact, offline self-test completes, and clicking

@@ -84,6 +84,11 @@ Current state:
   The renderer can select streamers from the left rail, click pause monitoring,
   resume monitoring, check now, and `Run offline self-test` without calling
   Node-only core/archive/indexer APIs.
+- The Web dashboard now has per-streamer synthetic context. Selecting a
+  streamer changes the center workspace, recording details, latest facts,
+  right-side current-session card, history list, and streamer summary. Paused
+  or offline streamers show `No current recording` instead of `Recording Now`.
+- Left streamer rows now render site and last-check time on separate lines.
 - `apps/desktop` defaults to `http://127.0.0.1:5187/` for dev. Do not use
   `5173` for Chronarium because the user uses that port for other local work.
 - Root-level TDD slices are now organized under `tdd-tests/` by owner path; the
@@ -137,6 +142,8 @@ Current state:
   check now, and offline self-test.
 - `docs/plan/plan_web_dashboard_streamer_selection.md` records the first
   selectable maintained-streamer list behavior.
+- `docs/plan/plan_web_dashboard_streamer_context.md` records the check-time
+  wrapping fix and selected-streamer context linkage.
 - Sixteen Vitest behavior test files exercise synthetic archive writing, reading,
   validation failures, SQLite indexing, the core archive/index service, core
   runtime lifecycle, core maintenance inspection, archive recovery inspection,

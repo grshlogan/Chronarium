@@ -83,8 +83,9 @@ AI 可以快速接手局部问题
 - `apps/desktop` 已有第一版 Web-first React + Vite 录制工作台静态空壳，围绕
   主播维护、自动录制状态、历史场次和全局信息展示；默认开发端口为
   `127.0.0.1:5187`。它已经把主操作语义修正为暂停监控、恢复监控和立即检查，
-  并把浏览器安全的 synthetic fixture 行为收进 offline self-test 诊断入口；还没有
-  接入 core、Electron shell、preload 或 IPC。
+  并把浏览器安全的 synthetic fixture 行为收进 offline self-test 诊断入口。左侧
+  主播列表已能选择主播，中间工作区和右侧历史/当前场次会跟随选中主播切换；
+  还没有接入 core、Electron shell、preload 或 IPC。
 - `packages/core` 已有最小 task scheduler 骨架，可创建、启动、停止、失败和
   查询 fixture capture task；尚未驱动真实录制。
 - `packages/core` 已有 fixture-only adapter lifecycle host，可消费 adapter
@@ -169,6 +170,7 @@ small module boundaries.
 - [docs/plan/plan_web_dashboard_offline_behavior.md](./docs/plan/plan_web_dashboard_offline_behavior.md)：Web 录制工作台离线 demo 行为计划。
 - [docs/plan/plan_web_dashboard_monitoring_semantics.md](./docs/plan/plan_web_dashboard_monitoring_semantics.md)：Web 录制工作台监控/自检语义修正计划。
 - [docs/plan/plan_web_dashboard_streamer_selection.md](./docs/plan/plan_web_dashboard_streamer_selection.md)：Web 录制工作台主播选择行为计划。
+- [docs/plan/plan_web_dashboard_streamer_context.md](./docs/plan/plan_web_dashboard_streamer_context.md)：Web 录制工作台按主播上下文联动计划。
 
 ## 设计边界
 

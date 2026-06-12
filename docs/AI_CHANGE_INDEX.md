@@ -1041,3 +1041,42 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan parsed 24 JSON files.
 - Next: continue with add-link behavior, clearer pause/resume/check feedback,
   or GUI/core DTO boundaries.
+
+## 2026-06-12: Web dashboard streamer context
+
+- Conversation: user pointed out inconsistent `Last check` wrapping in the
+  left streamer list and asked to continue with selected-streamer context
+  linkage.
+- Landed: fixed left-list site/check-time wrapping and gave each synthetic
+  streamer its own current session, no-current-recording state, history, latest
+  facts, room state, and summary metrics.
+- Files:
+  - `README.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_web_dashboard_streamer_context.md`
+  - `apps/desktop/src/App.tsx`
+  - `apps/desktop/src/mockDashboard.ts`
+  - `apps/desktop/src/recordingDashboard.ts`
+  - `apps/desktop/src/styles.css`
+  - `tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+- Decisions:
+  - The renderer still uses browser-local synthetic state only.
+  - Paused and offline streamers show `No current recording` rather than
+    reusing another streamer's active recording.
+  - Site and check-time text in streamer rows are separate block elements.
+- Verification:
+  - TDD RED/GREEN: targeted dashboard test failed before separate site/check
+    elements and selected context existed, then passed after implementation.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 16 files and 69 tests.
+  - `pnpm build` passed.
+  - Browser smoke confirmed site/check-time block display plus `VelvetMoth` and
+    `CyberCyan` selected-context behavior on `http://127.0.0.1:5187/`.
+  - `git diff --check` produced no output.
+  - trailing whitespace scan produced no output.
+  - JSON/package config parse scan parsed 24 JSON files.
+- Next: continue with add-link behavior, clearer pause/resume/check feedback,
+  or GUI/core DTO boundaries.

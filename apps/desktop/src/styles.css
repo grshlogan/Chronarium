@@ -146,6 +146,11 @@ button {
   font-size: 14px;
 }
 
+.streamer-card .site-code,
+.streamer-card .last-check {
+  display: block;
+}
+
 .streamer-card span,
 .streamer-card small,
 .history-row span,
@@ -537,8 +542,25 @@ dl {
   background: rgba(14, 39, 41, 0.82);
 }
 
+.pinned-session.idle-session {
+  border-color: rgba(127, 156, 158, 0.22);
+  background: rgba(15, 22, 26, 0.84);
+}
+
 .pinned-session h2 {
   color: #ff6c5f;
+}
+
+.pinned-session.idle-session h2 {
+  color: #d9e6e8;
+}
+
+.pinned-session p:last-child,
+.empty-history {
+  margin: 14px 0 0;
+  color: #9cafb3;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .lock {
