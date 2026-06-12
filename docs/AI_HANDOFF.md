@@ -93,9 +93,13 @@ Current state:
   rows now show synthetic status lanes for availability, show mode, media-stream
   recording state, and information-stream recording state. These are UI mock
   states only, not real site/capture detection.
+- The row states are now presented as a compact status board rather than loose
+  chips: 35px availability cell plus 81px show-mode cell on the top row, then
+  full-width 120px media-stream and information-stream rows with `title` hover
+  descriptions.
 - Browser smoke confirmed the current left rail renders at 382px wide on
-  `http://127.0.0.1:5187/`; all six synthetic streamer rows have four status
-  chips and no detected card overflow.
+  `http://127.0.0.1:5187/`; all six synthetic streamer rows have a four-cell
+  status board and no detected card overflow.
 - `apps/desktop` defaults to `http://127.0.0.1:5187/` for dev. Do not use
   `5173` for Chronarium because the user uses that port for other local work.
 - Root-level TDD slices are now organized under `tdd-tests/` by owner path; the

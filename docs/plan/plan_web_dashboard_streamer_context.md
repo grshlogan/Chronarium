@@ -32,6 +32,9 @@ streamer drive the center workspace and right-side session context.
   streamer-specific history/facts.
 - RED/GREEN 4: left streamer rows render expanded status lanes for recording
   decisions.
+- RED/GREEN 5: left streamer rows render a compact status board with hover
+  descriptions: short availability cell, wider show-mode cell, and full-width
+  media/info stream cells.
 
 ## Verification
 
@@ -67,6 +70,14 @@ streamer drive the center workspace and right-side session context.
 - `git diff --check`: produced no output.
 - trailing whitespace scan: produced no output.
 - JSON/package config parse scan: parsed 24 JSON files.
+- RED/GREEN 5 failed until the status area exposed descriptive hover text and a
+  compact recording decision board.
+- The right-side status area now uses a fixed compact board: 35px availability
+  cell plus 81px show-mode cell on the first row, then 120px full-width media
+  and information stream rows.
+- Browser smoke confirmed the first streamer board at 120px wide, with no cell
+  overflow and hover titles for availability, show mode, media stream, and
+  information stream.
 - RED/GREEN 4 failed until the left streamer rows exposed synthetic status
   lanes for availability, show mode, media-stream capture, and
   information-stream capture.

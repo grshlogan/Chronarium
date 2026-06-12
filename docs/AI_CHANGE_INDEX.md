@@ -1070,7 +1070,10 @@ unimplemented ideas as completed work.
   - Site and check-time text in streamer rows are separate block elements.
   - Left streamer rows now show synthetic availability, show-mode,
     media-stream, and information-stream status lanes.
-  - The status lanes do not implement real site detection, ticket/private-show
+  - The status lanes were refined into a compact right-side status board:
+    short availability cell, wider show-mode cell, and full-width media/info
+    stream cells with hover descriptions.
+  - The status board does not implement real site detection, ticket/private-show
     handling, media capture, or information stream capture.
 - Verification:
   - TDD RED/GREEN: targeted dashboard test failed before separate site/check
@@ -1087,6 +1090,12 @@ unimplemented ideas as completed work.
     `pnpm test` passed 16 files and 70 tests, and `pnpm build` passed.
   - Browser smoke confirmed a 382px left rail, four status chips per streamer
     row, and no detected streamer-card overflow.
+  - TDD RED/GREEN: targeted dashboard test failed before compact status-board
+    hover text existed, then passed after adding the fixed board structure and
+    `title` descriptions.
+  - Browser smoke confirmed the first status board is 120px wide, with a 35px
+    availability cell, 81px show-mode cell, 120px media row, 120px information
+    row, and no detected cell overflow.
   - `git diff --check` produced no output.
   - trailing whitespace scan produced no output.
   - JSON/package config parse scan parsed 24 JSON files.

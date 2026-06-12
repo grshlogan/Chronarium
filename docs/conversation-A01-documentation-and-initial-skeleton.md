@@ -165,6 +165,11 @@ recording state. This is only a WebUI mock-state presentation layer. It does
 not implement real Chaturbate state detection, private-show handling, media
 stream capture, or information stream capture.
 
+The latest A01 UI refinement changed those loose status lanes into a compact
+right-side status board. The top row uses a short availability cell and a wider
+show-mode/ticket cell; the next two rows are full-width media-stream and
+information-stream states. Each cell has basic hover text through `title`.
+
 ## Active Constraints
 
 - Work only inside `D:\live\Chronarium`.
@@ -498,6 +503,13 @@ Checks already run during this continuation:
   status update.
 - JSON/package config parse scan: parsed 24 JSON files after the expanded
   left-rail status update.
+- TDD RED for compact status board hover text failed until the left streamer
+  rows exposed a recording decision status board and descriptive hover titles.
+- GREEN for compact status board hover text: targeted dashboard test passed
+  after changing the loose status chips into a fixed right-side status board.
+- Browser smoke confirmed the first streamer status board is 120px wide, its
+  top row is 35px plus 81px, its media/info rows are 120px wide, and no cell
+  overflow was detected.
 - `pnpm typecheck`: passed after fixing optional current-session updates.
 - `pnpm test`: passed 16 files and 69 tests after the Web dashboard streamer
   context update.

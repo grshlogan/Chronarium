@@ -96,28 +96,39 @@ export function App(props: AppProps = {}): ReactElement {
                 <span className="site-code">{streamer.site}</span>
                 <small className="last-check">Last check {streamer.lastCheck}</small>
               </div>
-              <div className="streamer-status-lanes" aria-label={`${streamer.name} status`}>
-                <span className={`status-chip ${streamer.status}`}>
+              <div
+                className="streamer-status-board"
+                aria-label={`${streamer.name} recording decision status`}
+              >
+                <span
+                  className={`status-cell availability ${streamer.status}`}
+                  title={describeAvailability(streamer)}
+                >
                   {formatAvailability(streamer)}
                 </span>
-                <span className="status-chip show-mode">
+                <span
+                  className="status-cell show-mode"
+                  title={`票房/秀类型：${formatShowMode(streamer)}`}
+                >
                   {formatShowMode(streamer)}
                 </span>
                 <span
-                  className={`status-chip ${
+                  className={`status-cell stream-state media-stream ${
                     streamer.mediaStreamState === "recording"
                       ? "recording"
                       : "idle"
                   }`}
+                  title={describeMediaStreamState(streamer)}
                 >
                   {formatMediaStreamState(streamer)}
                 </span>
                 <span
-                  className={`status-chip ${
+                  className={`status-cell stream-state information-stream ${
                     streamer.informationStreamState === "recording"
                       ? "recording"
                       : "idle"
                   }`}
+                  title={describeInformationStreamState(streamer)}
                 >
                   {formatInformationStreamState(streamer)}
                 </span>
@@ -416,6 +427,19 @@ function formatAvailability(
   }
 }
 
+function describeAvailability(
+  streamer: RecordingDashboardState["streamers"][number]
+): string {
+  switch (streamer.status) {
+    case "online":
+      return "在线：监控已确认主播在线";
+    case "offline":
+      return "离线：监控已确认主播离线";
+    case "away":
+      return "暂离：主播状态暂离或不可录制";
+  }
+}
+
 function formatShowMode(
   streamer: RecordingDashboardState["streamers"][number]
 ): string {
@@ -439,12 +463,28 @@ function formatMediaStreamState(
     : "媒体流未录制";
 }
 
+function describeMediaStreamState(
+  streamer: RecordingDashboardState["streamers"][number]
+): string {
+  return streamer.mediaStreamState === "recording"
+    ? "媒体流：正在录制"
+    : "媒体流：未录制";
+}
+
 function formatInformationStreamState(
   streamer: RecordingDashboardState["streamers"][number]
 ): string {
   return streamer.informationStreamState === "recording"
     ? "信息流录制中"
     : "信息流未录制";
+}
+
+function describeInformationStreamState(
+  streamer: RecordingDashboardState["streamers"][number]
+): string {
+  return streamer.informationStreamState === "recording"
+    ? "信息流：正在录制"
+    : "信息流：未录制";
 }
 
 function formatSelectedCaptureState(

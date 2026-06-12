@@ -49,6 +49,16 @@ describe("desktop recording dashboard", () => {
     expect(html).toContain("信息流未录制");
   });
 
+  it("renders streamer status board with descriptive hover text", () => {
+    const html = renderToStaticMarkup(<App />);
+
+    expect(html).toContain('aria-label="LunaCeleste recording decision status"');
+    expect(html).toContain('title="在线：监控已确认主播在线"');
+    expect(html).toContain('title="票房/秀类型：买断票房"');
+    expect(html).toContain('title="媒体流：正在录制"');
+    expect(html).toContain('title="信息流：正在录制"');
+  });
+
   it("renders the offline self-test result after the demo action completes", () => {
     const started = reduceRecordingDashboard(
       createInitialRecordingDashboard(),
