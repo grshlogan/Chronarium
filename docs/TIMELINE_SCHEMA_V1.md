@@ -181,6 +181,35 @@ Forbidden payload fields:
 - raw request headers;
 - cookies or bearer tokens.
 
+### `media.gap.detected`
+
+Records an observed or modeled gap in media evidence.
+
+Current Chaturbate diagnostic fixture payload fields:
+
+- `level`: `warning` or `error`;
+- `code`: currently `media_gap.detected`;
+- `evidenceLevel`: currently `synthetic-contract` for committed diagnostic
+  fixtures;
+- `message`: synthetic or redacted explanation;
+- `affectedTrackIds`: track ids affected by the gap;
+- `evidence`: JSON object with synthetic gap evidence, such as
+  `previousSegmentId`, `nextSegmentId`, expected and observed source sequence,
+  `gapStartMs`, and `gapDurationMs`;
+- `syntheticOnly`: `true` for committed fixtures.
+
+Evidence note:
+
+- The committed Chaturbate diagnostic fixtures are synthetic contract tests.
+  They prove that Chronarium can store and query the fact shape; they do not
+  prove current live-site Chaturbate behavior.
+
+Forbidden payload fields:
+
+- raw signed URLs;
+- raw request headers;
+- cookies or bearer tokens.
+
 ### `room.state`
 
 Records a room-state observation.
@@ -212,6 +241,59 @@ Required payload fields:
 - `message`.
 
 Diagnostics must not leak secrets.
+
+### `diagnostic.duration_mismatch`
+
+Records a duration mismatch between media tracks or between source facts and a
+derived artifact.
+
+Current Chaturbate diagnostic fixture payload fields:
+
+- `level`: `warning` or `error`;
+- `code`: currently `media_tool.duration_mismatch`;
+- `evidenceLevel`: currently `synthetic-contract` for committed diagnostic
+  fixtures;
+- `message`: synthetic or redacted explanation;
+- `affectedTrackIds`: track ids involved in the comparison;
+- `evidence`: JSON object with compared durations, such as `videoDurationMs`,
+  `audioDurationMs`, `differenceMs`, and a comparison label;
+- `syntheticOnly`: `true` for committed fixtures.
+
+The current fixture is synthetic only. A real duration mismatch diagnosis later
+must cite approved source facts or redacted media-tool output.
+
+Forbidden payload fields:
+
+- raw signed URLs;
+- raw request headers;
+- cookies or bearer tokens.
+
+### `diagnostic.media_tool_output`
+
+Records diagnostic evidence that would normally come from a downloader,
+ffprobe, FFmpeg, or another approved media tool boundary.
+
+Current Chaturbate diagnostic fixture payload fields:
+
+- `level`: `warning` or `error`;
+- `code`: currently one of `media_tool.audio_track_missing` or
+  `media_tool.output_stalled`;
+- `evidenceLevel`: currently `synthetic-contract` for committed diagnostic
+  fixtures;
+- `message`: synthetic or redacted explanation;
+- `affectedTrackIds`: track ids affected by the tool observation;
+- `evidence`: JSON object with synthetic evidence, such as expected and
+  observed track kinds, last observed segment ids, or no-progress duration;
+- `syntheticOnly`: `true` for committed fixtures.
+
+The current fixture does not execute media tools. It only proves the timeline,
+archive, and index shape for these diagnostic facts.
+
+Forbidden payload fields:
+
+- raw signed URLs;
+- raw request headers;
+- cookies or bearer tokens.
 
 ## Ordering Rules
 

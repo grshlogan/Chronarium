@@ -639,3 +639,50 @@ unimplemented ideas as completed work.
 - Next: add offline Chaturbate diagnostic fixtures for missing audio, duration
   mismatch, stalled output, and reconnect/gap scenarios, or implement archive
   recovery report-only detection.
+
+## 2026-06-12: Chaturbate offline diagnostic fixtures
+
+- Conversation: user asked to continue after deferring upload/retention work,
+  then clarified that tests based on synthetic scenarios must not be presented
+  as live-site facts.
+- Landed: added optional diagnostic records to the Chaturbate fixture parser,
+  two synthetic diagnostic fixtures, and tests proving diagnostic facts can be
+  validated, archived, read back, indexed, and queried.
+- Files:
+  - `README.md`
+  - `docs/TIMELINE_SCHEMA_V1.md`
+  - `docs/DIAGNOSTIC_CODES_V1.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A03-chaturbate-offline-fixtures.md`
+  - `docs/plan/plan_chaturbate_offline_diagnostic_fixtures.md`
+  - `packages/adapters/chaturbate/fixtures/README.md`
+  - `packages/adapters/chaturbate/fixtures/missing-audio.synthetic.json`
+  - `packages/adapters/chaturbate/fixtures/diagnostic-anomalies.synthetic.json`
+  - `packages/adapters/chaturbate/src/splitTrackFixture.ts`
+  - `packages/adapters/chaturbate/tests/diagnosticFixtures.test.ts`
+- Decisions:
+  - The new diagnostic fixtures are synthetic contract tests only.
+  - They model missing audio, media gap, duration mismatch, and stalled output
+    to prove Chronarium can store/query bad recording facts.
+  - They do not prove current live Chaturbate behavior; real compatibility
+    evidence must come later from approved redacted samples or synthetic
+    reproductions derived from approved local evidence.
+  - Timeline diagnostic payload codes are documented separately from archive
+    validator issue codes.
+- Verification:
+  - `pnpm exec vitest run packages/adapters/chaturbate/tests` passed 3 files
+    and 7 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 8 files and 39 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON parse scan succeeded for package/config and synthetic fixture JSON
+    files.
+- Next: run full workspace verification, commit/push this step, then continue
+  with archive recovery report-only detection or deterministic maintenance
+  inspection types.

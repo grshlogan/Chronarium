@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "name": "cb-missing-audio-synthetic",
+  "sessionId": "session-cb-synthetic-missing-audio-001",
+  "capturedAt": "2026-06-12T00:10:00.000Z",
+  "monotonicStartMs": 0,
+  "topology": {
+    "protocol": "ll-hls-cmaf",
+    "playlistReference": "fixture://chaturbate/missing-audio/master.m3u8",
+    "redactionStatus": "synthetic"
+  },
+  "tracks": [
+    {
+      "id": "video-main",
+      "kind": "video",
+      "label": "Synthetic CB video without audio partner",
+      "codec": "h264",
+      "container": "fmp4",
+      "timeBase": "1/1000",
+      "sourceIdHash": "synthetic-cb-missing-audio-video-source-hash",
+      "playlistReference": "fixture://chaturbate/missing-audio/video.m3u8",
+      "segments": [
+        {
+          "id": "video-segment-0001",
+          "sourceSequence": 301,
+          "mediaStartMs": 0,
+          "durationMs": 2000
+        },
+        {
+          "id": "video-segment-0002",
+          "sourceSequence": 302,
+          "mediaStartMs": 2000,
+          "durationMs": 2000
+        }
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "type": "diagnostic.media_tool_output",
+      "code": "media_tool.audio_track_missing",
+      "evidenceLevel": "synthetic-contract",
+      "level": "error",
+      "message": "Synthetic fixture observed a video-only topology where an audio track was expected.",
+      "monotonicMs": 4000,
+      "affectedTrackIds": ["video-main"],
+      "evidence": {
+        "expectedTrackKinds": ["video", "audio"],
+        "observedTrackKinds": ["video"],
+        "playlistReference": "fixture://chaturbate/missing-audio/master.m3u8",
+        "syntheticOnly": true
+      }
+    }
+  ]
+}

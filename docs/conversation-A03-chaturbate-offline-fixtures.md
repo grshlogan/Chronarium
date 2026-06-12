@@ -36,6 +36,18 @@ Current continuation:
   `.chron` archive;
 - verified that archive reader/validator and SQLite indexer can consume the
   resulting facts.
+- added synthetic diagnostic fixtures for missing audio, media gap,
+  audio/video duration mismatch, and stalled output;
+- verified that diagnostic facts can be emitted as timeline events, written to
+  `.chron`, validated/read back, and queried from SQLite.
+
+Important evidence clarification:
+
+- These diagnostic fixtures are synthetic contract tests.
+- They prove Chronarium can preserve and query modeled bad recording facts.
+- They do not prove current live Chaturbate behavior.
+- Real compatibility evidence must come later from user-approved, sanitized
+  samples or synthetic reproductions derived from approved local evidence.
 
 ## Active Constraints
 
@@ -60,15 +72,19 @@ Current continuation:
 - Adapter messages should pass the existing adapter protocol schema.
 - The fixture must reject network-looking playlist references so accidental
   real URLs do not enter committed tests.
+- Diagnostic fixtures are allowed to model likely failure classes, but must be
+  labeled as synthetic contract tests rather than empirical site facts.
 
 ## Files Changed Or Expected To Change
 
 - `docs/conversation-A03-chaturbate-offline-fixtures.md`
 - `docs/plan/plan_chaturbate_offline_split_fixture.md`
 - `docs/plan/plan_chaturbate_fixture_archive_flow.md`
+- `docs/plan/plan_chaturbate_offline_diagnostic_fixtures.md`
 - `packages/adapters/chaturbate/fixtures/`
 - `packages/adapters/chaturbate/src/`
 - `packages/adapters/chaturbate/tests/`
+- `packages/adapters/chaturbate/tests/diagnosticFixtures.test.ts`
 - `packages/adapters/chaturbate/tests/splitTrackArchiveFlow.test.ts`
 - `docs/TIMELINE_SCHEMA_V1.md`
 - `README.md`
@@ -100,9 +116,20 @@ Checks run:
 - `git diff --check`: produced no output.
 - trailing whitespace scan: produced no output.
 - JSON parse scan: succeeded.
+- `pnpm exec vitest run packages/adapters/chaturbate/tests`: passed 3 files and
+  7 tests after adding synthetic diagnostic fixtures.
+- `pnpm typecheck`: passed.
+- `pnpm test`: passed 8 files and 39 tests.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed.
+- `git diff --check`: produced no output.
+- trailing whitespace scan: produced no output.
+- JSON parse scan: succeeded for package/config and synthetic fixture JSON
+  files.
 
 ## Next Safe Step
 
-Add offline Chaturbate diagnostic fixtures for missing audio, duration
-mismatch, stalled output, and reconnect/gap scenarios, or implement archive
-recovery report-only detection.
+Run full workspace verification, then commit/push this diagnostic fixture step.
+After that, implement archive recovery report-only detection or the first
+deterministic maintenance inspection types under core.

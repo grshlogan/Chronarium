@@ -3,8 +3,10 @@
 Status: registry document. The Implemented Registry section reflects the
 `ArchiveValidationIssueCode` union that exists in
 `packages/archive/src/validator.ts` today and is stored by the SQLite indexer.
-All Reserved sections are drafts: no emitting code exists for them, and their
-candidate names may change until first implementation.
+The Timeline Diagnostic Payload Code Registry section reflects codes that
+appear inside committed synthetic timeline diagnostic fixture payloads. All
+Reserved sections are drafts: no production emitting code exists for them, and
+their candidate names may change until first implementation.
 
 ## Purpose
 
@@ -172,9 +174,11 @@ them: `validateFileArchive` (reads a Replay Package from disk) and
 
 ## Reserved Areas
 
-The following areas are RESERVED. No emitting code exists for any of them.
-Candidate names listed here are drafts and may change until first
-implementation; only the area tokens themselves are reserved.
+The following areas are RESERVED for archive validation or future durable
+diagnostic outputs. No production emitting code exists for any of them.
+Candidate names listed here are drafts unless they are also listed in the
+Timeline Diagnostic Payload Code Registry below; only the area tokens
+themselves are reserved.
 
 - `segment.*`: future MediaSegment integrity checks, such as missing segment
   files, hash mismatches, or duration anomalies. Related design context
@@ -187,9 +191,12 @@ implementation; only the area tokens themselves are reserved.
   rows that no longer match archive truth.
 - `adapter.*`: Adapter Worker runtime failures, such as parse errors,
   unexpected exits, or protocol violations. See `docs/ADAPTER_PROTOCOL.md`.
-- `media_tool.*`: external media tool diagnostics. Candidate examples are
+- `media_gap.*`: media gap diagnostics preserved as timeline facts. The first
+  committed synthetic fixture uses `media_gap.detected`.
+- `media_tool.*`: external media tool diagnostics. Candidate examples include
+  `media_tool.audio_track_missing`, `media_tool.duration_mismatch`,
   `media_tool.output_stalled` (output stopped growing while the tool process
-  stayed alive) and `media_tool.exit_nonzero` (tool exited with a failure
+  stayed alive), and `media_tool.exit_nonzero` (tool exited with a failure
   status), following the watchdog lessons in
   `docs/CB_RECORDING_REFERENCES.md` and the boundary in
   `docs/MEDIA_TOOLS_BOUNDARY.md`.
@@ -205,6 +212,38 @@ implementation; only the area tokens themselves are reserved.
   in a derived mux.
 - `storage.*`: disk space and storage health diagnostics, such as free space
   below a configured floor.
+
+## Timeline Diagnostic Payload Code Registry
+
+These codes currently appear only in committed synthetic Chaturbate diagnostic
+fixtures under `packages/adapters/chaturbate/fixtures/`. They are stored inside
+timeline event payloads, not emitted by `packages/archive/src/validator.ts` and
+not stored in `archive_validation_issues`.
+
+Evidence level:
+
+- synthetic contract fixture only;
+- proves Chronarium can store, validate, read, and index the fact shape;
+- does not prove current live Chaturbate behavior;
+- real compatibility evidence must come later from separately approved,
+  redacted samples or synthetic reproductions derived from approved local
+  evidence.
+
+### media_gap.*
+
+- `media_gap.detected`: a media gap was observed or modeled between media
+  evidence points. Current fixture event type: `media.gap.detected`.
+
+### media_tool.*
+
+- `media_tool.audio_track_missing`: an expected audio track was absent in the
+  modeled topology. Current fixture event type:
+  `diagnostic.media_tool_output`.
+- `media_tool.duration_mismatch`: compared media durations did not match.
+  Current fixture event type: `diagnostic.duration_mismatch`.
+- `media_tool.output_stalled`: no new media evidence arrived while the modeled
+  tool process remained alive. Current fixture event type:
+  `diagnostic.media_tool_output`.
 
 ## Relationship To Timeline Events
 

@@ -64,6 +64,7 @@ docs/
     plan_archive_recovery.md
     plan_chaturbate_offline_split_fixture.md
     plan_chaturbate_fixture_archive_flow.md
+    plan_chaturbate_offline_diagnostic_fixtures.md
 packages/
   types/
   schemas/
@@ -441,6 +442,16 @@ Responsibility:
 - Records that the flow remains offline, synthetic, and free of real media or
   credential handling.
 
+### `docs/plan/plan_chaturbate_offline_diagnostic_fixtures.md`
+
+Responsibility:
+
+- Plan, scope, evidence level, and verification notes for synthetic
+  Chaturbate diagnostic fixtures.
+- Records that missing audio, duration mismatch, media gap, and stalled-output
+  scenarios are contract tests for Chronarium's storage/query behavior, not
+  proof of current live Chaturbate behavior.
+
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 
 Responsibility:
@@ -517,12 +528,15 @@ packages/
       tsconfig.json
       fixtures/
         README.md
+        diagnostic-anomalies.synthetic.json
+        missing-audio.synthetic.json
         split-audio-video.synthetic.json
       src/
         fixtureAdapter.ts
         index.ts
         splitTrackFixture.ts
       tests/
+        diagnosticFixtures.test.ts
         splitTrackArchiveFlow.test.ts
         splitTrackFixture.test.ts
   archive/
@@ -688,10 +702,14 @@ Current status:
   LL-HLS/CMAF topology.
 - It can parse that fixture into media track metadata and timeline facts, then
   emit those facts through the existing fixture adapter runner.
+- It includes synthetic diagnostic fixtures for missing audio, media gap,
+  duration mismatch, and stalled output. These are contract tests for
+  Chronarium's archive/timeline/index behavior, not evidence that current live
+  Chaturbate behaves this way.
 - Its tests validate timeline envelopes, adapter protocol messages, rejection
   of network-looking or token-bearing fixture references, writing the fixture
   into a synthetic `.chron` archive, archive reader/validator consumption, and
-  SQLite indexer queries.
+  SQLite indexer queries for split-track and diagnostic facts.
 - It does not perform network requests, downloads, account handling, cookies, or
   session handling.
 

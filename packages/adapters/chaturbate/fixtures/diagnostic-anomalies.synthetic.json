@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "name": "cb-diagnostic-anomalies-synthetic",
+  "sessionId": "session-cb-synthetic-diagnostic-001",
+  "capturedAt": "2026-06-12T00:20:00.000Z",
+  "monotonicStartMs": 0,
+  "topology": {
+    "protocol": "ll-hls-cmaf",
+    "playlistReference": "fixture://chaturbate/diagnostic-anomalies/master.m3u8",
+    "redactionStatus": "synthetic"
+  },
+  "tracks": [
+    {
+      "id": "video-main",
+      "kind": "video",
+      "label": "Synthetic CB video with gap",
+      "codec": "h264",
+      "container": "fmp4",
+      "timeBase": "1/1000",
+      "sourceIdHash": "synthetic-cb-diagnostic-video-source-hash",
+      "playlistReference": "fixture://chaturbate/diagnostic-anomalies/video.m3u8",
+      "segments": [
+        {
+          "id": "video-segment-0001",
+          "sourceSequence": 401,
+          "mediaStartMs": 0,
+          "durationMs": 2000
+        },
+        {
+          "id": "video-segment-0002",
+          "sourceSequence": 402,
+          "mediaStartMs": 2000,
+          "durationMs": 2000
+        },
+        {
+          "id": "video-segment-0004",
+          "sourceSequence": 404,
+          "mediaStartMs": 7000,
+          "durationMs": 2000
+        }
+      ]
+    },
+    {
+      "id": "audio-main",
+      "kind": "audio",
+      "label": "Synthetic CB audio shorter than video",
+      "codec": "aac",
+      "container": "fmp4",
+      "timeBase": "1/1000",
+      "sourceIdHash": "synthetic-cb-diagnostic-audio-source-hash",
+      "playlistReference": "fixture://chaturbate/diagnostic-anomalies/audio.m3u8",
+      "segments": [
+        {
+          "id": "audio-segment-0001",
+          "sourceSequence": 501,
+          "mediaStartMs": 0,
+          "durationMs": 2000
+        },
+        {
+          "id": "audio-segment-0002",
+          "sourceSequence": 502,
+          "mediaStartMs": 2000,
+          "durationMs": 1500
+        }
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "type": "media.gap.detected",
+      "code": "media_gap.detected",
+      "evidenceLevel": "synthetic-contract",
+      "level": "warning",
+      "message": "Synthetic fixture observed a missing video segment interval before source sequence 404.",
+      "monotonicMs": 4000,
+      "affectedTrackIds": ["video-main"],
+      "evidence": {
+        "trackId": "video-main",
+        "previousSegmentId": "video-segment-0002",
+        "nextSegmentId": "video-segment-0004",
+        "expectedNextSourceSequence": 403,
+        "observedNextSourceSequence": 404,
+        "gapStartMs": 4000,
+        "gapDurationMs": 3000,
+        "syntheticOnly": true
+      }
+    },
+    {
+      "type": "diagnostic.duration_mismatch",
+      "code": "media_tool.duration_mismatch",
+      "evidenceLevel": "synthetic-contract",
+      "level": "warning",
+      "message": "Synthetic fixture observed video duration longer than audio duration.",
+      "monotonicMs": 9000,
+      "affectedTrackIds": ["video-main", "audio-main"],
+      "evidence": {
+        "videoDurationMs": 9000,
+        "audioDurationMs": 3500,
+        "differenceMs": 5500,
+        "comparison": "video_longer_than_audio",
+        "syntheticOnly": true
+      }
+    },
+    {
+      "type": "diagnostic.media_tool_output",
+      "code": "media_tool.output_stalled",
+      "evidenceLevel": "synthetic-contract",
+      "level": "error",
+      "message": "Synthetic fixture observed no new media evidence while the simulated tool process stayed alive.",
+      "monotonicMs": 11000,
+      "affectedTrackIds": ["video-main", "audio-main"],
+      "evidence": {
+        "tool": "synthetic-downloader",
+        "lastObservedSegmentIds": {
+          "video-main": "video-segment-0004",
+          "audio-main": "audio-segment-0002"
+        },
+        "noProgressForMs": 2000,
+        "processState": "alive",
+        "syntheticOnly": true
+      }
+    }
+  ]
+}

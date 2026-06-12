@@ -1,5 +1,6 @@
 import type {
   JsonObject,
+  JsonValue,
   MediaTrack,
   MediaTrackKind,
   RedactionStatus,
@@ -19,6 +20,7 @@ export interface ChaturbateSplitTrackFixture {
   readonly monotonicStartMs: number;
   readonly topology: ChaturbateFixtureTopology;
   readonly tracks: readonly ChaturbateFixtureTrack[];
+  readonly diagnostics: readonly ChaturbateFixtureDiagnostic[];
 }
 
 export interface ChaturbateFixtureTopology {
@@ -46,6 +48,30 @@ export interface ChaturbateFixtureSegment {
   readonly durationMs: number;
 }
 
+export type ChaturbateFixtureDiagnosticType =
+  | "diagnostic.duration_mismatch"
+  | "diagnostic.media_tool_output"
+  | "media.gap.detected";
+
+export type ChaturbateFixtureDiagnosticCode =
+  | "media_tool.audio_track_missing"
+  | "media_tool.duration_mismatch"
+  | "media_tool.output_stalled"
+  | "media_gap.detected";
+
+export type ChaturbateFixtureDiagnosticLevel = "warning" | "error";
+
+export interface ChaturbateFixtureDiagnostic {
+  readonly type: ChaturbateFixtureDiagnosticType;
+  readonly code: ChaturbateFixtureDiagnosticCode;
+  readonly evidenceLevel: "synthetic-contract";
+  readonly level: ChaturbateFixtureDiagnosticLevel;
+  readonly message: string;
+  readonly monotonicMs: number;
+  readonly affectedTrackIds: readonly string[];
+  readonly evidence: JsonObject;
+}
+
 export function parseChaturbateSplitTrackFixture(
   value: unknown
 ): ChaturbateSplitTrackFixture {
@@ -58,6 +84,12 @@ export function parseChaturbateSplitTrackFixture(
   const topology = parseTopology(fixture.topology);
   const tracks = expectArray(fixture.tracks, "tracks").map((track, index) =>
     parseTrack(track, `tracks[${index}]`)
+  );
+  const diagnostics = expectOptionalArray(
+    fixture.diagnostics,
+    "diagnostics"
+  ).map((diagnostic, index) =>
+    parseDiagnostic(diagnostic, `diagnostics[${index}]`)
   );
 
   if (tracks.length === 0) {
@@ -72,6 +104,16 @@ export function parseChaturbateSplitTrackFixture(
     trackIds.add(track.id);
   }
 
+  diagnostics.forEach((diagnostic, diagnosticIndex) => {
+    diagnostic.affectedTrackIds.forEach((trackId) => {
+      if (!trackIds.has(trackId)) {
+        throw new Error(
+          `diagnostics[${diagnosticIndex}].affectedTrackIds references unknown track id: ${trackId}`
+        );
+      }
+    });
+  });
+
   return {
     schemaVersion: 1,
     name: expectString(fixture.name, "name"),
@@ -83,7 +125,8 @@ export function parseChaturbateSplitTrackFixture(
       0
     ),
     topology,
-    tracks
+    tracks,
+    diagnostics
   };
 }
 
@@ -171,6 +214,27 @@ export function createChaturbateSplitTrackTimelineEvents(
       );
       sequence += 1;
     }
+  }
+
+  for (const diagnostic of fixture.diagnostics) {
+    events.push(
+      createFixtureTimelineEvent({
+        fixture,
+        sequence,
+        type: diagnostic.type,
+        monotonicMs: fixture.monotonicStartMs + diagnostic.monotonicMs,
+        payload: {
+          level: diagnostic.level,
+          code: diagnostic.code,
+          evidenceLevel: diagnostic.evidenceLevel,
+          message: diagnostic.message,
+          affectedTrackIds: diagnostic.affectedTrackIds,
+          evidence: diagnostic.evidence,
+          syntheticOnly: true
+        }
+      })
+    );
+    sequence += 1;
   }
 
   return events;
@@ -261,6 +325,51 @@ function parseSegment(value: unknown, path: string): ChaturbateFixtureSegment {
   };
 }
 
+function parseDiagnostic(
+  value: unknown,
+  path: string
+): ChaturbateFixtureDiagnostic {
+  const diagnostic = expectRecord(value, path);
+  const type = parseDiagnosticType(expectString(diagnostic.type, `${path}.type`));
+  const code = parseDiagnosticCode(expectString(diagnostic.code, `${path}.code`));
+  const evidenceLevel = expectString(
+    diagnostic.evidenceLevel,
+    `${path}.evidenceLevel`
+  );
+  if (evidenceLevel !== "synthetic-contract") {
+    throw new Error(`${path}.evidenceLevel must be synthetic-contract.`);
+  }
+
+  const level = parseDiagnosticLevel(
+    expectString(diagnostic.level, `${path}.level`)
+  );
+  const message = expectString(diagnostic.message, `${path}.message`);
+  const affectedTrackIds = expectOptionalArray(
+    diagnostic.affectedTrackIds,
+    `${path}.affectedTrackIds`
+  ).map((trackId, index) =>
+    expectString(trackId, `${path}.affectedTrackIds[${index}]`)
+  );
+  const evidence = expectJsonObject(diagnostic.evidence, `${path}.evidence`);
+
+  assertNoSensitiveFixtureStrings(message, `${path}.message`);
+  assertNoSensitiveFixtureStrings(evidence, `${path}.evidence`);
+
+  return {
+    type,
+    code,
+    evidenceLevel,
+    level,
+    message,
+    monotonicMs: expectNonNegativeInteger(
+      diagnostic.monotonicMs,
+      `${path}.monotonicMs`
+    ),
+    affectedTrackIds,
+    evidence
+  };
+}
+
 function createFixtureTimelineEvent(input: {
   readonly fixture: ChaturbateSplitTrackFixture;
   readonly sequence: number;
@@ -297,6 +406,45 @@ function createSyntheticSource(sourceIdHash?: string): {
   };
 }
 
+function parseDiagnosticType(
+  value: string
+): ChaturbateFixtureDiagnosticType {
+  switch (value) {
+    case "diagnostic.duration_mismatch":
+    case "diagnostic.media_tool_output":
+    case "media.gap.detected":
+      return value;
+    default:
+      throw new Error(`Unsupported fixture diagnostic type: ${value}`);
+  }
+}
+
+function parseDiagnosticCode(
+  value: string
+): ChaturbateFixtureDiagnosticCode {
+  switch (value) {
+    case "media_tool.audio_track_missing":
+    case "media_tool.duration_mismatch":
+    case "media_tool.output_stalled":
+    case "media_gap.detected":
+      return value;
+    default:
+      throw new Error(`Unsupported fixture diagnostic code: ${value}`);
+  }
+}
+
+function parseDiagnosticLevel(
+  value: string
+): ChaturbateFixtureDiagnosticLevel {
+  switch (value) {
+    case "warning":
+    case "error":
+      return value;
+    default:
+      throw new Error(`Unsupported fixture diagnostic level: ${value}`);
+  }
+}
+
 function assertSyntheticFixtureReference(reference: string, path: string): void {
   const lowerReference = reference.toLowerCase();
   const forbiddenFragments = [
@@ -321,6 +469,47 @@ function assertSyntheticFixtureReference(reference: string, path: string): void 
   }
 }
 
+function assertNoSensitiveFixtureStrings(value: unknown, path: string): void {
+  if (typeof value === "string") {
+    const lowerValue = value.toLowerCase();
+    const forbiddenFragments = [
+      "cookie",
+      "token",
+      "session=",
+      "signature",
+      "authorization",
+      "bearer",
+      "signed"
+    ];
+
+    if (
+      lowerValue.startsWith("http://") ||
+      lowerValue.startsWith("https://")
+    ) {
+      throw new Error(`${path} must not contain network URLs.`);
+    }
+
+    if (forbiddenFragments.some((fragment) => lowerValue.includes(fragment))) {
+      throw new Error(`${path} contains a forbidden sensitive fragment.`);
+    }
+
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item, index) =>
+      assertNoSensitiveFixtureStrings(item, `${path}[${index}]`)
+    );
+    return;
+  }
+
+  if (typeof value === "object" && value !== null) {
+    Object.entries(value).forEach(([key, item]) =>
+      assertNoSensitiveFixtureStrings(item, `${path}.${key}`)
+    );
+  }
+}
+
 function expectRecord(value: unknown, path: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(`${path} must be an object.`);
@@ -337,12 +526,63 @@ function expectArray(value: unknown, path: string): readonly unknown[] {
   return value;
 }
 
+function expectOptionalArray(
+  value: unknown,
+  path: string
+): readonly unknown[] {
+  if (value === undefined) {
+    return [];
+  }
+
+  return expectArray(value, path);
+}
+
 function expectString(value: unknown, path: string): string {
   if (typeof value !== "string" || value.length === 0) {
     throw new Error(`${path} must be a non-empty string.`);
   }
 
   return value;
+}
+
+function expectJsonObject(value: unknown, path: string): JsonObject {
+  const record = expectRecord(value, path);
+  const output: Record<string, JsonValue> = {};
+
+  Object.entries(record).forEach(([key, item]) => {
+    output[key] = expectJsonValue(item, `${path}.${key}`);
+  });
+
+  return output;
+}
+
+function expectJsonValue(value: unknown, path: string): JsonValue {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      throw new Error(`${path} must be a finite JSON number.`);
+    }
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item, index) =>
+      expectJsonValue(item, `${path}[${index}]`)
+    );
+  }
+
+  if (typeof value === "object" && value !== null) {
+    return expectJsonObject(value, path);
+  }
+
+  throw new Error(`${path} must be a JSON-compatible value.`);
 }
 
 function optionalStringProperty<K extends string>(

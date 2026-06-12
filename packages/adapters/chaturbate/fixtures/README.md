@@ -7,6 +7,20 @@ Current fixtures:
 - `split-audio-video.synthetic.json`: a CB-like LL-HLS/CMAF topology with one
   synthetic video track, one synthetic audio track, and two synthetic segment
   observations per track.
+- `missing-audio.synthetic.json`: a synthetic video-only topology plus one
+  diagnostic fact for expected audio being absent.
+- `diagnostic-anomalies.synthetic.json`: a synthetic split-track topology with
+  a media gap, audio/video duration mismatch, and stalled-output diagnostic
+  facts.
+
+Evidence level:
+
+- These fixtures are contract tests for Chronarium's archive, timeline, and
+  index behavior.
+- They do not prove current live Chaturbate behavior.
+- Real compatibility evidence must come later from separately approved,
+  sanitized samples or synthetic reproductions derived from approved local
+  evidence.
 
 Do not place real recordings, raw playlists with signed URLs, cookies, request
 headers, account data, private room labels, or personal chat logs here.
