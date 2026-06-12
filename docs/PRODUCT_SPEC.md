@@ -112,9 +112,12 @@ can derive query rows from synthetic archives for archive metadata, timeline
 events, and validation issues. The first core archive/index service can call
 archive validation, archive reading, reindex, and index queries. A minimal core
 runtime lifecycle shell can start, stop, report health, and expose that service
-while running. GUI, core task scheduling, adapter lifecycle, SQLite integration
-with GUI, media tooling, real media segment writing/probing, archive
-recovery/migration, replay player, and real adapters remain unimplemented.
+while running. The first report-only archive recovery inspector can identify
+common interrupted-write states without repair, and the first core GUI-facing
+service facade exposes health, archive/index, maintenance, and recovery
+inspection calls for a future GUI. Electron/React GUI, core task scheduling,
+adapter lifecycle, media tooling, real media segment writing/probing, archive
+repair/migration, replay player, and real adapters remain unimplemented.
 
 ## Open Product Decisions
 

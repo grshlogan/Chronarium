@@ -257,7 +257,9 @@ finalize using synthetic fixtures only — never real archives or real media.
 ## Progress / Decisions
 
 - Plan created during conversation A02.
-- Implementation not started; no recovery code exists.
+- First report-only recovery inspection slice implemented during A01 in
+  `packages/archive/src/recovery.ts`.
+- Repair operations are still not implemented.
 - Marker mechanism (Option A versus Option B) intentionally undecided.
 
 ## Blockers

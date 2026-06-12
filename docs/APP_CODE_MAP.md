@@ -6,10 +6,11 @@ does not replace `docs/ARCHITECTURE.md`.
 ## Current State
 
 Chronarium now has documentation plus a minimal executable TypeScript validation
-chain. The package code is still early and fixture-first. No GUI, core task
-scheduler, adapter lifecycle, real site capture, SQLite integration with GUI,
-FFmpeg command builder, real media segment writer/prober, archive
-recovery/migration, or replay player exists yet.
+chain. The package code is still early and fixture-first. It has a report-only
+archive recovery inspector and a core GUI-facing facade, but no Electron/React
+GUI, core task scheduler, adapter lifecycle, real site capture, FFmpeg command
+builder, real media segment writer/prober, archive repair/migration, or replay
+player exists yet.
 
 Current files:
 
@@ -65,6 +66,7 @@ docs/
     plan_chaturbate_fixture_archive_flow.md
     plan_chaturbate_offline_diagnostic_fixtures.md
     plan_core_maintenance_inspector_foundation.md
+    plan_archive_recovery_and_gui_core_facade.md
 packages/
   types/
   schemas/
@@ -422,7 +424,17 @@ Responsibility:
 - Design plan for interrupted-write archive recovery: failure scenarios,
   conservative recovery principles, proposed mechanisms, and implementation
   order.
-- Created before implementation; no recovery code exists.
+- Created before implementation; the first implemented slice is the report-only
+  inspector tracked in `plan_archive_recovery_and_gui_core_facade.md`.
+
+### `docs/plan/plan_archive_recovery_and_gui_core_facade.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first report-only archive
+  recovery inspector and the first core GUI-facing facade.
+- Records that this work adds no repair actions, no Electron/React GUI, no IPC,
+  and no real site capture.
 
 ### `docs/plan/plan_chaturbate_offline_split_fixture.md`
 
@@ -523,6 +535,7 @@ packages/
     tsconfig.json
     src/
       archiveIndexService.ts
+      guiService.ts
       index.ts
       maintenance/
         archiveInspector.ts
@@ -531,6 +544,7 @@ packages/
       runtime.ts
     tests/
       archiveIndexService.test.ts
+      guiService.test.ts
       maintenanceInspector.test.ts
       runtime.test.ts
   adapters/
@@ -557,10 +571,12 @@ packages/
       index.ts
       layout.ts
       reader.ts
+      recovery.ts
       validator.ts
       writer.ts
     tests/
       archiveReaderValidator.test.ts
+      archiveRecovery.test.ts
       syntheticArchiveWriter.test.ts
   indexer/
     package.json
@@ -695,6 +711,10 @@ Current status:
   data from archive validator issues and known timeline diagnostic facts.
 - The maintenance inspector does not start AI, repair archives, run media tools,
   reindex SQLite, or touch live sites.
+- The GUI-facing facade exposes health, archive validate/read/reindex/list,
+  maintenance inspection, and recovery inspection for future GUI callers.
+- The facade is an in-process TypeScript boundary only; no Electron, preload,
+  IPC, or React renderer exists yet.
 - Does not start tasks, adapters, capture jobs, exports, ops loops, or media
   tools yet.
 
@@ -756,8 +776,12 @@ Current status:
   event-count mismatches, manifest last-sequence mismatches, timeline path
   mismatches, missing/invalid media track metadata, track manifest mismatches,
   and unsafe archive-relative paths.
-- Real media segment writing/reading/probing, recovery, and migration are still
-  pending.
+- Includes a report-only recovery inspector for missing/invalid manifest,
+  invalid timeline JSONL lines, missing/finalized manifest counts, manifest
+  count mismatches, orphan `.tmp` files, undeclared track directories, and
+  missing manifest-declared track metadata.
+- Real media segment writing/reading/probing, archive repair, and migration are
+  still pending.
 
 ### `packages/indexer`
 
@@ -778,7 +802,8 @@ Current status:
 - Supports explicit reindex, archive removal, clear-all, and filtered archive,
   timeline event, and validation issue queries.
 - SQLite is still a rebuildable cache/index, not the source of replay truth.
-- Not yet integrated with `packages/core` or any GUI.
+- Integrated with `packages/core` through archive/index service and the
+  GUI-facing facade. No actual GUI exists yet.
 
 ### `packages/player`
 

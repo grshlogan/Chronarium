@@ -86,6 +86,11 @@ of this A01 conversation, not a separate project conversation. It added:
 - core tests for healthy archives, diagnostic timeline facts, and archive
   validator issue findings.
 
+The current A01 continuation added the first report-only archive recovery
+inspector and the first core GUI-facing service facade. This moved the project
+toward a GUI-era skeleton without adding any Electron/React app, real site
+capture, AI calls, archive repair, or media tooling.
+
 ## Active Constraints
 
 - Work only inside `D:\live\Chronarium`.
@@ -118,19 +123,27 @@ of this A01 conversation, not a separate project conversation. It added:
 - Future A01 phases should update this A01 context and plan/index documents
   instead of creating `conversation-A03-*`, `conversation-A04-*`, or later
   pseudo-conversation files.
+- Archive recovery inspection is report-only. It must not delete, move,
+  rewrite, repair, quarantine, or reindex archive files.
+- The core GUI facade is only an in-process TypeScript API for future GUI
+  callers. It is not an Electron preload bridge, IPC implementation, or React
+  renderer.
 
 ## Files In Scope For This Continuation
 
 Expected code changes:
 
-- none; this continuation is documentation design only.
+- `packages/archive/src/recovery.ts`
+- `packages/archive/src/index.ts`
+- `packages/archive/tests/archiveRecovery.test.ts`
+- `packages/core/src/guiService.ts`
+- `packages/core/src/index.ts`
+- `packages/core/tests/guiService.test.ts`
 
 Expected documentation changes:
 
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
-- `docs/conversation-A03-chaturbate-offline-fixtures.md` deletion after merge
-- `docs/conversation-A04-core-maintenance-inspector-foundation.md` deletion
-  after merge
+- `docs/plan/plan_archive_recovery_and_gui_core_facade.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
@@ -269,10 +282,26 @@ Checks already run during this continuation:
 - trailing whitespace scan: produced no output after core maintenance
   inspector foundation.
 - JSON parse scan: succeeded after core maintenance inspector foundation.
+- `pnpm exec vitest run packages/archive/tests`: passed 3 files and 27 tests
+  after archive recovery inspector.
+- `pnpm exec vitest run packages/core/tests`: passed 4 files and 9 tests after
+  core GUI facade.
+- `pnpm typecheck`: passed after archive recovery inspector and core GUI
+  facade.
+- `pnpm test`: passed 11 files and 50 tests after archive recovery inspector
+  and core GUI facade.
+- `pnpm build`: passed after archive recovery inspector and core GUI facade.
+- `git diff --check`: produced no output after archive recovery inspector and
+  core GUI facade.
+- trailing whitespace scan: produced no output after archive recovery inspector
+  and core GUI facade.
+- JSON/package config parse scan: succeeded after archive recovery inspector
+  and core GUI facade.
 
 ## Next Safe Step
 
-Continue A01 with archive recovery report-only detection or maintenance
-inspector index freshness checks. Keep A02 independent and do not create A03,
-A04, or later conversation context files unless the user starts new real
-conversations and explicitly assigns those IDs.
+Build the Electron + React + Vite desktop shell and wire it to the core GUI
+facade for health/status, or add a GUI archive management page after the shell
+exists. Keep A02 independent and do not create A03, A04, or later conversation
+context files unless the user starts new real conversations and explicitly
+assigns those IDs.

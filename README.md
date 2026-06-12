@@ -73,6 +73,13 @@ AI 可以快速接手局部问题
 - `packages/core` 已有第一版只读 maintenance archive inspector，可把 archive
   validator issues 和 timeline diagnostic facts 转成结构化 MaintenanceReport。
   它只报告，不自动修复、不 reindex、不接 AI。
+- `packages/archive` 已有第一版只读 archive recovery inspector，可报告缺失/
+  损坏 manifest、timeline JSONL 损坏、manifest timeline 计数缺失/不一致、
+  orphan `.tmp` 文件、未声明 track 目录和缺失 track metadata。它只报告，
+  不修复、不删除、不移动、不重写 archive。
+- `packages/core` 已有最小 GUI-facing service facade，可把 future GUI 需要的
+  health、archive validate/read/reindex/list、maintenance inspect 和 recovery
+  inspect 串到一个 core 入口；尚未实现 Electron/React GUI 或 IPC。
 - `packages/adapters/chaturbate` 已有第一个离线 split audio/video synthetic
   fixture，可生成 media track metadata 和 timeline facts，并通过 adapter
   protocol fixture runner 测试；该 fixture 也已可写入 synthetic `.chron`
@@ -87,9 +94,9 @@ AI 可以快速接手局部问题
   core runtime lifecycle、core maintenance inspector、Chaturbate 离线
   split-track fixture、fixture archive/indexer flow 和 synthetic diagnostic
   fixture。
-- 尚未实现 GUI、core task scheduler、adapter lifecycle、真实站点 adapter、
-  SQLite index 与 GUI 集成、FFmpeg command builder、真实媒体分片写入、archive
-  recovery/migration 或 replay player。
+- 尚未实现 Electron/React GUI、core task scheduler、adapter lifecycle、真实
+  站点 adapter、FFmpeg command builder、真实媒体分片写入、archive repair/
+  migration 或 replay player。
 - 已补充回放模型、GUI↔core 协议、诊断码注册表、媒体工具边界等基础契约
   文档草案，以及归档恢复的实现前设计计划。
 - 本阶段的重点是先立稳工程边界、AI 维护规则、架构词汇、schema 草案、
@@ -173,7 +180,9 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 开始 archive recovery 的 report-only 检测，但继续禁止真实站点连接和账号/session 处理。
-2. 给 maintenance inspector 增加 index freshness 对比，仍只读或只建议 safe rebuild。
-3. 设计真实媒体分片写入前的 FFmpeg / segment 边界。
+1. 搭建 Electron + React + Vite 的最小桌面壳，通过 core GUI facade 显示
+   health/status。
+2. 做 GUI archive 管理页：选择 archive 目录、列出 `.chron`、validate/reindex、
+   查看 recovery/maintenance 报告。
+3. 给 maintenance inspector 增加 index freshness 对比，仍只读或只建议 safe rebuild。
 4. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。

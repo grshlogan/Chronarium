@@ -55,6 +55,13 @@ Current state:
   turns archive validator issues and known timeline diagnostic facts into a
   structured `MaintenanceReport`. It does not repair, reindex, run media tools,
   call AI, or connect to live sites.
+- `packages/archive` has the first report-only archive recovery inspector. It
+  detects common interrupted-write states and suggested manual actions, but it
+  does not repair, delete, move, rewrite, or quarantine archive files.
+- `packages/core` has the first GUI-facing service facade. It exposes health,
+  archive validate/read/reindex/list, maintenance inspection, and recovery
+  inspection through one core entry point for a future GUI. No Electron/React
+  GUI or IPC exists yet.
 - `docs/MAINTENANCE_OPS_DESIGN.md` records the draft maintenance / ops
   inspection model and external project references.
 - `docs/CB_RECORDING_REFERENCES.md` records public GitHub project references
@@ -72,7 +79,7 @@ Current state:
   contract promoted from the CB reference document; no media-tools package
   exists.
 - `docs/plan/plan_archive_recovery.md` records the interrupted-write recovery
-  design plan; no recovery code exists.
+  design plan; the first implemented slice is report-only inspection.
 - `packages/adapters/chaturbate` has a first offline split audio/video
   synthetic fixture for a CB-like LL-HLS/CMAF topology.
 - The Chaturbate fixture code converts that fixture into media track metadata
@@ -87,13 +94,14 @@ Current state:
   Chaturbate behavior.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
-- Eight Vitest behavior test files exercise synthetic archive writing, reading,
+- Ten Vitest behavior test files exercise synthetic archive writing, reading,
   validation failures, SQLite indexing, the core archive/index service, core
-  runtime lifecycle, and core maintenance inspection, plus Chaturbate offline
-  split-track fixture behavior and fixture archive/indexer and diagnostic flows.
-- No GUI, core task scheduler, adapter lifecycle, SQLite integration with GUI,
-  FFmpeg command builder, real media segment writer/prober, archive
-  recovery/migration, replay player, or real capture exists yet.
+  runtime lifecycle, core maintenance inspection, archive recovery inspection,
+  and the core GUI facade, plus Chaturbate offline split-track fixture behavior
+  and fixture archive/indexer and diagnostic flows.
+- No Electron/React GUI, core task scheduler, adapter lifecycle, FFmpeg command
+  builder, real media segment writer/prober, archive repair/migration, replay
+  player, or real capture exists yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
 - Conversation context files currently represent only two active conversation
@@ -145,6 +153,7 @@ docs/plan/plan_chaturbate_offline_split_fixture.md
 docs/plan/plan_chaturbate_fixture_archive_flow.md
 docs/plan/plan_chaturbate_offline_diagnostic_fixtures.md
 docs/plan/plan_core_maintenance_inspector_foundation.md
+docs/plan/plan_archive_recovery_and_gui_core_facade.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 docs/conversation-A02-foundation-docs-completion.md
 .gitattributes
@@ -224,13 +233,15 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Implement archive recovery following
-   `docs/plan/plan_archive_recovery.md`, starting with report-only detection.
-2. Extend the maintenance inspector with index freshness comparison, keeping
+1. Build the Electron + React + Vite desktop shell and wire it to the core GUI
+   facade for health/status.
+2. Add a GUI archive management page for validate/reindex/recovery/maintenance
+   reports.
+3. Extend the maintenance inspector with index freshness comparison, keeping
    writes as explicit safe-rebuild suggestions rather than automatic actions.
-3. Add real media segment IO only after the media-track metadata validator
+4. Add real media segment IO only after the media-track metadata validator
    remains stable.
-4. If real Chaturbate behavior needs validation, first prepare separately
+5. If real Chaturbate behavior needs validation, first prepare separately
    approved redacted evidence or synthetic reproductions derived from approved
    local samples.
 

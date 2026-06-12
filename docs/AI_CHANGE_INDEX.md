@@ -757,3 +757,46 @@ unimplemented ideas as completed work.
   - Conversation context file check now lists only A01 and A02.
 - Next: run docs-safe checks, then continue A01 with archive recovery or
   maintenance index freshness work.
+
+## 2026-06-12: Archive recovery inspector and core GUI facade
+
+- Conversation: user asked to continue toward the first usable GUI-era shape by
+  doing step 2 (archive recovery report-only detection) and step 3 (minimal
+  core service interface for GUI).
+- Landed: added report-only archive recovery inspection in `packages/archive`
+  and a GUI-facing core facade in `packages/core`.
+- Files:
+  - `README.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_archive_recovery.md`
+  - `docs/plan/plan_archive_recovery_and_gui_core_facade.md`
+  - `packages/archive/src/index.ts`
+  - `packages/archive/src/recovery.ts`
+  - `packages/archive/tests/archiveRecovery.test.ts`
+  - `packages/core/src/guiService.ts`
+  - `packages/core/src/index.ts`
+  - `packages/core/tests/guiService.test.ts`
+- Decisions:
+  - Recovery remains report-only: no repair, delete, move, rewrite, quarantine,
+    or index mutation.
+  - The core GUI facade is an in-process TypeScript boundary for future GUI
+    work; no Electron, React, preload, IPC, or renderer code exists yet.
+  - GUI-facing async methods return rejected promises for runtime-not-started
+    failures instead of throwing synchronously.
+- Verification:
+  - `pnpm exec vitest run packages/archive/tests` passed 3 files and 27 tests.
+  - `pnpm exec vitest run packages/core/tests` passed 4 files and 9 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 11 files and 50 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan succeeded.
+- Next: run full workspace checks, then build the Electron/React desktop shell
+  around the new facade.
