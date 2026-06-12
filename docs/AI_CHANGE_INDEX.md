@@ -800,3 +800,46 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan succeeded.
 - Next: run full workspace checks, then build the Electron/React desktop shell
   around the new facade.
+
+## 2026-06-12: Backend task, adapter lifecycle, and media tooling skeletons
+
+- Conversation: user decided task scheduler, adapter lifecycle, and media
+  tooling should be built before GUI.
+- Landed: added an in-memory fixture task scheduler, a fixture-only adapter
+  lifecycle host, and a new `packages/media-tools` package with typed
+  FFmpeg/ffprobe command builders.
+- Files:
+  - `README.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/MEDIA_TOOLS_BOUNDARY.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_backend_task_adapter_media_skeleton.md`
+  - `packages/core/src/adapters/`
+  - `packages/core/src/tasks/`
+  - `packages/core/src/index.ts`
+  - `packages/core/tests/adapterLifecycle.test.ts`
+  - `packages/core/tests/taskScheduler.test.ts`
+  - `packages/media-tools/`
+  - `tsconfig.base.json`
+  - `tsconfig.json`
+- Decisions:
+  - The task scheduler is memory-only and fixture-mode only for now.
+  - The adapter lifecycle host consumes fixture message streams only; it does
+    not spawn child processes.
+  - Media-tools builds command descriptions only; tests do not execute FFmpeg
+    or ffprobe.
+- Verification:
+  - `pnpm exec vitest run packages/core/tests packages/media-tools/tests`
+    passed 7 files and 19 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 14 files and 60 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan succeeded.
+- Next: connect scheduler plus fixture adapter lifecycle into an offline
+  capture-like pipeline that emits timeline facts.

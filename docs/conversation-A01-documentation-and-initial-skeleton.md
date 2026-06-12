@@ -133,17 +133,18 @@ capture, AI calls, archive repair, or media tooling.
 
 Expected code changes:
 
-- `packages/archive/src/recovery.ts`
-- `packages/archive/src/index.ts`
-- `packages/archive/tests/archiveRecovery.test.ts`
-- `packages/core/src/guiService.ts`
+- `packages/core/src/tasks/`
+- `packages/core/src/adapters/`
 - `packages/core/src/index.ts`
-- `packages/core/tests/guiService.test.ts`
+- `packages/core/tests/taskScheduler.test.ts`
+- `packages/core/tests/adapterLifecycle.test.ts`
+- `packages/media-tools/`
+- `tsconfig.json`
 
 Expected documentation changes:
 
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
-- `docs/plan/plan_archive_recovery_and_gui_core_facade.md`
+- `docs/plan/plan_backend_task_adapter_media_skeleton.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
@@ -297,11 +298,26 @@ Checks already run during this continuation:
   and core GUI facade.
 - JSON/package config parse scan: succeeded after archive recovery inspector
   and core GUI facade.
+- `pnpm exec vitest run packages/core/tests packages/media-tools/tests`: passed
+  7 files and 19 tests after task scheduler, fixture adapter lifecycle, and
+  media-tools command builders.
+- `pnpm typecheck`: passed after task scheduler, fixture adapter lifecycle, and
+  media-tools command builders.
+- `pnpm test`: passed 14 files and 60 tests after task scheduler, fixture
+  adapter lifecycle, and media-tools command builders.
+- `pnpm build`: passed after task scheduler, fixture adapter lifecycle, and
+  media-tools command builders.
+- `git diff --check`: produced no output after task scheduler, fixture adapter
+  lifecycle, and media-tools command builders.
+- trailing whitespace scan: produced no output after task scheduler, fixture
+  adapter lifecycle, and media-tools command builders.
+- JSON/package config parse scan: succeeded after task scheduler, fixture
+  adapter lifecycle, and media-tools command builders.
 
 ## Next Safe Step
 
-Build the Electron + React + Vite desktop shell and wire it to the core GUI
-facade for health/status, or add a GUI archive management page after the shell
-exists. Keep A02 independent and do not create A03, A04, or later conversation
-context files unless the user starts new real conversations and explicitly
-assigns those IDs.
+Connect the task scheduler and fixture adapter lifecycle host into an offline
+capture-like core pipeline that emits timeline facts, then add media-tool output
+parser fixtures. Keep A02 independent and do not create A03, A04, or later
+conversation context files unless the user starts new real conversations and
+explicitly assigns those IDs.

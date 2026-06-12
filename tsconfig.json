@@ -6,6 +6,7 @@
     { "path": "packages/archive" },
     { "path": "packages/core" },
     { "path": "packages/indexer" },
+    { "path": "packages/media-tools" },
     { "path": "packages/adapters/chaturbate" },
     { "path": "packages/testkit" }
   ]

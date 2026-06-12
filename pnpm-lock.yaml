@@ -54,6 +54,8 @@ importers:
         specifier: workspace:*
         version: link:../types
 
+  packages/media-tools: {}
+
   packages/schemas:
     dependencies:
       '@chronarium/types':

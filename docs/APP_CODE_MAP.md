@@ -67,12 +67,14 @@ docs/
     plan_chaturbate_offline_diagnostic_fixtures.md
     plan_core_maintenance_inspector_foundation.md
     plan_archive_recovery_and_gui_core_facade.md
+    plan_backend_task_adapter_media_skeleton.md
 packages/
   types/
   schemas/
   archive/
   indexer/
   core/
+  media-tools/
   adapters/
     chaturbate/
   testkit/
@@ -436,6 +438,15 @@ Responsibility:
 - Records that this work adds no repair actions, no Electron/React GUI, no IPC,
   and no real site capture.
 
+### `docs/plan/plan_backend_task_adapter_media_skeleton.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the task scheduler skeleton, fixture
+  adapter lifecycle host, and media-tools command-builder skeleton.
+- Records that this work does not connect to real sites, start real adapter
+  child processes, execute media tools, or build GUI.
+
 ### `docs/plan/plan_chaturbate_offline_split_fixture.md`
 
 Responsibility:
@@ -534,6 +545,9 @@ packages/
     package.json
     tsconfig.json
     src/
+      adapters/
+        adapterLifecycle.ts
+        index.ts
       archiveIndexService.ts
       guiService.ts
       index.ts
@@ -542,11 +556,17 @@ packages/
         index.ts
         inspectionTypes.ts
       runtime.ts
+      tasks/
+        index.ts
+        taskScheduler.ts
+        taskTypes.ts
     tests/
+      adapterLifecycle.test.ts
       archiveIndexService.test.ts
       guiService.test.ts
       maintenanceInspector.test.ts
       runtime.test.ts
+      taskScheduler.test.ts
   adapters/
     chaturbate/
       package.json
@@ -587,6 +607,17 @@ packages/
       schema.ts
     tests/
       archiveIndexer.test.ts
+  media-tools/
+    package.json
+    tsconfig.json
+    src/
+      commandTypes.ts
+      ffmpegCommand.ts
+      ffprobeCommand.ts
+      index.ts
+      pathSafety.ts
+    tests/
+      mediaToolCommands.test.ts
   testkit/
     package.json
     tsconfig.json
@@ -715,8 +746,12 @@ Current status:
   maintenance inspection, and recovery inspection for future GUI callers.
 - The facade is an in-process TypeScript boundary only; no Electron, preload,
   IPC, or React renderer exists yet.
-- Does not start tasks, adapters, capture jobs, exports, ops loops, or media
-  tools yet.
+- The in-memory task scheduler can create, start, stop, fail, get, and list
+  fixture capture tasks.
+- The fixture adapter lifecycle host can consume adapter protocol message
+  streams and summarize ready/fact/diagnostic/error/finished state.
+- Does not run real capture jobs, start adapter child processes, export media,
+  run ops loops, or execute media tools yet.
 
 ### `packages/adapters/<site>`
 
@@ -804,6 +839,23 @@ Current status:
 - SQLite is still a rebuildable cache/index, not the source of replay truth.
 - Integrated with `packages/core` through archive/index service and the
   GUI-facing facade. No actual GUI exists yet.
+
+### `packages/media-tools`
+
+Owns:
+
+- typed external media tool command builders;
+- argv and redacted argv construction;
+- command-boundary tests;
+- future media tool output parser fixtures.
+
+Current status:
+
+- Exists with typed FFmpeg remux and ffprobe JSON command builders.
+- Returns command descriptions only; it does not execute real binaries.
+- Rejects empty FFmpeg input lists, output paths outside the working directory,
+  and newline-bearing modeled paths.
+- Uses argv arrays, not shell strings.
 
 ### `packages/player`
 

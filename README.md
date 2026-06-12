@@ -47,7 +47,7 @@ AI 可以快速接手局部问题
 - 已创建 `pnpm` workspace、基础 `tsconfig` 和首批 `packages/*` 边界。
 - 已创建 `packages/types`、`packages/schemas`、`packages/archive`、
   `packages/indexer`、`packages/core`、`packages/adapters/chaturbate`、
-  `packages/testkit` 的初版空壳或契约。
+  `packages/media-tools`、`packages/testkit` 的初版空壳或契约。
 - 已选择并添加开源许可证：Apache-2.0。
 - 已安装最小开发依赖并生成 `pnpm-lock.yaml`。
 - 已实现 `packages/schemas` 的首批 Zod runtime schemas。
@@ -80,6 +80,13 @@ AI 可以快速接手局部问题
 - `packages/core` 已有最小 GUI-facing service facade，可把 future GUI 需要的
   health、archive validate/read/reindex/list、maintenance inspect 和 recovery
   inspect 串到一个 core 入口；尚未实现 Electron/React GUI 或 IPC。
+- `packages/core` 已有最小 task scheduler 骨架，可创建、启动、停止、失败和
+  查询 fixture capture task；尚未驱动真实录制。
+- `packages/core` 已有 fixture-only adapter lifecycle host，可消费 adapter
+  protocol message stream、收集 ready/fact/diagnostic/error/finished 状态；
+  尚未启动真实 child process 或连接真实站点。
+- `packages/media-tools` 已有 typed FFmpeg/ffprobe command builder 骨架，可生成
+  argv/redactedArgv 和执行边界描述；测试不执行真实外部工具。
 - `packages/adapters/chaturbate` 已有第一个离线 split audio/video synthetic
   fixture，可生成 media track metadata 和 timeline facts，并通过 adapter
   protocol fixture runner 测试；该 fixture 也已可写入 synthetic `.chron`
@@ -94,8 +101,8 @@ AI 可以快速接手局部问题
   core runtime lifecycle、core maintenance inspector、Chaturbate 离线
   split-track fixture、fixture archive/indexer flow 和 synthetic diagnostic
   fixture。
-- 尚未实现 Electron/React GUI、core task scheduler、adapter lifecycle、真实
-  站点 adapter、FFmpeg command builder、真实媒体分片写入、archive repair/
+- 尚未实现 Electron/React GUI、真实 task 执行、真实 adapter child process、
+  真实站点 adapter、外部媒体工具执行、真实媒体分片写入、archive repair/
   migration 或 replay player。
 - 已补充回放模型、GUI↔core 协议、诊断码注册表、媒体工具边界等基础契约
   文档草案，以及归档恢复的实现前设计计划。
@@ -180,9 +187,9 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 搭建 Electron + React + Vite 的最小桌面壳，通过 core GUI facade 显示
+1. 把 task scheduler 和 fixture adapter lifecycle 串成一次离线 capture-like
+   pipeline，产出 timeline facts，但仍不接真实站点。
+2. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
+3. 搭建 Electron + React + Vite 的最小桌面壳，通过 core GUI facade 显示
    health/status。
-2. 做 GUI archive 管理页：选择 archive 目录、列出 `.chron`、validate/reindex、
-   查看 recovery/maintenance 报告。
-3. 给 maintenance inspector 增加 index freshness 对比，仍只读或只建议 safe rebuild。
 4. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。

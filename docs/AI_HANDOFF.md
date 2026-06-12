@@ -22,7 +22,8 @@ Current state:
   `tsconfig.base.json`, and `tsconfig.json`.
 - Initial packages exist: `packages/types`, `packages/schemas`,
   `packages/archive`, `packages/indexer`, `packages/core`,
-  `packages/adapters/chaturbate`, and `packages/testkit`.
+  `packages/adapters/chaturbate`, `packages/media-tools`, and
+  `packages/testkit`.
 - Package code is contract-first, fixture-first, and only has the first
   executable validation path.
 - Chaturbate adapter code is synthetic fixture mode only and does not connect to
@@ -62,6 +63,13 @@ Current state:
   archive validate/read/reindex/list, maintenance inspection, and recovery
   inspection through one core entry point for a future GUI. No Electron/React
   GUI or IPC exists yet.
+- `packages/core` has a minimal in-memory task scheduler skeleton for fixture
+  capture tasks.
+- `packages/core` has a fixture-only adapter lifecycle host that consumes
+  adapter protocol messages and records ready/fact/diagnostic/error/finished
+  state without starting real child processes.
+- `packages/media-tools` has typed FFmpeg/ffprobe command builders that return
+  argv/redactedArgv descriptions. It does not execute real binaries.
 - `docs/MAINTENANCE_OPS_DESIGN.md` records the draft maintenance / ops
   inspection model and external project references.
 - `docs/CB_RECORDING_REFERENCES.md` records public GitHub project references
@@ -94,14 +102,15 @@ Current state:
   Chaturbate behavior.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
-- Ten Vitest behavior test files exercise synthetic archive writing, reading,
+- Thirteen Vitest behavior test files exercise synthetic archive writing, reading,
   validation failures, SQLite indexing, the core archive/index service, core
   runtime lifecycle, core maintenance inspection, archive recovery inspection,
-  and the core GUI facade, plus Chaturbate offline split-track fixture behavior
-  and fixture archive/indexer and diagnostic flows.
-- No Electron/React GUI, core task scheduler, adapter lifecycle, FFmpeg command
-  builder, real media segment writer/prober, archive repair/migration, replay
-  player, or real capture exists yet.
+  the core GUI facade, task scheduling, fixture adapter lifecycle, and media
+  command builders, plus Chaturbate offline split-track fixture behavior and
+  fixture archive/indexer and diagnostic flows.
+- No Electron/React GUI, real task execution, real adapter child process,
+  external media tool execution, real media segment writer/prober, archive
+  repair/migration, replay player, or real capture exists yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
 - Conversation context files currently represent only two active conversation
@@ -171,6 +180,7 @@ packages/archive/
 packages/indexer/
 packages/core/
 packages/adapters/chaturbate/
+packages/media-tools/
 packages/testkit/
 ```
 
@@ -233,15 +243,17 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Build the Electron + React + Vite desktop shell and wire it to the core GUI
+1. Wire the task scheduler and fixture adapter lifecycle host into an offline
+   capture-like core pipeline that emits timeline facts.
+2. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
+   real tools.
+3. Build the Electron + React + Vite desktop shell and wire it to the core GUI
    facade for health/status.
-2. Add a GUI archive management page for validate/reindex/recovery/maintenance
-   reports.
-3. Extend the maintenance inspector with index freshness comparison, keeping
+4. Extend the maintenance inspector with index freshness comparison, keeping
    writes as explicit safe-rebuild suggestions rather than automatic actions.
-4. Add real media segment IO only after the media-track metadata validator
+5. Add real media segment IO only after the media-track metadata validator
    remains stable.
-5. If real Chaturbate behavior needs validation, first prepare separately
+6. If real Chaturbate behavior needs validation, first prepare separately
    approved redacted evidence or synthetic reproductions derived from approved
    local samples.
 

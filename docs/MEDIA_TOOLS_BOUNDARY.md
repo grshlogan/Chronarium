@@ -1,14 +1,12 @@
 # Media Tools Boundary
 
-Status: design contract. No `packages/media-tools` package exists, and no
-FFmpeg, ffprobe, or downloader integration is implemented in Chronarium today.
-Nothing in this document is running code. These are the rules that future
-media tool integration must follow, promoted from section "4. Tool Integration
-Needs Typed Command Builders" of docs/CB_RECORDING_REFERENCES.md into a
-standalone boundary contract. The closest implemented neighbors are the
-fixture-safe archive writer/reader/validator described in
-docs/ARCHIVE_FORMAT_V1.md and the rebuildable SQLite indexer; none of them
-invoke external tools.
+Status: design contract plus first command-builder skeleton. A
+`packages/media-tools` package now exists with typed FFmpeg/ffprobe command
+builders that return argv/redactedArgv descriptions. Chronarium still does not
+execute FFmpeg, ffprobe, or downloader tools, and no downloader integration is
+implemented. These rules were promoted from section "4. Tool Integration Needs
+Typed Command Builders" of docs/CB_RECORDING_REFERENCES.md into a standalone
+boundary contract.
 
 ## Purpose
 
