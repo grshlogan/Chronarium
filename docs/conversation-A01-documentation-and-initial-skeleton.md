@@ -172,6 +172,12 @@ information-stream states side by side with equal widths. Each cell has basic
 hover text through `title`. The avatar, three-line identity block, and status
 board are vertically centered as three aligned blocks in each streamer card.
 
+The latest A01 UI typography refinement enlarged the maintained-streamer cards
+after user review. The left rail is now 560px wide, streamer cards are 112px
+tall, the status board is 256px wide, and the left-card typography scale is
+18px streamer name, 16px site/check text, and 14px status cells. This remains a
+synthetic WebUI presentation change only.
+
 ## Active Constraints
 
 - Work only inside `D:\live\Chronarium`.
@@ -515,6 +521,14 @@ Checks already run during this continuation:
 - Later browser smoke confirmed the left rail is 438px wide, streamer cards are
   86px high, media/info cells share one row with equal 86px widths, and avatar,
   identity block, and status board all align to the card centerline.
+- TDD contract coverage was expanded so the dashboard test reads
+  `apps/desktop/src/styles.css` and checks the enlarged streamer-card visual
+  scale: 560px left rail, 112px cards, 256px status board, and 18px / 16px /
+  14px text levels.
+- Browser smoke confirmed the enlarged streamer rail on
+  `http://127.0.0.1:5187/`: 560px left rail, 112px cards, 256px status board,
+  18px names, 16px site/check text, 14px status cells, and no detected text
+  overflow.
 - `pnpm typecheck`: passed after fixing optional current-session updates.
 - `pnpm test`: passed 16 files and 69 tests after the Web dashboard streamer
   context update.

@@ -76,8 +76,8 @@ export function App(props: AppProps = {}): ReactElement {
             <button
               className={
                 streamer.id === selectedStreamer.id
-                  ? "streamer-card selected"
-                  : "streamer-card"
+                  ? "streamer-card selected expanded"
+                  : "streamer-card expanded"
               }
               key={streamer.id}
               type="button"

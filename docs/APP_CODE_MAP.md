@@ -836,6 +836,10 @@ Current status:
   media-stream and information-stream cells with hover descriptions.
 - Streamer cards vertically center the avatar, the three-line identity block,
   and the four-cell status board as three aligned blocks.
+- The current left rail is 560px wide. Streamer cards are 112px tall, the
+  status board is 256px wide, and left-card typography follows the explicit
+  18px / 16px / 14px scale for streamer name, site/check text, and status
+  cells.
 - The UI exposes pause monitoring, resume monitoring, and check now controls for
   the selected streamer. The synthetic demo is presented as an offline
   self-test under maintenance diagnostics, not as a recording start action.

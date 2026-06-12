@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
@@ -5,6 +7,10 @@ import {
   createInitialRecordingDashboard,
   reduceRecordingDashboard
 } from "@chronarium/desktop";
+
+const desktopStylesPath = fileURLToPath(
+  new URL("../../../../apps/desktop/src/styles.css", import.meta.url)
+);
 
 describe("desktop recording dashboard", () => {
   it("renders the streamer maintenance recording workspace", () => {
@@ -54,11 +60,30 @@ describe("desktop recording dashboard", () => {
 
     expect(html).toContain('class="streamer-identity"');
     expect(html).toContain('aria-label="LunaCeleste recording decision status"');
+    expect(html).toContain('class="streamer-card selected expanded"');
     expect(html).toContain('class="stream-state-row"');
     expect(html).toContain('title="在线：监控已确认主播在线"');
     expect(html).toContain('title="票房/秀类型：买断票房"');
     expect(html).toContain('title="媒体流：正在录制"');
     expect(html).toContain('title="信息流：正在录制"');
+  });
+
+  it("keeps streamer cards on the enlarged 18/16/14 visual scale", () => {
+    const css = readFileSync(desktopStylesPath, "utf8");
+
+    expect(css).toContain("--rail-left-width: 560px;");
+    expect(css).toContain(
+      "grid-template-columns: 58px minmax(160px, 1fr) 256px;"
+    );
+    expect(css).toMatch(/\.streamer-card\s*{[\s\S]*?min-height: 112px;/);
+    expect(css).toMatch(/\.streamer-status-board\s*{[\s\S]*?width: 256px;/);
+    expect(css).toMatch(/\.streamer-card strong,[\s\S]*?font-size: 18px;/);
+    expect(css).toMatch(
+      /\.streamer-card span,[\s\S]*?\.pinned-session dt\s*{[\s\S]*?font-size: 16px;/
+    );
+    expect(css).toMatch(
+      /\.streamer-card \.status-cell\s*{[\s\S]*?font-size: 14px;/
+    );
   });
 
   it("renders the offline self-test result after the demo action completes", () => {

@@ -1106,3 +1106,35 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan parsed 24 JSON files.
 - Next: continue with add-link behavior, clearer pause/resume/check feedback,
   or GUI/core DTO boundaries.
+
+## 2026-06-12: Web dashboard enlarged streamer cards
+
+- Conversation: user asked to enlarge the maintained-streamer cards, hover
+  status cells, and typography to a clearer 18px / 16px / 14px scale.
+- Landed: enlarged the left streamer rail and card/status-board CSS, added an
+  explicit `expanded` marker to streamer cards, and added a TDD CSS contract
+  check for the settled dimensions.
+- Files:
+  - `apps/desktop/src/App.tsx`
+  - `apps/desktop/src/styles.css`
+  - `tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_web_dashboard_streamer_context.md`
+- Decisions:
+  - The current left rail target is 560px.
+  - Streamer cards are 112px tall with 58px avatars.
+  - The card status board is 256px wide.
+  - Left-card typography is 18px streamer name, 16px site/check text, and 14px
+    status cells.
+  - This is still browser-local synthetic UI only; it does not add real site
+    state, real capture state, or GUI-core binding.
+- Verification:
+  - Targeted dashboard TDD test passed after adding the CSS contract check.
+  - Browser smoke confirmed the enlarged streamer cards and no detected text
+    overflow.
+- Next: run full workspace verification, commit/push this UI refinement, then
+  continue with add-link behavior, clearer monitoring feedback, or GUI-core DTO
+  boundaries.

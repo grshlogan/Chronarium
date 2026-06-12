@@ -91,6 +91,10 @@ streamer drive the center workspace and right-side session context.
 - Browser smoke confirmed a 438px left rail, 86px streamer cards, a 176px
   status board, equal 86px media/info cells on the same row, and zero centerline
   delta for avatar, identity block, and status board.
+- RED/GREEN 7 enlarged the settled streamer-card presentation after user
+  review: left rail 560px, streamer cards 112px tall, avatars 58px, status
+  board 256px, and an explicit 18px / 16px / 14px type scale for streamer name,
+  site/check text, and status cells.
 - RED/GREEN 4 failed until the left streamer rows exposed synthetic status
   lanes for availability, show mode, media-stream capture, and
   information-stream capture.
@@ -106,6 +110,11 @@ streamer drive the center workspace and right-side session context.
 - Browser smoke on `http://127.0.0.1:5187/` confirmed the left rail width is
   382px, all 6 streamer rows have 4 status chips, and no streamer card overflow
   was detected.
+- Later browser smoke confirmed the enlarged 560px rail and 112px streamer
+  cards render with 18px / 16px / 14px typography, a 256px status board, and no
+  detected text overflow.
+- The targeted dashboard TDD test now includes a CSS contract check for the
+  enlarged streamer-card dimensions and typography scale.
 - `git diff --check`: produced no output.
 - trailing whitespace scan: produced no output.
 - JSON/package config parse scan: parsed 24 JSON files.

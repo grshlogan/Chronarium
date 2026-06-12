@@ -94,16 +94,16 @@ Current state:
   recording state, and information-stream recording state. These are UI mock
   states only, not real site/capture detection.
 - The row states are now presented as a compact status board rather than loose
-  chips: 35px availability cell plus a wider show-mode cell on the top row,
+  chips: 48px availability cell plus a wider show-mode cell on the top row,
   then equal-width side-by-side media-stream and information-stream cells with
   `title` hover descriptions.
-- Browser smoke confirmed the current left rail renders at 382px wide on
+- The left rail is currently enlarged to 560px. Streamer cards are 112px tall,
+  the status board is 256px wide, and the left-card typography scale is
+  18px streamer name, 16px site/check text, and 14px status cells.
+- Browser smoke confirmed the enlarged left rail renders on
   `http://127.0.0.1:5187/`; all six synthetic streamer rows have a four-cell
-  status board and no detected card overflow.
-- A later browser smoke confirmed the left rail renders at 438px, streamer
-  cards are 86px high, the first status board is 176px wide, media/info cells
-  sit on the same row with equal 86px widths, and the avatar, identity block,
-  and status board all share the card centerline.
+  status board, media/info cells sit on the same row, and no detected text or
+  card overflow was found.
 - `apps/desktop` defaults to `http://127.0.0.1:5187/` for dev. Do not use
   `5173` for Chronarium because the user uses that port for other local work.
 - Root-level TDD slices are now organized under `tdd-tests/` by owner path; the
