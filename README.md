@@ -78,6 +78,8 @@ AI 可以快速接手局部问题
 - 尚未实现 GUI、core task scheduler、adapter lifecycle、真实站点 adapter、
   SQLite index 与 GUI 集成、FFmpeg command builder、真实媒体分片写入、archive
   recovery/migration 或 replay player。
+- 已补充回放模型、GUI↔core 协议、诊断码注册表、媒体工具边界等基础契约
+  文档草案，以及归档恢复的实现前设计计划。
 - 本阶段的重点是先立稳工程边界、AI 维护规则、架构词汇、schema 草案、
   代码地图和交接文档。
 
@@ -112,7 +114,11 @@ small module boundaries.
 - [docs/PRODUCT_SPEC.md](./docs/PRODUCT_SPEC.md)：产品承诺、MVP 范围、非目标和核心工作流。
 - [docs/ARCHIVE_FORMAT_V1.md](./docs/ARCHIVE_FORMAT_V1.md)：`.chron` archive v1 目录形状和写入规则草案。
 - [docs/TIMELINE_SCHEMA_V1.md](./docs/TIMELINE_SCHEMA_V1.md)：timeline event envelope 和事件族草案。
+- [docs/REPLAY_MODEL_V1.md](./docs/REPLAY_MODEL_V1.md)：回放语义契约草案——回放输入、回放时钟、seek 和状态重建规则。
 - [docs/ADAPTER_PROTOCOL.md](./docs/ADAPTER_PROTOCOL.md)：core 与 adapter worker 的消息协议草案。
+- [docs/GUI_CORE_PROTOCOL.md](./docs/GUI_CORE_PROTOCOL.md)：GUI 与 core 之间的消息协议草案。
+- [docs/DIAGNOSTIC_CODES_V1.md](./docs/DIAGNOSTIC_CODES_V1.md)：诊断与校验错误码注册表和命名规则。
+- [docs/MEDIA_TOOLS_BOUNDARY.md](./docs/MEDIA_TOOLS_BOUNDARY.md)：外部媒体工具的类型化命令边界契约草案。
 - [docs/SECURITY_PRIVACY.md](./docs/SECURITY_PRIVACY.md)：安全、隐私、fixture 和敏感数据规则。
 - [docs/MAINTENANCE_OPS_DESIGN.md](./docs/MAINTENANCE_OPS_DESIGN.md)：maintenance / ops 巡检系统设计草案和项目引用。
 - [docs/CB_RECORDING_REFERENCES.md](./docs/CB_RECORDING_REFERENCES.md)：CB 分离音视频录播参考项目和 Chronarium 设计取舍。
@@ -121,6 +127,7 @@ small module boundaries.
 - [docs/AI_HANDOFF.md](./docs/AI_HANDOFF.md)：给后续 AI 或开发者接手的当前状态、决策和下一步。
 - [docs/AI_CHANGE_INDEX.md](./docs/AI_CHANGE_INDEX.md)：AI 对话与结构性更改索引。
 - [docs/conversation-A01-documentation-and-initial-skeleton.md](./docs/conversation-A01-documentation-and-initial-skeleton.md)：A01 对话上下文维护文档。
+- [docs/conversation-A02-foundation-docs-completion.md](./docs/conversation-A02-foundation-docs-completion.md)：A02 对话上下文维护文档。
 - [docs/plan/README.md](./docs/plan/README.md)：后续计划文档入口和命名规则。
 
 ## 设计边界

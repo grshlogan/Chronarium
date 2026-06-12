@@ -5,7 +5,7 @@ Chronarium is a new local-first livestream archive and replay platform under
 
 ## Current Status
 
-Date: 2026-06-11
+Date: 2026-06-12
 
 Current state:
 
@@ -56,6 +56,19 @@ Current state:
 - `docs/CB_RECORDING_REFERENCES.md` records public GitHub project references
   for Chaturbate-style split audio/video recording and the design boundaries
   Chronarium should keep before real CB adapter work.
+- `docs/REPLAY_MODEL_V1.md` records the draft replay semantics contract:
+  replay inputs, the replay clock, seek and state reconstruction, and the
+  constraints replay places on archive and timeline contracts.
+- `docs/GUI_CORE_PROTOCOL.md` records the draft GUI-to-core message protocol
+  mirroring `docs/ADAPTER_PROTOCOL.md`; no GUI or IPC implementation exists.
+- `docs/DIAGNOSTIC_CODES_V1.md` records the diagnostic code registry: the
+  twenty implemented archive validation issue codes plus naming, stability,
+  and reserved-area rules.
+- `docs/MEDIA_TOOLS_BOUNDARY.md` records the typed external media tool
+  contract promoted from the CB reference document; no media-tools package
+  exists.
+- `docs/plan/plan_archive_recovery.md` records the interrupted-write recovery
+  design plan; no recovery code exists.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
 - Five Vitest behavior test files exercise synthetic archive writing, reading,
@@ -77,7 +90,11 @@ docs/ARCHITECTURE.md
 docs/PRODUCT_SPEC.md
 docs/ARCHIVE_FORMAT_V1.md
 docs/TIMELINE_SCHEMA_V1.md
+docs/REPLAY_MODEL_V1.md
 docs/ADAPTER_PROTOCOL.md
+docs/GUI_CORE_PROTOCOL.md
+docs/DIAGNOSTIC_CODES_V1.md
+docs/MEDIA_TOOLS_BOUNDARY.md
 docs/SECURITY_PRIVACY.md
 docs/MAINTENANCE_OPS_DESIGN.md
 docs/CB_RECORDING_REFERENCES.md
@@ -98,7 +115,10 @@ docs/plan/plan_core_archive_index_service.md
 docs/plan/plan_core_runtime_lifecycle_shell.md
 docs/plan/plan_maintenance_ops_design.md
 docs/plan/plan_cb_recording_references.md
+docs/plan/plan_foundation_docs_completion.md
+docs/plan/plan_archive_recovery.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
+docs/conversation-A02-foundation-docs-completion.md
 .gitattributes
 .gitignore
 LICENSE
@@ -176,13 +196,17 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Add offline split audio/video CB-like fixtures and schema drafts, without
+1. Add offline Chaturbate adapter fixtures and tests; the adapter package is
+   currently the only package without tests, which violates the AGENTS.md
+   adapter fixture rule.
+2. Implement archive recovery following
+   `docs/plan/plan_archive_recovery.md`, starting with report-only detection.
+3. Add offline split audio/video CB-like fixtures and schema drafts, without
    connecting to Chaturbate.
-2. Implement the first deterministic maintenance inspection types and archive
+4. Implement the first deterministic maintenance inspection types and archive
    inspector under core, without AI calls or destructive actions.
-3. Add real media segment IO only after the media-track metadata validator
+5. Add real media segment IO only after the media-track metadata validator
    remains stable.
-4. Add recovery behavior for interrupted archive writes.
 
 ## Verification Status
 
@@ -327,3 +351,13 @@ CB recording references continuation checks:
 - Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
   output.
 - JSON/package config parse scan succeeded.
+
+Foundation docs completion (A02) checks:
+
+- `git diff --check`: produced no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
+  output.
+- JSON/package config parse scan succeeded.
+- New documents verified to use LF endings and end with a single newline.
+- Regression guard on unchanged code: `pnpm typecheck` passed, `pnpm test`
+  passed 5 Vitest files and 32 tests, `pnpm build` passed.

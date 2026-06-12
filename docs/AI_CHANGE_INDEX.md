@@ -520,3 +520,47 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan succeeded.
 - Next: add offline split audio/video fixtures and schema drafts, or implement
   deterministic maintenance inspection types under core.
+
+## 2026-06-12: Foundation docs completion
+
+- Conversation: the user reviewed the project state, decided the early phase
+  should prioritize documentation completeness over new code, and asked to
+  fill the documentation gaps identified during the review (A02).
+- Landed: five new documents, a plan document, an A02 conversation context
+  document, and index updates. Documentation only; no code changes.
+- Files:
+  - `docs/REPLAY_MODEL_V1.md`
+  - `docs/GUI_CORE_PROTOCOL.md`
+  - `docs/DIAGNOSTIC_CODES_V1.md`
+  - `docs/MEDIA_TOOLS_BOUNDARY.md`
+  - `docs/plan/plan_archive_recovery.md`
+  - `docs/plan/plan_foundation_docs_completion.md`
+  - `docs/conversation-A02-foundation-docs-completion.md`
+  - `README.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+- Decisions:
+  - Replay semantics are a versioned contract; replay is the primary consumer
+    of `.chron` packages and constrains storage design.
+  - The GUI/core edge gets a protocol document mirroring
+    `docs/ADAPTER_PROTOCOL.md`; transport choice stays deferred.
+  - Validation issue codes are a documented registry treated as a storage
+    contract; a `protocol.*` reserved area was added for GUI/core protocol
+    errors.
+  - Media tool rules were promoted from `docs/CB_RECORDING_REFERENCES.md`
+    into a standalone boundary contract; `media.mux.*` is a proposed new
+    event family that must be reserved in `docs/TIMELINE_SCHEMA_V1.md`
+    before first use.
+  - Archive recovery starts as a plan; all repair operations are Level 2
+    (explicit user confirmation) under the maintenance action safety levels;
+    the writing/finalized marker mechanism is intentionally undecided.
+- Verification:
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan succeeded.
+  - New docs verified to use LF endings and end with a single newline.
+  - Regression guard on unchanged code: `pnpm typecheck` passed,
+    `pnpm test` passed 5 Vitest files and 32 tests, `pnpm build` passed.
+- Next: add offline Chaturbate adapter fixtures and tests, or implement
+  archive recovery following `docs/plan/plan_archive_recovery.md`.

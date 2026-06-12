@@ -31,7 +31,11 @@ docs/
   PRODUCT_SPEC.md
   ARCHIVE_FORMAT_V1.md
   TIMELINE_SCHEMA_V1.md
+  REPLAY_MODEL_V1.md
   ADAPTER_PROTOCOL.md
+  GUI_CORE_PROTOCOL.md
+  DIAGNOSTIC_CODES_V1.md
+  MEDIA_TOOLS_BOUNDARY.md
   SECURITY_PRIVACY.md
   MAINTENANCE_OPS_DESIGN.md
   CB_RECORDING_REFERENCES.md
@@ -40,6 +44,7 @@ docs/
   AI_HANDOFF.md
   AI_CHANGE_INDEX.md
   conversation-A01-documentation-and-initial-skeleton.md
+  conversation-A02-foundation-docs-completion.md
   plan/
     README.md
     plan_workspace_schema_foundation.md
@@ -54,6 +59,8 @@ docs/
     plan_core_runtime_lifecycle_shell.md
     plan_maintenance_ops_design.md
     plan_cb_recording_references.md
+    plan_foundation_docs_completion.md
+    plan_archive_recovery.md
 packages/
   types/
   schemas/
@@ -174,6 +181,19 @@ Boundary:
 - Runtime validation exists for the initial event envelope, but payload-specific
   event schemas are still pending.
 
+### `docs/REPLAY_MODEL_V1.md`
+
+Responsibility:
+
+- Replay semantics contract: replay inputs, replay clock, seek model, state
+  reconstruction, and gap presentation rules.
+- Constraints the replay consumer places on archive and timeline contracts.
+- Replay milestones before a real player exists.
+
+Boundary:
+
+- Draft design contract. No replay player or replay reader integration exists.
+
 ### `docs/ADAPTER_PROTOCOL.md`
 
 Responsibility:
@@ -186,6 +206,44 @@ Responsibility:
 Boundary:
 
 - No live site behavior is implemented.
+
+### `docs/GUI_CORE_PROTOCOL.md`
+
+Responsibility:
+
+- GUI-to-core and core-to-GUI message families.
+- Renderer/preload/Electron-main/core process boundary and transport options.
+- Error model, query bounds, and protocol security rules.
+
+Boundary:
+
+- Draft protocol contract. No GUI, Electron shell, preload bridge, or IPC
+  implementation exists.
+
+### `docs/DIAGNOSTIC_CODES_V1.md`
+
+Responsibility:
+
+- Registry of implemented archive validation issue codes.
+- Naming, severity, stability, and evolution rules for diagnostic codes.
+- Reserved code areas for future subsystems.
+
+Boundary:
+
+- The implemented registry mirrors `packages/archive/src/validator.ts`; all
+  reserved areas are drafts without emitting code.
+
+### `docs/MEDIA_TOOLS_BOUNDARY.md`
+
+Responsibility:
+
+- Typed command builder, execution, evidence, redaction, and testing rules for
+  external media tools.
+- Tool roles for FFmpeg, ffprobe, and candidate downloaders.
+
+Boundary:
+
+- Design contract. No media-tools package or tool integration exists.
 
 ### `docs/SECURITY_PRIVACY.md`
 
@@ -346,6 +404,22 @@ Responsibility:
 - Plan, scope, references, and verification notes for the CB recording
   reference design document.
 
+### `docs/plan/plan_foundation_docs_completion.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the A02 foundation documentation
+  completion pass.
+
+### `docs/plan/plan_archive_recovery.md`
+
+Responsibility:
+
+- Design plan for interrupted-write archive recovery: failure scenarios,
+  conservative recovery principles, proposed mechanisms, and implementation
+  order.
+- Created before implementation; no recovery code exists.
+
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 
 Responsibility:
@@ -353,6 +427,14 @@ Responsibility:
 - Conversation-level continuity document for A01.
 - Records current status, constraints, decisions, files in scope,
   verification, and next safe step.
+
+### `docs/conversation-A02-foundation-docs-completion.md`
+
+Responsibility:
+
+- Conversation-level continuity document for A02.
+- Records the foundation documentation completion pass: scope, decisions,
+  files changed, and verification.
 
 ## Current Code Tree
 
