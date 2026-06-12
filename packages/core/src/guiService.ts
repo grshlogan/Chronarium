@@ -3,6 +3,7 @@ import type {
   ArchiveSnapshot,
   ArchiveValidationReport
 } from "@chronarium/archive";
+import type { OfflineFixtureCaptureInput } from "./offlineFixtureCapturePipeline.js";
 import { inspectArchiveRecovery } from "@chronarium/archive";
 import type {
   ArchiveIndexQuery,
@@ -22,6 +23,10 @@ import type {
   CoreHealthSnapshot,
   CoreRuntime
 } from "./runtime.js";
+import {
+  runOfflineFixtureCapture,
+  type OfflineFixtureCaptureResult
+} from "./offlineFixtureCapturePipeline.js";
 
 export interface CoreGuiService {
   getHealth(): Promise<CoreHealthSnapshot>;
@@ -33,6 +38,9 @@ export interface CoreGuiService {
   inspectArchiveMaintenance(
     archiveRootPath: string
   ): Promise<MaintenanceReport>;
+  runOfflineFixtureCapture(
+    input: OfflineFixtureCaptureInput
+  ): Promise<OfflineFixtureCaptureResult>;
   reindexArchive(archiveRootPath: string): Promise<ArchiveIndexSummary>;
   listArchives(input?: ArchiveIndexQuery): readonly IndexedArchive[];
   listTimelineEvents(
@@ -84,6 +92,14 @@ class DefaultCoreGuiService implements CoreGuiService {
     archiveRootPath: string
   ): Promise<MaintenanceReport> {
     return this.getMaintenanceInspector().inspectArchive(archiveRootPath);
+  }
+
+  runOfflineFixtureCapture(
+    input: OfflineFixtureCaptureInput
+  ): Promise<OfflineFixtureCaptureResult> {
+    return runOfflineFixtureCapture(input, {
+      archiveIndexService: this.runtime.getArchiveIndexService()
+    });
   }
 
   async reindexArchive(archiveRootPath: string): Promise<ArchiveIndexSummary> {

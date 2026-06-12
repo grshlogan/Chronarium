@@ -843,3 +843,48 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan succeeded.
 - Next: connect scheduler plus fixture adapter lifecycle into an offline
   capture-like pipeline that emits timeline facts.
+
+## 2026-06-12: Offline fixture capture pipeline
+
+- Conversation: before starting GUI implementation, user asked for a 5 minute
+  Image2 GUI concept attempt and a TDD-built offline vertical slice.
+- Landed: added the first offline fixture capture pipeline in core and exposed
+  it through the GUI-facing service facade.
+- Files:
+  - `README.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_offline_fixture_capture_pipeline.md`
+  - `packages/core/src/offlineFixtureCapturePipeline.ts`
+  - `packages/core/src/guiService.ts`
+  - `packages/core/src/index.ts`
+  - `packages/core/tests/offlineFixtureCapturePipeline.test.ts`
+- Decisions:
+  - The pipeline is fixture-only and consumes caller-provided adapter protocol
+    messages.
+  - It writes synthetic `.chron` archives, media track metadata, and timeline
+    facts, then reindexes SQLite.
+  - Adapter errors and missing `adapter.finished` messages map to failed tasks
+    and skip archive indexing.
+  - Image2 GUI concept output is stored under ignored `runtime/` and is a
+    design reference only.
+- Verification:
+  - Image2 `health --network` passed and small smoke generation succeeded.
+  - GUI concept generation command hit the 5 minute timeout, but
+    `runtime/imagegen/chronarium-gui-concept.png` later appeared and was
+    visually inspected.
+  - TDD RED: the first targeted core test failed because
+    `gui.runOfflineFixtureCapture` did not exist.
+  - GREEN: targeted pipeline tests passed after adding the pipeline and GUI
+    facade method.
+  - `pnpm exec vitest run packages/core/tests`: passed 7 files and 18 tests.
+  - `pnpm typecheck`: passed after adding an `adapter.error` type guard.
+  - `pnpm test`: passed 15 files and 63 tests.
+  - `pnpm build`: passed.
+  - `git diff --check`: produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan parsed 22 JSON files.
+- Next: run full workspace verification, then build media-tool output parser
+  fixtures or start the Web-first Electron/React/Vite GUI shell.

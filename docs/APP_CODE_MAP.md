@@ -7,10 +7,11 @@ does not replace `docs/ARCHITECTURE.md`.
 
 Chronarium now has documentation plus a minimal executable TypeScript validation
 chain. The package code is still early and fixture-first. It has a report-only
-archive recovery inspector and a core GUI-facing facade, but no Electron/React
-GUI, core task scheduler, adapter lifecycle, real site capture, FFmpeg command
-builder, real media segment writer/prober, archive repair/migration, or replay
-player exists yet.
+archive recovery inspector, a core GUI-facing facade, fixture task/lifecycle
+skeletons, typed media command builders, and the first offline capture-like
+pipeline. No Electron/React GUI, real site capture, real adapter child process,
+external media tool execution, real media segment writer/prober, archive
+repair/migration, or replay player exists yet.
 
 Current files:
 
@@ -68,6 +69,7 @@ docs/
     plan_core_maintenance_inspector_foundation.md
     plan_archive_recovery_and_gui_core_facade.md
     plan_backend_task_adapter_media_skeleton.md
+    plan_offline_fixture_capture_pipeline.md
 packages/
   types/
   schemas/
@@ -251,7 +253,9 @@ Responsibility:
 
 Boundary:
 
-- Design contract. No media-tools package or tool integration exists.
+- Design contract plus implemented command-builder boundary. The current
+  `packages/media-tools` package builds typed FFmpeg/ffprobe command
+  descriptions only; it does not execute tools.
 
 ### `docs/SECURITY_PRIVACY.md`
 
@@ -447,6 +451,16 @@ Responsibility:
 - Records that this work does not connect to real sites, start real adapter
   child processes, execute media tools, or build GUI.
 
+### `docs/plan/plan_offline_fixture_capture_pipeline.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first offline capture-like core
+  pipeline.
+- Records that the flow consumes fixture adapter messages, writes synthetic
+  `.chron` archives, reindexes SQLite, maps adapter lifecycle failures to task
+  failures, and remains free of live site capture or real media IO.
+
 ### `docs/plan/plan_chaturbate_offline_split_fixture.md`
 
 Responsibility:
@@ -551,6 +565,7 @@ packages/
       archiveIndexService.ts
       guiService.ts
       index.ts
+      offlineFixtureCapturePipeline.ts
       maintenance/
         archiveInspector.ts
         index.ts
@@ -565,6 +580,7 @@ packages/
       archiveIndexService.test.ts
       guiService.test.ts
       maintenanceInspector.test.ts
+      offlineFixtureCapturePipeline.test.ts
       runtime.test.ts
       taskScheduler.test.ts
   adapters/
@@ -750,8 +766,14 @@ Current status:
   fixture capture tasks.
 - The fixture adapter lifecycle host can consume adapter protocol message
   streams and summarize ready/fact/diagnostic/error/finished state.
-- Does not run real capture jobs, start adapter child processes, export media,
-  run ops loops, or execute media tools yet.
+- The offline fixture capture pipeline can run a fixture capture request from
+  adapter messages into a synthetic `.chron` archive, write media track
+  metadata, append timeline facts, reindex SQLite, and return the result
+  through the GUI facade.
+- Adapter errors and missing `adapter.finished` map to failed tasks and skip
+  archive indexing.
+- Does not run live capture jobs, start adapter child processes, export media,
+  run ops loops, execute media tools, or write real media segments yet.
 
 ### `packages/adapters/<site>`
 

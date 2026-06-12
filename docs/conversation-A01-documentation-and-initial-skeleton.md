@@ -91,6 +91,19 @@ inspector and the first core GUI-facing service facade. This moved the project
 toward a GUI-era skeleton without adding any Electron/React app, real site
 capture, AI calls, archive repair, or media tooling.
 
+The current A01 continuation also added the first offline fixture capture
+pipeline before GUI implementation. It connects fixture task scheduling,
+fixture adapter lifecycle messages, archive writing, SQLite reindexing, and
+the GUI-facing service facade into one offline vertical slice. It remains
+synthetic-only and does not start adapter child processes, connect to live
+sites, execute media tools, or write real media segments.
+
+Image2 GUI concept generation was attempted through the local
+`gpt-image2-proxy` skill with a 5 minute command timeout. The command returned
+timeout, but the generated image later appeared at
+`runtime/imagegen/chronarium-gui-concept.png`. The image is stored under the
+ignored `runtime/` directory and is a design reference, not an implemented GUI.
+
 ## Active Constraints
 
 - Work only inside `D:\live\Chronarium`.
@@ -131,20 +144,17 @@ capture, AI calls, archive repair, or media tooling.
 
 ## Files In Scope For This Continuation
 
-Expected code changes:
+Code changes for this continuation:
 
-- `packages/core/src/tasks/`
-- `packages/core/src/adapters/`
+- `packages/core/src/offlineFixtureCapturePipeline.ts`
+- `packages/core/src/guiService.ts`
 - `packages/core/src/index.ts`
-- `packages/core/tests/taskScheduler.test.ts`
-- `packages/core/tests/adapterLifecycle.test.ts`
-- `packages/media-tools/`
-- `tsconfig.json`
+- `packages/core/tests/offlineFixtureCapturePipeline.test.ts`
 
-Expected documentation changes:
+Documentation changes for this continuation:
 
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
-- `docs/plan/plan_backend_task_adapter_media_skeleton.md`
+- `docs/plan/plan_offline_fixture_capture_pipeline.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
@@ -313,11 +323,39 @@ Checks already run during this continuation:
   adapter lifecycle, and media-tools command builders.
 - JSON/package config parse scan: succeeded after task scheduler, fixture
   adapter lifecycle, and media-tools command builders.
+- Image2 through `gpt-image2-proxy`:
+  - `health --network`: passed and listed `gpt-image-2`.
+  - small smoke generation: succeeded at `runtime/imagegen/image2-smoke.png`.
+  - GUI concept generation with 5 minute command timeout returned timeout, but
+    the output image later appeared at
+    `runtime/imagegen/chronarium-gui-concept.png`.
+- TDD RED 1: `pnpm exec vitest run
+  packages/core/tests/offlineFixtureCapturePipeline.test.ts` failed because
+  `gui.runOfflineFixtureCapture` did not exist.
+- GREEN 1: added `runOfflineFixtureCapture` and exposed it through
+  `CoreGuiService`; the targeted test passed.
+- TDD RED/GREEN 2: added fixture adapter error coverage; the existing failure
+  path satisfied the behavior.
+- TDD RED/GREEN 3: added missing `adapter.finished` coverage; the lifecycle
+  failure path mapped to a failed task and skipped indexing.
+- `pnpm exec vitest run packages/core/tests/offlineFixtureCapturePipeline.test.ts`:
+  passed 1 file and 3 tests.
+- First `pnpm typecheck` during this continuation failed because
+  `offlineFixtureCapturePipeline.ts` read `code/message/retryable` from a broad
+  `AdapterToCoreMessage` union; fixed with an `adapter.error` type guard.
+- `pnpm typecheck`: passed after adding the type guard.
+- `pnpm exec vitest run packages/core/tests`: passed 7 files and 18 tests.
+- `pnpm test`: passed 15 files and 63 tests.
+- `pnpm build`: passed.
+- `git diff --check`: produced no output.
+- trailing whitespace scan: produced no output.
+- JSON/package config parse scan: parsed 22 JSON files.
 
 ## Next Safe Step
 
-Connect the task scheduler and fixture adapter lifecycle host into an offline
-capture-like core pipeline that emits timeline facts, then add media-tool output
-parser fixtures. Keep A02 independent and do not create A03, A04, or later
+Run full workspace verification, commit/push this offline fixture capture
+pipeline step if requested, then either add media-tool output parser fixtures
+or start the Web-first Electron/React/Vite GUI shell around the existing
+GUI-facing facade. Keep A02 independent and do not create A03, A04, or later
 conversation context files unless the user starts new real conversations and
 explicitly assigns those IDs.

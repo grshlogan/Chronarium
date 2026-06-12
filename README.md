@@ -85,6 +85,10 @@ AI 可以快速接手局部问题
 - `packages/core` 已有 fixture-only adapter lifecycle host，可消费 adapter
   protocol message stream、收集 ready/fact/diagnostic/error/finished 状态；
   尚未启动真实 child process 或连接真实站点。
+- `packages/core` 已有第一条离线 capture-like pipeline，可把 fixture adapter
+  message stream 转成一次 capture task，写入 synthetic `.chron` archive，
+  重新建立 SQLite index，并通过 GUI-facing service 返回结果。失败的 adapter
+  lifecycle 会映射成 failed task，且不会索引成功 archive。
 - `packages/media-tools` 已有 typed FFmpeg/ffprobe command builder 骨架，可生成
   argv/redactedArgv 和执行边界描述；测试不执行真实外部工具。
 - `packages/adapters/chaturbate` 已有第一个离线 split audio/video synthetic
@@ -98,9 +102,9 @@ AI 可以快速接手局部问题
   package、读取 `.chron` package，以及 invalid JSONL、重复 eventId、
   sequence gap、manifest count/lastSequence mismatch、unsafe path、media track
   metadata 缺失/不一致、SQLite index 写入/查询、core archive/index service、
-  core runtime lifecycle、core maintenance inspector、Chaturbate 离线
-  split-track fixture、fixture archive/indexer flow 和 synthetic diagnostic
-  fixture。
+  core runtime lifecycle、core maintenance inspector、offline fixture capture
+  pipeline、Chaturbate 离线 split-track fixture、fixture archive/indexer flow
+  和 synthetic diagnostic fixture。
 - 尚未实现 Electron/React GUI、真实 task 执行、真实 adapter child process、
   真实站点 adapter、外部媒体工具执行、真实媒体分片写入、archive repair/
   migration 或 replay player。
@@ -187,9 +191,9 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 把 task scheduler 和 fixture adapter lifecycle 串成一次离线 capture-like
-   pipeline，产出 timeline facts，但仍不接真实站点。
-2. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
-3. 搭建 Electron + React + Vite 的最小桌面壳，通过 core GUI facade 显示
+1. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
+2. 搭建 Electron + React + Vite 的最小桌面壳，通过 core GUI facade 显示
    health/status。
+3. 让 Web renderer 先接入离线 capture-like pipeline，展示 archive 列表、
+   timeline facts、validation / maintenance / recovery 状态。
 4. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。

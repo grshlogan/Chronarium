@@ -68,6 +68,12 @@ Current state:
 - `packages/core` has a fixture-only adapter lifecycle host that consumes
   adapter protocol messages and records ready/fact/diagnostic/error/finished
   state without starting real child processes.
+- `packages/core` has the first offline fixture capture pipeline exposed
+  through the GUI-facing service. It can turn fixture adapter messages into a
+  capture task, write a synthetic `.chron` archive, reindex SQLite, and report
+  success/failure to future GUI callers.
+- Adapter lifecycle errors and missing `adapter.finished` messages map to
+  failed tasks and skip archive indexing.
 - `packages/media-tools` has typed FFmpeg/ffprobe command builders that return
   argv/redactedArgv descriptions. It does not execute real binaries.
 - `docs/MAINTENANCE_OPS_DESIGN.md` records the draft maintenance / ops
@@ -84,8 +90,8 @@ Current state:
   twenty implemented archive validation issue codes plus naming, stability,
   and reserved-area rules.
 - `docs/MEDIA_TOOLS_BOUNDARY.md` records the typed external media tool
-  contract promoted from the CB reference document; no media-tools package
-  exists.
+  contract promoted from the CB reference document; `packages/media-tools`
+  implements command builders only, not execution.
 - `docs/plan/plan_archive_recovery.md` records the interrupted-write recovery
   design plan; the first implemented slice is report-only inspection.
 - `packages/adapters/chaturbate` has a first offline split audio/video
@@ -102,15 +108,16 @@ Current state:
   Chaturbate behavior.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
-- Thirteen Vitest behavior test files exercise synthetic archive writing, reading,
+- Fifteen Vitest behavior test files exercise synthetic archive writing, reading,
   validation failures, SQLite indexing, the core archive/index service, core
   runtime lifecycle, core maintenance inspection, archive recovery inspection,
-  the core GUI facade, task scheduling, fixture adapter lifecycle, and media
-  command builders, plus Chaturbate offline split-track fixture behavior and
-  fixture archive/indexer and diagnostic flows.
-- No Electron/React GUI, real task execution, real adapter child process,
+  the core GUI facade, task scheduling, fixture adapter lifecycle, offline
+  fixture capture pipeline, and media command builders, plus Chaturbate
+  offline split-track fixture behavior and fixture archive/indexer and
+  diagnostic flows.
+- No Electron/React GUI, live task execution, real adapter child process,
   external media tool execution, real media segment writer/prober, archive
-  repair/migration, replay player, or real capture exists yet.
+  repair/migration, replay player, or real site capture exists yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
 - Conversation context files currently represent only two active conversation
@@ -243,12 +250,12 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Wire the task scheduler and fixture adapter lifecycle host into an offline
-   capture-like core pipeline that emits timeline facts.
-2. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
+1. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
    real tools.
-3. Build the Electron + React + Vite desktop shell and wire it to the core GUI
+2. Build the Electron + React + Vite desktop shell and wire it to the core GUI
    facade for health/status.
+3. Let the first Web renderer use the offline fixture capture pipeline to show
+   archive list, timeline facts, validation, recovery, and maintenance status.
 4. Extend the maintenance inspector with index freshness comparison, keeping
    writes as explicit safe-rebuild suggestions rather than automatic actions.
 5. Add real media segment IO only after the media-track metadata validator
@@ -465,3 +472,26 @@ Core maintenance inspector checks:
 - Trailing whitespace scan produced no output.
 - JSON parse scan succeeded for package/config and synthetic fixture JSON
   files.
+
+Offline fixture capture pipeline checks:
+
+- Image2 `gpt-image2-proxy health --network`: passed and listed
+  `gpt-image-2`.
+- Image2 small smoke generation succeeded at
+  `runtime/imagegen/image2-smoke.png`.
+- Image2 GUI concept generation command hit the 5 minute timeout, but the
+  output image later appeared at
+  `runtime/imagegen/chronarium-gui-concept.png` and was visually inspected.
+- TDD RED: `pnpm exec vitest run
+  packages/core/tests/offlineFixtureCapturePipeline.test.ts` failed because
+  `gui.runOfflineFixtureCapture` did not exist.
+- Targeted pipeline test after implementation: passed 1 file and 3 tests.
+- First `pnpm typecheck` failed because an adapter error needed explicit
+  `adapter.error` type narrowing; fixed with a type guard.
+- `pnpm typecheck`: passed after the type guard.
+- `pnpm exec vitest run packages/core/tests`: passed 7 files and 18 tests.
+- `pnpm test`: passed 15 files and 63 tests.
+- `pnpm build`: passed.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan produced no output.
+- JSON/package config parse scan parsed 22 JSON files.
