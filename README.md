@@ -70,11 +70,14 @@ AI 可以快速接手局部问题
   archive validate/read 和 SQLite reindex/query。
 - `packages/core` 已有最小 runtime lifecycle shell，可 start/stop、返回
   health，并在运行时持有 archive/index service。
+- `packages/adapters/chaturbate` 已有第一个离线 split audio/video synthetic
+  fixture，可生成 media track metadata 和 timeline facts，并通过 adapter
+  protocol fixture runner 测试。
 - 已添加 Vitest 行为测试，覆盖 synthetic session/timeline 写入 `.chron`
   package、读取 `.chron` package，以及 invalid JSONL、重复 eventId、
   sequence gap、manifest count/lastSequence mismatch、unsafe path、media track
-  metadata 缺失/不一致、SQLite index 写入/查询、core archive/index service
-  和 core runtime lifecycle。
+  metadata 缺失/不一致、SQLite index 写入/查询、core archive/index service、
+  core runtime lifecycle 和 Chaturbate 离线 split-track fixture。
 - 尚未实现 GUI、core task scheduler、adapter lifecycle、真实站点 adapter、
   SQLite index 与 GUI 集成、FFmpeg command builder、真实媒体分片写入、archive
   recovery/migration 或 replay player。
@@ -128,6 +131,7 @@ small module boundaries.
 - [docs/AI_CHANGE_INDEX.md](./docs/AI_CHANGE_INDEX.md)：AI 对话与结构性更改索引。
 - [docs/conversation-A01-documentation-and-initial-skeleton.md](./docs/conversation-A01-documentation-and-initial-skeleton.md)：A01 对话上下文维护文档。
 - [docs/conversation-A02-foundation-docs-completion.md](./docs/conversation-A02-foundation-docs-completion.md)：A02 对话上下文维护文档。
+- [docs/conversation-A03-chaturbate-offline-fixtures.md](./docs/conversation-A03-chaturbate-offline-fixtures.md)：A03 Chaturbate 离线 fixture 上下文维护文档。
 - [docs/plan/README.md](./docs/plan/README.md)：后续计划文档入口和命名规则。
 
 ## 设计边界
@@ -163,6 +167,7 @@ Chronarium 目标 GitHub 仓库：
 
 1. 设计 maintenance / ops 巡检模型，但先只用确定性检查，不接真实 AI 执行。
 2. 为 archive reader/validator 增加更完整的 fixture builder 和诊断样例。
-3. 根据 CB 参考文档设计 split audio/video fixture 和 media-tool 边界。
+3. 把 Chaturbate split-track fixture 写入 synthetic `.chron` archive，验证
+   archive reader/indexer 能消费这些 facts。
 4. 设计真实媒体分片写入前的 FFmpeg / segment 边界。
 5. 扩展 Chaturbate fixture harness，但继续禁止真实站点连接和账号/session 处理。

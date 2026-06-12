@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "name": "cb-split-audio-video-synthetic",
+  "sessionId": "session-cb-synthetic-001",
+  "capturedAt": "2026-06-12T00:00:00.000Z",
+  "monotonicStartMs": 0,
+  "topology": {
+    "protocol": "ll-hls-cmaf",
+    "playlistReference": "fixture://chaturbate/split-audio-video/master.m3u8",
+    "redactionStatus": "synthetic"
+  },
+  "tracks": [
+    {
+      "id": "video-main",
+      "kind": "video",
+      "label": "Synthetic CB video",
+      "codec": "h264",
+      "container": "fmp4",
+      "timeBase": "1/1000",
+      "sourceIdHash": "synthetic-cb-video-source-hash",
+      "playlistReference": "fixture://chaturbate/split-audio-video/video.m3u8",
+      "segments": [
+        {
+          "id": "video-segment-0001",
+          "sourceSequence": 101,
+          "mediaStartMs": 0,
+          "durationMs": 2000
+        },
+        {
+          "id": "video-segment-0002",
+          "sourceSequence": 102,
+          "mediaStartMs": 2000,
+          "durationMs": 2000
+        }
+      ]
+    },
+    {
+      "id": "audio-main",
+      "kind": "audio",
+      "label": "Synthetic CB audio",
+      "codec": "aac",
+      "container": "fmp4",
+      "timeBase": "1/1000",
+      "sourceIdHash": "synthetic-cb-audio-source-hash",
+      "playlistReference": "fixture://chaturbate/split-audio-video/audio.m3u8",
+      "segments": [
+        {
+          "id": "audio-segment-0001",
+          "sourceSequence": 201,
+          "mediaStartMs": 0,
+          "durationMs": 2000
+        },
+        {
+          "id": "audio-segment-0002",
+          "sourceSequence": 202,
+          "mediaStartMs": 2000,
+          "durationMs": 2000
+        }
+      ]
+    }
+  ]
+}

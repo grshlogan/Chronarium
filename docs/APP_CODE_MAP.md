@@ -45,6 +45,7 @@ docs/
   AI_CHANGE_INDEX.md
   conversation-A01-documentation-and-initial-skeleton.md
   conversation-A02-foundation-docs-completion.md
+  conversation-A03-chaturbate-offline-fixtures.md
   plan/
     README.md
     plan_workspace_schema_foundation.md
@@ -61,6 +62,7 @@ docs/
     plan_cb_recording_references.md
     plan_foundation_docs_completion.md
     plan_archive_recovery.md
+    plan_chaturbate_offline_split_fixture.md
 packages/
   types/
   schemas/
@@ -420,6 +422,15 @@ Responsibility:
   order.
 - Created before implementation; no recovery code exists.
 
+### `docs/plan/plan_chaturbate_offline_split_fixture.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first Chaturbate offline split
+  audio/video fixture and tests.
+- Records that the work is fixture-only and excludes live site capture,
+  downloader integration, and credential handling.
+
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 
 Responsibility:
@@ -435,6 +446,13 @@ Responsibility:
 - Conversation-level continuity document for A02.
 - Records the foundation documentation completion pass: scope, decisions,
   files changed, and verification.
+
+### `docs/conversation-A03-chaturbate-offline-fixtures.md`
+
+Responsibility:
+
+- Conversation-level continuity document for A03.
+- Records the Chaturbate offline split-track fixture and test continuation.
 
 ## Current Code Tree
 
@@ -488,9 +506,14 @@ packages/
       package.json
       tsconfig.json
       fixtures/
+        README.md
+        split-audio-video.synthetic.json
       src/
         fixtureAdapter.ts
         index.ts
+        splitTrackFixture.ts
+      tests/
+        splitTrackFixture.test.ts
   archive/
     package.json
     tsconfig.json
@@ -649,8 +672,13 @@ Adapters must not call each other.
 
 Current status:
 
-- `packages/adapters/chaturbate` exists as a synthetic fixture adapter
-  skeleton only.
+- `packages/adapters/chaturbate` exists as a synthetic fixture adapter.
+- It includes a committed offline split audio/video fixture for a CB-like
+  LL-HLS/CMAF topology.
+- It can parse that fixture into media track metadata and timeline facts, then
+  emit those facts through the existing fixture adapter runner.
+- Its tests validate timeline envelopes, adapter protocol messages, and
+  rejection of network-looking or token-bearing fixture references.
 - It does not perform network requests, downloads, account handling, cookies, or
   session handling.
 

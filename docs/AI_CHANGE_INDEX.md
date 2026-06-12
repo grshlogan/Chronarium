@@ -564,3 +564,43 @@ unimplemented ideas as completed work.
     `pnpm test` passed 5 Vitest files and 32 tests, `pnpm build` passed.
 - Next: add offline Chaturbate adapter fixtures and tests, or implement
   archive recovery following `docs/plan/plan_archive_recovery.md`.
+
+## 2026-06-12: Chaturbate offline split-track fixture
+
+- Conversation: after pushing the A02 foundation docs, user asked to continue
+  with Chaturbate adapter offline fixtures and tests.
+- Landed: added a synthetic CB-like split audio/video fixture, adapter-local
+  fixture parser/builders, and behavior tests.
+- Files:
+  - `README.md`
+  - `docs/TIMELINE_SCHEMA_V1.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A03-chaturbate-offline-fixtures.md`
+  - `docs/plan/plan_chaturbate_offline_split_fixture.md`
+  - `packages/adapters/chaturbate/fixtures/README.md`
+  - `packages/adapters/chaturbate/fixtures/split-audio-video.synthetic.json`
+  - `packages/adapters/chaturbate/src/index.ts`
+  - `packages/adapters/chaturbate/src/splitTrackFixture.ts`
+  - `packages/adapters/chaturbate/tests/splitTrackFixture.test.ts`
+- Decisions:
+  - The first CB adapter test uses synthetic JSON only.
+  - Fixture source references must use `fixture://chaturbate/...`.
+  - Network-looking playlist references and token-bearing query strings are
+    rejected before timeline facts are built.
+  - The fixture emits `media.track.topology_observed`,
+    `media.track.discovered`, and `media.segment.observed` facts.
+- Verification:
+  - `pnpm exec vitest run packages/adapters/chaturbate/tests` passed 1 file
+    and 3 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 6 files and 35 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON parse scan succeeded.
+- Next: write the split-track fixture into a synthetic `.chron` archive and
+  verify archive reader/indexer consumption.

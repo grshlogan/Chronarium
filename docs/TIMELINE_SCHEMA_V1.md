@@ -1,8 +1,8 @@
 # Timeline Schema V1
 
 Status: draft schema contract. First-pass Zod runtime validation exists for the
-event envelope, and one synthetic archive writer test exercises it. Event-family
-payload schemas and ordering diagnostics are still incomplete.
+event envelope, and fixture tests exercise the initial archive and Chaturbate
+adapter event shapes. Most payload-specific runtime schemas are still pending.
 
 ## Principle
 
@@ -126,7 +126,39 @@ Required payload fields:
 - `trackId`;
 - `kind`.
 
-### `media.segment.discovered`
+Current Chaturbate offline fixture payload fields:
+
+- `playlistReference`: synthetic `fixture://chaturbate/...` reference only;
+- `sourceIdHash`: redacted or synthetic source identity;
+- `syntheticOnly`: `true`;
+- optional `label`, `codec`, `container`, and `timeBase`.
+
+Forbidden payload fields:
+
+- raw signed URLs;
+- raw request headers;
+- cookies or bearer tokens.
+
+### `media.track.topology_observed`
+
+Records that an adapter observed a media topology before download.
+
+Current Chaturbate offline fixture payload fields:
+
+- `fixtureName`;
+- `protocol`: currently `ll-hls-cmaf` for the synthetic CB split-track
+  fixture;
+- `playlistReference`: synthetic `fixture://chaturbate/...` reference only;
+- `trackIds`;
+- `syntheticOnly`: `true`.
+
+Forbidden payload fields:
+
+- raw signed URLs;
+- raw request headers;
+- cookies or bearer tokens.
+
+### `media.segment.observed`
 
 Records that a media segment was discovered or represented by a fixture.
 
@@ -134,6 +166,14 @@ Required payload fields:
 
 - `trackId`;
 - `segmentId`.
+
+Current Chaturbate offline fixture payload fields:
+
+- `sourceSequence`;
+- `mediaStartMs`;
+- `durationMs`;
+- `playlistReference`: synthetic `fixture://chaturbate/...` reference only;
+- `syntheticOnly`: `true`.
 
 Forbidden payload fields:
 
