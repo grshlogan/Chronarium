@@ -957,3 +957,35 @@ unimplemented ideas as completed work.
   - Full workspace checks should run after this entry is added.
 - Next: run full workspace verification, then either add archive streaming /
   benchmark groundwork or add a GUI-facing DTO boundary for the dashboard.
+
+## 2026-06-12: Web dashboard offline behavior demo
+
+- Conversation: user asked to continue after choosing behavior over more GUI
+  polish.
+- Landed: added a browser-safe offline fixture capture demo action for the
+  Web-first dashboard.
+- Files:
+  - `apps/desktop/src/App.tsx`
+  - `apps/desktop/src/index.ts`
+  - `apps/desktop/src/recordingDashboard.ts`
+  - `apps/desktop/src/styles.css`
+  - `tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+  - `docs/plan/plan_web_dashboard_offline_behavior.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+- Decisions:
+  - The Vite renderer still must not call Node-only core/archive/indexer APIs.
+  - The new button uses a synthetic demo action and reducer state only.
+  - A future Electron/preload or GUI DTO boundary should replace the demo
+    action before calling `CoreGuiService`.
+- Verification:
+  - TDD RED: the dashboard behavior test failed because
+    `createInitialRecordingDashboard` was not exported.
+  - GREEN: the targeted TDD test passed after adding the dashboard state,
+    reducer, demo action, and UI panel.
+  - Browser smoke clicked `Run fixture capture` on
+    `http://127.0.0.1:5187/` and confirmed the completed result rendered.
+- Next: run full workspace verification, then connect the demo action to a real
+  GUI-facing DTO/preload boundary or implement archive streaming benchmarks.

@@ -241,7 +241,7 @@ dl {
 
 .workspace {
   display: grid;
-  grid-template-rows: auto minmax(330px, 1fr) 292px;
+  grid-template-rows: auto minmax(300px, 1fr) 252px auto;
   gap: 10px;
   padding: 12px;
   border-radius: 8px;
@@ -366,6 +366,43 @@ dl {
   border-radius: 8px;
   padding: 16px;
   background: rgba(14, 22, 25, 0.92);
+}
+
+.offline-capture-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid rgba(127, 156, 158, 0.16);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: rgba(11, 19, 22, 0.92);
+}
+
+.offline-capture-panel h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.offline-capture-panel p:last-child {
+  margin: 5px 0 0;
+  color: #9cafb3;
+  font-size: 13px;
+}
+
+.run-capture {
+  min-width: 168px;
+  min-height: 38px;
+  border: 1px solid rgba(58, 211, 196, 0.42);
+  border-radius: 8px;
+  color: #d9ffff;
+  background: rgba(31, 128, 118, 0.42);
+}
+
+.run-capture:disabled {
+  color: #9cafb3;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .recording-detail h2 {

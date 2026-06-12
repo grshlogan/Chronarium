@@ -10,10 +10,10 @@ chain. The package code is still early and fixture-first. It has a report-only
 archive recovery inspector, a core GUI-facing facade, fixture task/lifecycle
 skeletons, typed media command builders, and the first offline capture-like
 pipeline. It also has a first Web-first React/Vite recording dashboard shell
-under `apps/desktop`, backed by static synthetic data only. No Electron shell,
-preload/IPC, real site capture, real adapter child process, external media tool
-execution, real media segment writer/prober, archive repair/migration, or
-replay player exists yet.
+under `apps/desktop`, backed by synthetic data and a browser-safe offline
+fixture capture demo action only. No Electron shell, preload/IPC, real site
+capture, real adapter child process, external media tool execution, real media
+segment writer/prober, archive repair/migration, or replay player exists yet.
 
 Current files:
 
@@ -73,6 +73,7 @@ docs/
     plan_backend_task_adapter_media_skeleton.md
     plan_offline_fixture_capture_pipeline.md
     plan_streaming_archive_io_and_benchmarks.md
+    plan_web_dashboard_offline_behavior.md
     plan_web_first_recording_dashboard.md
 apps/
   desktop/
@@ -85,6 +86,7 @@ apps/
       index.ts
       main.tsx
       mockDashboard.ts
+      recordingDashboard.ts
       styles.css
       vite-env.d.ts
 packages/
@@ -495,6 +497,15 @@ Responsibility:
   benchmark script so future Rust/native module decisions have measured
   evidence.
 
+### `docs/plan/plan_web_dashboard_offline_behavior.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first browser-safe behavior slice
+  in the Web-first recording dashboard.
+- Records that the button uses a synthetic demo action only and must not call
+  Node-only core/archive/indexer APIs from the renderer.
+
 ### `docs/plan/plan_web_first_recording_dashboard.md`
 
 Responsibility:
@@ -587,6 +598,7 @@ apps/
       index.ts
       main.tsx
       mockDashboard.ts
+      recordingDashboard.ts
       styles.css
       vite-env.d.ts
 packages/
@@ -768,12 +780,17 @@ Must not own:
 
 Current status:
 
-- Exists as a Web-first React + Vite app with a static recording dashboard.
+- Exists as a Web-first React + Vite app with a recording dashboard and a
+  browser-safe synthetic offline capture demo.
 - The first screen focuses on maintained streamers, selected streamer recording
   state, disabled live-preview placeholder, recording information, pinned
   current session, history, and global information.
+- `recordingDashboard.ts` owns the browser-safe dashboard state, reducer, and
+  synthetic demo action.
+- The UI can run the demo action from a button and render completed/failed
+  status into history and latest facts.
 - The dev server defaults to `http://127.0.0.1:5187/` with `--strictPort`.
-- It uses synthetic mock view-model data only.
+- It uses synthetic mock view-model/demo data only.
 - It does not connect to core, read archives, query SQLite, start tasks,
   launch Electron, expose preload/IPC, preview live streams, or connect to real
   sites.

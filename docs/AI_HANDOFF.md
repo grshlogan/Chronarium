@@ -78,6 +78,10 @@ Current state:
   It renders maintained streamers, a selected streamer recording workspace,
   disabled recording preview placeholder, recording information, pinned current
   session, history, and global information from synthetic static data only.
+- `apps/desktop/src/recordingDashboard.ts` now owns a browser-safe dashboard
+  state/reducer and synthetic offline fixture capture demo action. The renderer
+  can click `Run fixture capture` and show completed/failure state without
+  calling Node-only core/archive/indexer APIs.
 - `apps/desktop` defaults to `http://127.0.0.1:5187/` for dev. Do not use
   `5173` for Chronarium because the user uses that port for other local work.
 - Root-level TDD slices are now organized under `tdd-tests/` by owner path; the
@@ -122,13 +126,16 @@ Current state:
   pre-GUI/pre-replay archive contract step: add streaming or batched timeline
   read/validation entry points and large synthetic timeline benchmarks before
   consumers hard-code full `timelineEvents` arrays.
+- `docs/plan/plan_web_dashboard_offline_behavior.md` records the safe first
+  behavior slice for the Web dashboard: synthetic demo action only, no core
+  filesystem calls from the browser renderer.
 - Sixteen Vitest behavior test files exercise synthetic archive writing, reading,
   validation failures, SQLite indexing, the core archive/index service, core
   runtime lifecycle, core maintenance inspection, archive recovery inspection,
   the core GUI facade, task scheduling, fixture adapter lifecycle, offline
   fixture capture pipeline, media command builders, and the first desktop
-  recording dashboard, plus Chaturbate offline split-track fixture behavior and
-  fixture archive/indexer and diagnostic flows.
+  recording dashboard behavior, plus Chaturbate offline split-track fixture
+  behavior and fixture archive/indexer and diagnostic flows.
 - No Electron shell, preload/IPC, live GUI-core binding, live task execution,
   real adapter child process, external media tool execution, real media segment
   writer/prober, archive repair/migration, replay player, or real site capture
@@ -186,6 +193,7 @@ docs/plan/plan_chaturbate_offline_diagnostic_fixtures.md
 docs/plan/plan_core_maintenance_inspector_foundation.md
 docs/plan/plan_archive_recovery_and_gui_core_facade.md
 docs/plan/plan_streaming_archive_io_and_benchmarks.md
+docs/plan/plan_web_dashboard_offline_behavior.md
 docs/plan/plan_web_first_recording_dashboard.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 docs/conversation-A02-foundation-docs-completion.md
@@ -272,9 +280,9 @@ The project should optimize for AI-assisted long-term maintenance:
 1. Implement the streaming/batched archive timeline API and large synthetic
    timeline benchmark plan before archive-heavy GUI/indexer/replay work further
    depends on full-array `timelineEvents`.
-2. Add a GUI-facing DTO/presenter boundary for `apps/desktop` so the static
-   recording dashboard can connect to core without calling archive/indexer
-   internals directly.
+2. Replace the browser-only offline capture demo action with a real GUI-facing
+   DTO/preload boundary, then connect it to `CoreGuiService` without letting the
+   renderer call archive/indexer internals directly.
 3. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
    real tools.
 4. Build the Electron shell and preload/IPC boundary around the existing

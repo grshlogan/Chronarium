@@ -39,7 +39,8 @@ It has:
 - a read-only core maintenance archive inspector that turns archive validator
   issues and known timeline diagnostic facts into `MaintenanceReport` findings;
 - a Web-first React/Vite recording dashboard under `apps/desktop`, using static
-  synthetic data only and defaulting to `127.0.0.1:5187`;
+  synthetic data plus a browser-safe offline fixture capture demo action only,
+  defaulting to `127.0.0.1:5187`;
 - Vitest behavior tests for synthetic `.chron` writing, reading, and basic
   timeline consistency failures, writer append-time rejection, media track
   metadata diagnostics, SQLite indexing, core archive/index service

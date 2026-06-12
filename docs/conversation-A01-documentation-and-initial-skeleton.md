@@ -127,6 +127,14 @@ A01 also hardened the TDD rules in `AGENTS.md` and added
 tree such as `tdd-tests/apps/desktop/recording-dashboard/`, not as flat files
 directly under `tdd-tests/`.
 
+The current A01 behavior pass added a browser-safe offline fixture capture demo
+for the Web dashboard. The new `apps/desktop/src/recordingDashboard.ts` owns
+dashboard state, reducer actions, and a synthetic demo action. The UI can click
+`Run fixture capture` and render a completed result into history and latest
+facts. This is not a core/archive/indexer integration yet; it deliberately does
+not write `.chron` archives, query SQLite, call Node APIs from the browser, or
+connect to a real site.
+
 ## Active Constraints
 
 - Work only inside `D:\live\Chronarium`.
@@ -166,6 +174,9 @@ directly under `tdd-tests/`.
 - The first React/Vite renderer is static and synthetic-only until a GUI-facing
   DTO boundary is added. It must not call `readFileArchive`,
   `validateFileArchive`, or indexer APIs directly.
+- The offline fixture capture button in the Web renderer is a browser-safe demo
+  action only. A future Electron/preload or GUI DTO client must replace it
+  before it can call `CoreGuiService`.
 - Chronarium desktop Web UI development should use port `5187`, not `5173`.
 
 ## Files In Scope For This Continuation
@@ -180,6 +191,7 @@ Code changes for this continuation:
 - `apps/desktop/src/index.ts`
 - `apps/desktop/src/main.tsx`
 - `apps/desktop/src/mockDashboard.ts`
+- `apps/desktop/src/recordingDashboard.ts`
 - `apps/desktop/src/styles.css`
 - `apps/desktop/src/vite-env.d.ts`
 - `tdd-tests/README.md`
@@ -194,6 +206,7 @@ Documentation changes for this continuation:
 - `docs/PRODUCT_SPEC.md`
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
 - `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
+- `docs/plan/plan_web_dashboard_offline_behavior.md`
 - `docs/plan/plan_web_first_recording_dashboard.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
@@ -400,12 +413,22 @@ Checks already run during this continuation:
   file passed after adding the React/Vite app and static dashboard shell.
 - Browser smoke on `http://127.0.0.1:5187/` confirmed the main desktop viewport
   renders the three-column dashboard with no detected text overflow.
+- TDD RED for the Web dashboard offline behavior:
+  `pnpm exec vitest run
+  tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+  failed because `createInitialRecordingDashboard` was not exported.
+- GREEN for the Web dashboard offline behavior: the targeted TDD file passed
+  after adding `recordingDashboard.ts`, reducer actions, and the UI demo panel.
+- Browser smoke clicked `Run fixture capture` on
+  `http://127.0.0.1:5187/` and confirmed `Completed`,
+  `Synthetic archive written`, `Fixture capture completed`, and
+  `3 timeline facts` were rendered without detected text overflow.
 
 ## Next Safe Step
 
 Either implement the streaming/batched archive timeline API and benchmark
 groundwork before deeper archive consumers hard-code full in-memory arrays, or
-add a GUI-facing DTO/presenter boundary so the Web-first dashboard can connect
-to core without calling archive reader/indexer internals directly. Keep A02
-independent and do not create A03, A04, or later conversation context files
-unless the user starts new real conversations and explicitly assigns those IDs.
+replace the Web dashboard's browser-only demo action with an Electron/preload
+or GUI DTO boundary that can call `CoreGuiService` safely. Keep A02 independent
+and do not create A03, A04, or later conversation context files unless the user
+starts new real conversations and explicitly assigns those IDs.

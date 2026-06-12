@@ -1,17 +1,53 @@
-import type { ReactElement } from "react";
-import { dashboardViewModel } from "./mockDashboard.js";
+import { useState, type ReactElement } from "react";
+import {
+  createInitialRecordingDashboard,
+  reduceRecordingDashboard,
+  runOfflineFixtureCaptureDemo,
+  type RecordingDashboardState
+} from "./recordingDashboard.js";
 
-const selectedStreamer = dashboardViewModel.streamers.find(
-  (streamer) => streamer.id === dashboardViewModel.selectedStreamerId
-);
-
-if (selectedStreamer === undefined) {
-  throw new Error("Selected streamer is missing from the dashboard view model.");
+export interface AppProps {
+  readonly dashboard?: RecordingDashboardState;
 }
 
-const selectedDashboardStreamer = selectedStreamer;
+export function App(props: AppProps = {}): ReactElement {
+  const [interactiveDashboard, setInteractiveDashboard] = useState(
+    () => props.dashboard ?? createInitialRecordingDashboard()
+  );
+  const dashboard = props.dashboard ?? interactiveDashboard;
+  const selectedStreamer = dashboard.streamers.find(
+    (streamer) => streamer.id === dashboard.selectedStreamerId
+  );
 
-export function App(): ReactElement {
+  if (selectedStreamer === undefined) {
+    throw new Error("Selected streamer is missing from the dashboard view model.");
+  }
+
+  const runDemoCapture = async (): Promise<void> => {
+    setInteractiveDashboard((current) =>
+      reduceRecordingDashboard(current, {
+        type: "offlineFixtureCapture.started"
+      })
+    );
+
+    try {
+      const action = await runOfflineFixtureCaptureDemo();
+      setInteractiveDashboard((current) =>
+        reduceRecordingDashboard(current, action)
+      );
+    } catch (error) {
+      setInteractiveDashboard((current) =>
+        reduceRecordingDashboard(current, {
+          type: "offlineFixtureCapture.failed",
+          errorMessage:
+            error instanceof Error
+              ? error.message
+              : "Offline fixture capture failed."
+        })
+      );
+    }
+  };
+
   return (
     <main className="app-shell">
       <aside className="streamer-rail" aria-label="Managed streamers">
@@ -28,10 +64,10 @@ export function App(): ReactElement {
           Add streamer link
         </button>
         <section className="streamer-list">
-          {dashboardViewModel.streamers.map((streamer) => (
+          {dashboard.streamers.map((streamer) => (
             <article
               className={
-                streamer.id === selectedDashboardStreamer.id
+                streamer.id === selectedStreamer.id
                   ? "streamer-card selected"
                   : "streamer-card"
               }
@@ -79,11 +115,11 @@ export function App(): ReactElement {
       <section className="workspace" aria-label="Selected streamer workspace">
         <header className="workspace-header">
           <div className="avatar large" aria-hidden="true">
-            {selectedDashboardStreamer.name.slice(0, 1)}
+            {selectedStreamer.name.slice(0, 1)}
           </div>
           <div>
             <p className="eyebrow">Selected streamer</p>
-            <h2>{selectedDashboardStreamer.name}</h2>
+            <h2>{selectedStreamer.name}</h2>
             <span className="status-pill">ONLINE</span>
           </div>
           <div className="header-actions">
@@ -111,11 +147,11 @@ export function App(): ReactElement {
         <section className="recording-detail">
           <div>
             <p className="eyebrow">Recording information</p>
-            <h2>{dashboardViewModel.currentSession.duration}</h2>
+            <h2>{dashboard.currentSession.duration}</h2>
             <dl className="metric-grid">
               <div>
                 <dt>Written size</dt>
-                <dd>{dashboardViewModel.currentSession.size}</dd>
+                <dd>{dashboard.currentSession.size}</dd>
               </div>
               <div>
                 <dt>Segments</dt>
@@ -134,7 +170,7 @@ export function App(): ReactElement {
           <div className="facts-panel">
             <h3>Latest facts</h3>
             <ol>
-              {dashboardViewModel.facts.map((fact) => (
+              {dashboard.facts.map((fact) => (
                 <li className={fact.level} key={`${fact.time}-${fact.label}`}>
                   <span>{fact.label}</span>
                   <time>{fact.time}</time>
@@ -142,6 +178,24 @@ export function App(): ReactElement {
               ))}
             </ol>
           </div>
+        </section>
+
+        <section className="offline-capture-panel" aria-label="Offline fixture capture">
+          <div>
+            <p className="eyebrow">Offline fixture capture</p>
+            <h2>{formatFixtureCaptureStatus(dashboard.offlineFixtureCapture.status)}</h2>
+            <p>{describeFixtureCapture(dashboard)}</p>
+          </div>
+          <button
+            className="run-capture"
+            type="button"
+            disabled={dashboard.offlineFixtureCapture.status === "running"}
+            onClick={() => {
+              void runDemoCapture();
+            }}
+          >
+            Run fixture capture
+          </button>
         </section>
       </section>
 
@@ -153,22 +207,22 @@ export function App(): ReactElement {
           <dl>
             <div>
               <dt>Started</dt>
-              <dd>{dashboardViewModel.currentSession.startedAt}</dd>
+              <dd>{dashboard.currentSession.startedAt}</dd>
             </div>
             <div>
               <dt>Duration</dt>
-              <dd>{dashboardViewModel.currentSession.duration}</dd>
+              <dd>{dashboard.currentSession.duration}</dd>
             </div>
             <div>
               <dt>Size</dt>
-              <dd>{dashboardViewModel.currentSession.size}</dd>
+              <dd>{dashboard.currentSession.size}</dd>
             </div>
           </dl>
         </section>
 
         <section className="history-list">
           <h2>History</h2>
-          {dashboardViewModel.history.map((session) => (
+          {dashboard.history.map((session) => (
             <article className="history-row" key={session.id}>
               <div>
                 <strong>{session.label}</strong>
@@ -206,4 +260,36 @@ export function App(): ReactElement {
       </aside>
     </main>
   );
+}
+
+function formatFixtureCaptureStatus(
+  status: RecordingDashboardState["offlineFixtureCapture"]["status"]
+): string {
+  switch (status) {
+    case "idle":
+      return "Ready";
+    case "running":
+      return "Running";
+    case "completed":
+      return "Completed";
+    case "failed":
+      return "Failed";
+  }
+}
+
+function describeFixtureCapture(dashboard: RecordingDashboardState): string {
+  const capture = dashboard.offlineFixtureCapture;
+
+  switch (capture.status) {
+    case "idle":
+      return "Run a local synthetic capture path without contacting a live site.";
+    case "running":
+      return "Synthetic adapter facts are being passed through the UI behavior path.";
+    case "completed":
+      return `${capture.archiveLabel ?? "Synthetic archive written"} · ${
+        capture.timelineEventCount ?? 0
+      } timeline facts`;
+    case "failed":
+      return capture.errorMessage ?? "Offline fixture capture failed.";
+  }
 }
