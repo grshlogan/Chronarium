@@ -7,7 +7,7 @@ const sourceAlias = (path: string): string =>
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["packages/**/*.test.ts"]
+    include: ["packages/**/*.test.ts", "tdd-tests/**/*.test.ts?(x)"]
   },
   resolve: {
     alias: {
@@ -16,6 +16,7 @@ export default defineConfig({
       "@chronarium/archive": sourceAlias("./packages/archive/src/index.ts"),
       "@chronarium/core": sourceAlias("./packages/core/src/index.ts"),
       "@chronarium/indexer": sourceAlias("./packages/indexer/src/index.ts"),
+      "@chronarium/desktop": sourceAlias("./apps/desktop/src/index.ts"),
       "@chronarium/adapter-chaturbate": sourceAlias(
         "./packages/adapters/chaturbate/src/index.ts"
       ),

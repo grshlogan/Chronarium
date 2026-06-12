@@ -44,6 +44,12 @@ Offline analysis: Python scripts allowed
 The stack is intentionally TypeScript-first to reduce AI maintenance cost and
 keep UI, backend, adapters, schemas, and tests close together.
 
+Rust is a future option for bounded performance or safety modules only after
+benchmarks show a real bottleneck. Before considering Rust for archive work,
+Chronarium needs streaming or batched archive timeline APIs and large synthetic
+timeline benchmarks so GUI, indexer, replay, and maintenance do not hard-code
+whole-file `timelineEvents` array reads.
+
 ## Process Model
 
 ```text
@@ -298,3 +304,22 @@ These decisions are intentionally deferred:
 - native module needs;
 - signed update channel;
 - public fixture policy;
+
+## Performance Evidence Before Native Modules
+
+Native modules must be driven by measured bottlenecks, not by preference.
+
+For archive and timeline paths, the first prerequisite is a TypeScript-facing
+streaming or batched API. Current whole-snapshot readers are useful for small
+fixtures, but future GUI, indexer, replay, and maintenance code should be able
+to consume timeline facts without receiving the entire `timeline.jsonl` as one
+array.
+
+The second prerequisite is benchmark evidence. `packages/testkit` should grow
+deterministic large synthetic timeline builders, such as 100,000 and 1,000,000
+event archives, plus a small benchmark script that reports time and memory for
+archive validation, indexing, and replay scans.
+
+Only after those boundaries and measurements exist should Rust be evaluated for
+archive verification, timeline scanning, hashing, repair, compaction, or media
+integrity workers.

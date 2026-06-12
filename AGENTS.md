@@ -130,6 +130,42 @@ or security boundaries, and only behind stable TypeScript-facing contracts.
 - Keep documentation practical and handoff-friendly: current state, active
   boundaries, key files, commands, verification, and next step.
 
+### TDD Rules
+
+- For code work, load and follow the local TDD skill before editing source code
+  unless the user explicitly asks for a different workflow or the change is
+  genuinely docs/config-only.
+- Follow a RED -> GREEN -> REFACTOR loop for behavior changes. If this is not
+  feasible, record the reason in the final report and in the relevant plan or
+  conversation context when the work is non-trivial.
+- Write one behavior test first, make it fail for the expected reason, then add
+  the smallest implementation that makes that behavior pass. Do not batch many
+  speculative tests before implementation.
+- Tests should verify public behavior through package, app, or service
+  interfaces, not private implementation details.
+- Record the first RED failure and the GREEN validation in the final report and
+  the relevant plan/context document for non-trivial code changes.
+- Root-level TDD tests belong under `tdd-tests/`.
+- Keep `tdd-tests/` organized as a code tree, not a flat dump. Use paths that
+  mirror the behavior owner, for example:
+
+```text
+tdd-tests/
+  apps/
+    desktop/
+      recording-dashboard/
+  packages/
+    archive/
+      streaming-timeline/
+    core/
+      offline-capture/
+```
+
+- Do not place new test files directly under `tdd-tests/` unless the test is
+  intentionally cross-cutting and no narrower owner exists.
+- `packages/*/tests` may still hold package-local behavior tests. Use
+  `tdd-tests/` for cross-package, app-level, or user-requested TDD slices.
+
 ## 8. Documentation Discipline
 
 For non-trivial work, create or update a plan document before implementation.

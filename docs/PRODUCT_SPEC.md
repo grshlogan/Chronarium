@@ -103,7 +103,7 @@ The maintainer should be able to answer:
 
 ## Current Implementation Status
 
-As of 2026-06-11, the project has a minimal executable validation chain:
+As of 2026-06-12, the project has a minimal executable validation chain:
 synthetic fixture data can be runtime-validated and written into a local
 `.chron` package skeleton. The first archive reader/validator can read
 `manifest.json`, `timeline.jsonl`, and synthetic media-track metadata, then
@@ -115,8 +115,11 @@ runtime lifecycle shell can start, stop, report health, and expose that service
 while running. The first report-only archive recovery inspector can identify
 common interrupted-write states without repair, and the first core GUI-facing
 service facade exposes health, archive/index, maintenance, and recovery
-inspection calls for a future GUI. Electron/React GUI, core task scheduling,
-adapter lifecycle, media tooling, real media segment writing/probing, archive
+inspection calls for a future GUI. Core also has a fixture-only task scheduler,
+adapter lifecycle host, typed media command builders, and an offline
+capture-like pipeline. `apps/desktop` now contains a static Web-first
+React/Vite recording dashboard shell using synthetic data only. Electron shell,
+preload/IPC, live GUI-core binding, real media segment writing/probing, archive
 repair/migration, replay player, and real adapters remain unimplemented.
 
 ## Open Product Decisions

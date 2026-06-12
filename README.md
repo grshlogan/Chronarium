@@ -79,7 +79,10 @@ AI 可以快速接手局部问题
   不修复、不删除、不移动、不重写 archive。
 - `packages/core` 已有最小 GUI-facing service facade，可把 future GUI 需要的
   health、archive validate/read/reindex/list、maintenance inspect 和 recovery
-  inspect 串到一个 core 入口；尚未实现 Electron/React GUI 或 IPC。
+  inspect 串到一个 core 入口。
+- `apps/desktop` 已有第一版 Web-first React + Vite 录制工作台静态空壳，围绕
+  主播维护、当前录制状态、历史场次和全局信息展示；默认开发端口为
+  `127.0.0.1:5187`。它还没有接入 core、Electron shell、preload 或 IPC。
 - `packages/core` 已有最小 task scheduler 骨架，可创建、启动、停止、失败和
   查询 fixture capture task；尚未驱动真实录制。
 - `packages/core` 已有 fixture-only adapter lifecycle host，可消费 adapter
@@ -105,9 +108,9 @@ AI 可以快速接手局部问题
   core runtime lifecycle、core maintenance inspector、offline fixture capture
   pipeline、Chaturbate 离线 split-track fixture、fixture archive/indexer flow
   和 synthetic diagnostic fixture。
-- 尚未实现 Electron/React GUI、真实 task 执行、真实 adapter child process、
-  真实站点 adapter、外部媒体工具执行、真实媒体分片写入、archive repair/
-  migration 或 replay player。
+- 尚未实现 Electron 桌面壳、preload/IPC、真实 task 执行、真实 adapter
+  child process、真实站点 adapter、外部媒体工具执行、真实媒体分片写入、
+  archive repair/migration 或 replay player。
 - 已补充回放模型、GUI↔core 协议、诊断码注册表、媒体工具边界等基础契约
   文档草案，以及归档恢复的实现前设计计划。
 - 本阶段的重点是先立稳工程边界、AI 维护规则、架构词汇、schema 草案、
@@ -159,6 +162,8 @@ small module boundaries.
 - [docs/conversation-A01-documentation-and-initial-skeleton.md](./docs/conversation-A01-documentation-and-initial-skeleton.md)：A01 对话上下文维护文档。
 - [docs/conversation-A02-foundation-docs-completion.md](./docs/conversation-A02-foundation-docs-completion.md)：A02 对话上下文维护文档。
 - [docs/plan/README.md](./docs/plan/README.md)：后续计划文档入口和命名规则。
+- [docs/plan/plan_streaming_archive_io_and_benchmarks.md](./docs/plan/plan_streaming_archive_io_and_benchmarks.md)：archive 流式/分批读取入口与大规模 timeline benchmark 的计划。
+- [docs/plan/plan_web_first_recording_dashboard.md](./docs/plan/plan_web_first_recording_dashboard.md)：第一版 Web-first 录制工作台计划和验证记录。
 
 ## 设计边界
 
@@ -191,9 +196,12 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
-2. 搭建 Electron + React + Vite 的最小桌面壳，通过 core GUI facade 显示
-   health/status。
-3. 让 Web renderer 先接入离线 capture-like pipeline，展示 archive 列表、
+1. 在 archive 包契约中补流式/分批 timeline 读取入口，并在 testkit 规划
+   大规模 synthetic timeline builder/benchmark，避免 GUI/indexer/replay
+   固化整读 `timelineEvents` 数组。
+2. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
+3. 给第一版 Web-first 录制工作台补 GUI-facing DTO 边界，再接入 core
+   facade 显示 health/status。
+4. 让 Web renderer 接入离线 capture-like pipeline，展示 archive 列表、
    timeline facts、validation / maintenance / recovery 状态。
-4. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。
+5. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。

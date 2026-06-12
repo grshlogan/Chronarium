@@ -888,3 +888,72 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan parsed 22 JSON files.
 - Next: run full workspace verification, then build media-tool output parser
   fixtures or start the Web-first Electron/React/Vite GUI shell.
+
+## 2026-06-12: Streaming archive IO and benchmark plan
+
+- Conversation: user identified two pre-GUI architecture risks: full-array
+  timeline reads in `validateFileArchive` / `readFileArchive`, and the lack of
+  benchmark evidence for future Rust/native module decisions.
+- Landed: added a planning document for streaming/batched archive timeline APIs
+  and large synthetic timeline benchmark groundwork.
+- Files:
+  - `README.md`
+  - `docs/ARCHITECTURE.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
+- Decisions:
+  - Future GUI, indexer, replay, and maintenance work should not further
+    solidify full in-memory `timelineEvents` arrays as the only archive read
+    shape.
+  - Large deterministic timeline builders and benchmark scripts are required
+    before "measured bottlenecks" can justify Rust or other native modules.
+  - This pass implements no streaming API, benchmark, or Rust code.
+- Verification:
+  - Docs-only validation should run after this entry is added.
+- Next: implement the streaming/batched archive timeline API and large
+  synthetic timeline benchmark groundwork with TDD.
+
+## 2026-06-12: Web-first recording dashboard shell
+
+- Conversation: user clarified that the first GUI should focus on the recording
+  view, with maintained streamers on the left, selected streamer workspace in
+  the center, session history on the right, current recording pinned, and no
+  live preview for now.
+- Landed: added a static Web-first React/Vite dashboard under `apps/desktop`,
+  rooted in synthetic view-model data only.
+- Files:
+  - `AGENTS.md`
+  - `README.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/GUI_CORE_PROTOCOL.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_web_first_recording_dashboard.md`
+  - `apps/desktop/`
+  - `tdd-tests/README.md`
+  - `tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+- Decisions:
+  - The first GUI is Web-first React + TypeScript + Vite, before Electron
+    wrapping.
+  - The dashboard does not implement live preview, real capture, credentials,
+    cookies, session handling, archive reads, SQLite queries, preload/IPC, or
+    Electron.
+  - The Chronarium desktop dev server defaults to
+    `http://127.0.0.1:5187/` with `--strictPort`; port `5173` is avoided.
+  - Root-level TDD tests must stay in a source-owner-shaped tree under
+    `tdd-tests/`, not as flat files.
+- Verification:
+  - TDD RED: the dashboard test initially failed before
+    `@chronarium/desktop` existed.
+  - GREEN: the targeted dashboard test passed after adding the React/Vite app.
+  - Browser smoke on `http://127.0.0.1:5187/` confirmed the three-column desktop
+    layout rendered with no detected text overflow.
+  - Full workspace checks should run after this entry is added.
+- Next: run full workspace verification, then either add archive streaming /
+  benchmark groundwork or add a GUI-facing DTO boundary for the dashboard.

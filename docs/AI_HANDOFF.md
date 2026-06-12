@@ -61,8 +61,8 @@ Current state:
   does not repair, delete, move, rewrite, or quarantine archive files.
 - `packages/core` has the first GUI-facing service facade. It exposes health,
   archive validate/read/reindex/list, maintenance inspection, and recovery
-  inspection through one core entry point for a future GUI. No Electron/React
-  GUI or IPC exists yet.
+  inspection through one core entry point for a future GUI. It is not yet wired
+  to the Web renderer, Electron, preload, or IPC.
 - `packages/core` has a minimal in-memory task scheduler skeleton for fixture
   capture tasks.
 - `packages/core` has a fixture-only adapter lifecycle host that consumes
@@ -74,6 +74,15 @@ Current state:
   success/failure to future GUI callers.
 - Adapter lifecycle errors and missing `adapter.finished` messages map to
   failed tasks and skip archive indexing.
+- `apps/desktop` has the first Web-first React/Vite recording dashboard shell.
+  It renders maintained streamers, a selected streamer recording workspace,
+  disabled recording preview placeholder, recording information, pinned current
+  session, history, and global information from synthetic static data only.
+- `apps/desktop` defaults to `http://127.0.0.1:5187/` for dev. Do not use
+  `5173` for Chronarium because the user uses that port for other local work.
+- Root-level TDD slices are now organized under `tdd-tests/` by owner path; the
+  first one is
+  `tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`.
 - `packages/media-tools` has typed FFmpeg/ffprobe command builders that return
   argv/redactedArgv descriptions. It does not execute real binaries.
 - `docs/MAINTENANCE_OPS_DESIGN.md` records the draft maintenance / ops
@@ -85,7 +94,8 @@ Current state:
   replay inputs, the replay clock, seek and state reconstruction, and the
   constraints replay places on archive and timeline contracts.
 - `docs/GUI_CORE_PROTOCOL.md` records the draft GUI-to-core message protocol
-  mirroring `docs/ADAPTER_PROTOCOL.md`; no GUI or IPC implementation exists.
+  mirroring `docs/ADAPTER_PROTOCOL.md`; no Electron/preload/IPC or live
+  GUI-core binding exists.
 - `docs/DIAGNOSTIC_CODES_V1.md` records the diagnostic code registry: the
   twenty implemented archive validation issue codes plus naming, stability,
   and reserved-area rules.
@@ -108,16 +118,21 @@ Current state:
   Chaturbate behavior.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
-- Fifteen Vitest behavior test files exercise synthetic archive writing, reading,
+- `docs/plan/plan_streaming_archive_io_and_benchmarks.md` records a planned
+  pre-GUI/pre-replay archive contract step: add streaming or batched timeline
+  read/validation entry points and large synthetic timeline benchmarks before
+  consumers hard-code full `timelineEvents` arrays.
+- Sixteen Vitest behavior test files exercise synthetic archive writing, reading,
   validation failures, SQLite indexing, the core archive/index service, core
   runtime lifecycle, core maintenance inspection, archive recovery inspection,
   the core GUI facade, task scheduling, fixture adapter lifecycle, offline
-  fixture capture pipeline, and media command builders, plus Chaturbate
-  offline split-track fixture behavior and fixture archive/indexer and
-  diagnostic flows.
-- No Electron/React GUI, live task execution, real adapter child process,
-  external media tool execution, real media segment writer/prober, archive
-  repair/migration, replay player, or real site capture exists yet.
+  fixture capture pipeline, media command builders, and the first desktop
+  recording dashboard, plus Chaturbate offline split-track fixture behavior and
+  fixture archive/indexer and diagnostic flows.
+- No Electron shell, preload/IPC, live GUI-core binding, live task execution,
+  real adapter child process, external media tool execution, real media segment
+  writer/prober, archive repair/migration, replay player, or real site capture
+  exists yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
 - Conversation context files currently represent only two active conversation
@@ -170,6 +185,8 @@ docs/plan/plan_chaturbate_fixture_archive_flow.md
 docs/plan/plan_chaturbate_offline_diagnostic_fixtures.md
 docs/plan/plan_core_maintenance_inspector_foundation.md
 docs/plan/plan_archive_recovery_and_gui_core_facade.md
+docs/plan/plan_streaming_archive_io_and_benchmarks.md
+docs/plan/plan_web_first_recording_dashboard.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 docs/conversation-A02-foundation-docs-completion.md
 .gitattributes
@@ -189,6 +206,8 @@ packages/core/
 packages/adapters/chaturbate/
 packages/media-tools/
 packages/testkit/
+apps/desktop/
+tdd-tests/
 ```
 
 ## Important Decisions
@@ -250,17 +269,23 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
+1. Implement the streaming/batched archive timeline API and large synthetic
+   timeline benchmark plan before archive-heavy GUI/indexer/replay work further
+   depends on full-array `timelineEvents`.
+2. Add a GUI-facing DTO/presenter boundary for `apps/desktop` so the static
+   recording dashboard can connect to core without calling archive/indexer
+   internals directly.
+3. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
    real tools.
-2. Build the Electron + React + Vite desktop shell and wire it to the core GUI
-   facade for health/status.
-3. Let the first Web renderer use the offline fixture capture pipeline to show
+4. Build the Electron shell and preload/IPC boundary around the existing
+   Web-first renderer only after the GUI/core DTO boundary is stable.
+5. Let the Web renderer use the offline fixture capture pipeline to show
    archive list, timeline facts, validation, recovery, and maintenance status.
-4. Extend the maintenance inspector with index freshness comparison, keeping
+6. Extend the maintenance inspector with index freshness comparison, keeping
    writes as explicit safe-rebuild suggestions rather than automatic actions.
-5. Add real media segment IO only after the media-track metadata validator
+7. Add real media segment IO only after the media-track metadata validator
    remains stable.
-6. If real Chaturbate behavior needs validation, first prepare separately
+8. If real Chaturbate behavior needs validation, first prepare separately
    approved redacted evidence or synthetic reproductions derived from approved
    local samples.
 

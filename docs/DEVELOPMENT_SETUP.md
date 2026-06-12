@@ -8,8 +8,9 @@ The repository now has a minimal TypeScript workspace skeleton, installed
 development dependencies, runtime schema validation, a fixture-only archive
 writer path, a first fixture-safe archive reader/validator, and a first
 rebuildable SQLite indexer. `packages/core` now has a first small archive/index
-service, a minimal runtime lifecycle shell, and a first read-only maintenance
-archive inspector.
+service, a minimal runtime lifecycle shell, a first read-only maintenance
+archive inspector, and a fixture-only offline capture pipeline. `apps/desktop`
+now has a first Web-first React/Vite recording dashboard shell.
 
 It has:
 
@@ -37,21 +38,22 @@ It has:
   while running;
 - a read-only core maintenance archive inspector that turns archive validator
   issues and known timeline diagnostic facts into `MaintenanceReport` findings;
+- a Web-first React/Vite recording dashboard under `apps/desktop`, using static
+  synthetic data only and defaulting to `127.0.0.1:5187`;
 - Vitest behavior tests for synthetic `.chron` writing, reading, and basic
   timeline consistency failures, writer append-time rejection, media track
   metadata diagnostics, SQLite indexing, core archive/index service
-  coordination, core runtime lifecycle, and core maintenance inspection.
+  coordination, core runtime lifecycle, core maintenance inspection, offline
+  fixture capture, and the first desktop recording dashboard.
 
 It does not yet have:
 
-- executable GUI;
-- core task scheduler or adapter lifecycle;
+- Electron shell, preload, or IPC;
+- live GUI binding to core/archive/indexer data;
 - real media segment writing or probing;
 - archive recovery or migration behavior;
 - maintenance background loop, AI operations, or automatic repair;
-- SQLite integration with GUI;
 - real site adapters;
-- FFmpeg / ffprobe command builders;
 - replay player.
 
 ## Tooling
@@ -85,7 +87,11 @@ pnpm install
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm --filter @chronarium/desktop dev
 ```
+
+The desktop Web UI dev server uses `http://127.0.0.1:5187/` by default. Avoid
+using `5173`, which may be occupied by unrelated local projects.
 
 ## Safe Checks
 

@@ -104,6 +104,29 @@ timeout, but the generated image later appeared at
 `runtime/imagegen/chronarium-gui-concept.png`. The image is stored under the
 ignored `runtime/` directory and is a design reference, not an implemented GUI.
 
+The current A01 planning pass recorded a pre-GUI/pre-replay risk:
+`validateFileArchive` and `readFileArchive` expose full in-memory
+`timelineEvents` arrays. Before GUI, indexer, replay, or maintenance depend more
+deeply on that shape, Chronarium should add streaming or batched archive
+timeline entry points and large synthetic timeline benchmark fixtures. This is
+tracked in `docs/plan/plan_streaming_archive_io_and_benchmarks.md`.
+
+The current A01 GUI pass added the first Web-first React/Vite recording
+dashboard shell under `apps/desktop`. It follows the streamer-maintenance
+layout direction: maintained streamers on the left, selected streamer recording
+workspace in the center, current session and history on the right, and global
+information in the lower-left. It uses synthetic static data only. It does not
+connect to core, read archives, query SQLite, start tasks, launch Electron,
+expose preload/IPC, preview live streams, or connect to real sites. Its default
+dev server port is `127.0.0.1:5187`; A01 stopped the earlier Chronarium Vite
+process on `5173` after the user said that port is used by other local
+development work.
+
+A01 also hardened the TDD rules in `AGENTS.md` and added
+`tdd-tests/README.md`. Root-level TDD slices now belong under an owner-shaped
+tree such as `tdd-tests/apps/desktop/recording-dashboard/`, not as flat files
+directly under `tdd-tests/`.
+
 ## Active Constraints
 
 - Work only inside `D:\live\Chronarium`.
@@ -139,26 +162,42 @@ ignored `runtime/` directory and is a design reference, not an implemented GUI.
 - Archive recovery inspection is report-only. It must not delete, move,
   rewrite, repair, quarantine, or reindex archive files.
 - The core GUI facade is only an in-process TypeScript API for future GUI
-  callers. It is not an Electron preload bridge, IPC implementation, or React
-  renderer.
+  callers. It is not an Electron preload bridge or IPC implementation.
+- The first React/Vite renderer is static and synthetic-only until a GUI-facing
+  DTO boundary is added. It must not call `readFileArchive`,
+  `validateFileArchive`, or indexer APIs directly.
+- Chronarium desktop Web UI development should use port `5187`, not `5173`.
 
 ## Files In Scope For This Continuation
 
 Code changes for this continuation:
 
-- `packages/core/src/offlineFixtureCapturePipeline.ts`
-- `packages/core/src/guiService.ts`
-- `packages/core/src/index.ts`
-- `packages/core/tests/offlineFixtureCapturePipeline.test.ts`
+- `apps/desktop/package.json`
+- `apps/desktop/index.html`
+- `apps/desktop/tsconfig.json`
+- `apps/desktop/vite.config.ts`
+- `apps/desktop/src/App.tsx`
+- `apps/desktop/src/index.ts`
+- `apps/desktop/src/main.tsx`
+- `apps/desktop/src/mockDashboard.ts`
+- `apps/desktop/src/styles.css`
+- `apps/desktop/src/vite-env.d.ts`
+- `tdd-tests/README.md`
+- `tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
 
 Documentation changes for this continuation:
 
+- `AGENTS.md`
+- `README.md`
+- `docs/DEVELOPMENT_SETUP.md`
+- `docs/GUI_CORE_PROTOCOL.md`
+- `docs/PRODUCT_SPEC.md`
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
-- `docs/plan/plan_offline_fixture_capture_pipeline.md`
+- `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
+- `docs/plan/plan_web_first_recording_dashboard.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
-- `README.md`
 
 ## Verification Log
 
@@ -350,12 +389,23 @@ Checks already run during this continuation:
 - `git diff --check`: produced no output.
 - trailing whitespace scan: produced no output.
 - JSON/package config parse scan: parsed 22 JSON files.
+- Added `docs/plan/plan_streaming_archive_io_and_benchmarks.md` as a planning
+  document only. No streaming archive API, large timeline builder, benchmark
+  script, or Rust module was implemented in this planning pass.
+- TDD RED for the Web-first recording dashboard:
+  `pnpm exec vitest run
+  tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+  initially failed before the `@chronarium/desktop` app export existed.
+- GREEN for the Web-first recording dashboard: the targeted `tdd-tests` Vitest
+  file passed after adding the React/Vite app and static dashboard shell.
+- Browser smoke on `http://127.0.0.1:5187/` confirmed the main desktop viewport
+  renders the three-column dashboard with no detected text overflow.
 
 ## Next Safe Step
 
-Run full workspace verification, commit/push this offline fixture capture
-pipeline step if requested, then either add media-tool output parser fixtures
-or start the Web-first Electron/React/Vite GUI shell around the existing
-GUI-facing facade. Keep A02 independent and do not create A03, A04, or later
-conversation context files unless the user starts new real conversations and
-explicitly assigns those IDs.
+Either implement the streaming/batched archive timeline API and benchmark
+groundwork before deeper archive consumers hard-code full in-memory arrays, or
+add a GUI-facing DTO/presenter boundary so the Web-first dashboard can connect
+to core without calling archive reader/indexer internals directly. Keep A02
+independent and do not create A03, A04, or later conversation context files
+unless the user starts new real conversations and explicitly assigns those IDs.

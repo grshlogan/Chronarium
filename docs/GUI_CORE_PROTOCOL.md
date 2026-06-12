@@ -1,11 +1,13 @@
 # GUI Core Protocol
 
-Status: draft protocol contract. No GUI, Electron shell, preload bridge, or
-IPC implementation exists. `chronarium-core` is currently an in-process
-TypeScript library (`packages/core`) exposing a runtime contract and an
-archive/index service. Request families marked as existing below map to
-library calls that exist today; the message envelope, transport, events,
-paging, and everything marked reserved are design targets only.
+Status: draft protocol contract. A static Web-first React/Vite renderer exists
+under `apps/desktop`, but no Electron shell, preload bridge, IPC
+implementation, or live GUI-core binding exists. `chronarium-core` is currently
+an in-process TypeScript library (`packages/core`) exposing a runtime contract,
+archive/index service, GUI-facing facade, and fixture-only offline capture
+pipeline. Request families marked as existing below map to library calls that
+exist today; the message envelope, transport, events, paging, and everything
+marked reserved are design targets only.
 
 ## Purpose
 

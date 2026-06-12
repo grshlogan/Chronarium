@@ -9,9 +9,11 @@ Chronarium now has documentation plus a minimal executable TypeScript validation
 chain. The package code is still early and fixture-first. It has a report-only
 archive recovery inspector, a core GUI-facing facade, fixture task/lifecycle
 skeletons, typed media command builders, and the first offline capture-like
-pipeline. No Electron/React GUI, real site capture, real adapter child process,
-external media tool execution, real media segment writer/prober, archive
-repair/migration, or replay player exists yet.
+pipeline. It also has a first Web-first React/Vite recording dashboard shell
+under `apps/desktop`, backed by static synthetic data only. No Electron shell,
+preload/IPC, real site capture, real adapter child process, external media tool
+execution, real media segment writer/prober, archive repair/migration, or
+replay player exists yet.
 
 Current files:
 
@@ -70,6 +72,21 @@ docs/
     plan_archive_recovery_and_gui_core_facade.md
     plan_backend_task_adapter_media_skeleton.md
     plan_offline_fixture_capture_pipeline.md
+    plan_streaming_archive_io_and_benchmarks.md
+    plan_web_first_recording_dashboard.md
+apps/
+  desktop/
+    package.json
+    index.html
+    tsconfig.json
+    vite.config.ts
+    src/
+      App.tsx
+      index.ts
+      main.tsx
+      mockDashboard.ts
+      styles.css
+      vite-env.d.ts
 packages/
   types/
   schemas/
@@ -80,6 +97,12 @@ packages/
   adapters/
     chaturbate/
   testkit/
+tdd-tests/
+  README.md
+  apps/
+    desktop/
+      recording-dashboard/
+        desktopRecordingDashboard.test.tsx
 ```
 
 ## Root Files
@@ -461,6 +484,27 @@ Responsibility:
   `.chron` archives, reindexes SQLite, maps adapter lifecycle failures to task
   failures, and remains free of live site capture or real media IO.
 
+### `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
+
+Responsibility:
+
+- Plan for adding streaming or batched archive timeline read/validation entry
+  points before GUI, indexer, replay, and maintenance hard-code full
+  `timelineEvents` arrays.
+- Plan for adding large deterministic synthetic timeline builders and a local
+  benchmark script so future Rust/native module decisions have measured
+  evidence.
+
+### `docs/plan/plan_web_first_recording_dashboard.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first Web-first React/Vite
+  recording dashboard.
+- Records that the dashboard is static and synthetic-only, with no Electron
+  shell, preload/IPC, core binding, live preview, credential handling, or real
+  site capture.
+
 ### `docs/plan/plan_chaturbate_offline_split_fixture.md`
 
 Responsibility:
@@ -521,7 +565,8 @@ Responsibility:
 ## Current Code Tree
 
 The following tree exists. Some packages are still contract skeletons; archive
-and indexer have the first executable fixture paths.
+and indexer have the first executable fixture paths. The first Web UI exists as
+a static renderer shell only.
 
 ```text
 package.json
@@ -531,6 +576,19 @@ tsconfig.base.json
 tsconfig.json
 vitest.config.ts
 
+apps/
+  desktop/
+    package.json
+    index.html
+    tsconfig.json
+    vite.config.ts
+    src/
+      App.tsx
+      index.ts
+      main.tsx
+      mockDashboard.ts
+      styles.css
+      vite-env.d.ts
 packages/
   types/
     package.json
@@ -641,6 +699,12 @@ packages/
     src/
       fixtures.ts
       index.ts
+tdd-tests/
+  README.md
+  apps/
+    desktop/
+      recording-dashboard/
+        desktopRecordingDashboard.test.tsx
 ```
 
 ## Planned Future Tree
@@ -651,9 +715,7 @@ These areas are planned but not implemented:
 apps/
   desktop/
     electron/
-    src/
       main/
-      renderer/
       preload/
 
 packages/
@@ -692,9 +754,9 @@ tools/
 
 Owns:
 
-- Electron shell.
-- React renderer.
-- preload bridge.
+- React/Vite renderer.
+- Future Electron shell.
+- Future preload bridge.
 - GUI state and replay views.
 
 Must not own:
@@ -703,6 +765,18 @@ Must not own:
 - archive write authority;
 - FFmpeg command construction;
 - credential storage.
+
+Current status:
+
+- Exists as a Web-first React + Vite app with a static recording dashboard.
+- The first screen focuses on maintained streamers, selected streamer recording
+  state, disabled live-preview placeholder, recording information, pinned
+  current session, history, and global information.
+- The dev server defaults to `http://127.0.0.1:5187/` with `--strictPort`.
+- It uses synthetic mock view-model data only.
+- It does not connect to core, read archives, query SQLite, start tasks,
+  launch Electron, expose preload/IPC, preview live streams, or connect to real
+  sites.
 
 ### `packages/types`
 
@@ -760,8 +834,8 @@ Current status:
   reindex SQLite, or touch live sites.
 - The GUI-facing facade exposes health, archive validate/read/reindex/list,
   maintenance inspection, and recovery inspection for future GUI callers.
-- The facade is an in-process TypeScript boundary only; no Electron, preload,
-  IPC, or React renderer exists yet.
+- The facade is an in-process TypeScript boundary only; it is not yet connected
+  to the Web-first renderer, Electron, preload, or IPC.
 - The in-memory task scheduler can create, start, stop, fail, get, and list
   fixture capture tasks.
 - The fixture adapter lifecycle host can consume adapter protocol message
@@ -837,6 +911,9 @@ Current status:
   invalid timeline JSONL lines, missing/finalized manifest counts, manifest
   count mismatches, orphan `.tmp` files, undeclared track directories, and
   missing manifest-declared track metadata.
+- Streaming or batched timeline read/validation entry points are planned in
+  `docs/plan/plan_streaming_archive_io_and_benchmarks.md`; they do not exist
+  yet.
 - Real media segment writing/reading/probing, archive repair, and migration are
   still pending.
 
@@ -860,7 +937,7 @@ Current status:
   timeline event, and validation issue queries.
 - SQLite is still a rebuildable cache/index, not the source of replay truth.
 - Integrated with `packages/core` through archive/index service and the
-  GUI-facing facade. No actual GUI exists yet.
+  GUI-facing facade. No live GUI/indexer binding exists yet.
 
 ### `packages/media-tools`
 
@@ -902,6 +979,9 @@ Current status:
 - Exists with helpers for synthetic sessions and timeline events.
 - Includes a helper for synthetic archive manifests.
 - Includes a helper for synthetic media tracks.
+- Large deterministic timeline builders and benchmark helpers are planned in
+  `docs/plan/plan_streaming_archive_io_and_benchmarks.md`; they do not exist
+  yet.
 
 ## Root Workspace Files
 
@@ -981,6 +1061,19 @@ player timeline tests
 Electron boundary tests
 Playwright replay smoke tests
 ```
+
+Current root-level TDD slices:
+
+```text
+tdd-tests/
+  apps/
+    desktop/
+      recording-dashboard/
+        desktopRecordingDashboard.test.tsx
+```
+
+`tdd-tests/README.md` documents that root-level TDD slices should mirror source
+ownership paths instead of becoming a flat test dump.
 
 ## Maintenance Notes
 
