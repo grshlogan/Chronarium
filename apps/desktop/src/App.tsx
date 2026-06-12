@@ -91,7 +91,7 @@ export function App(props: AppProps = {}): ReactElement {
               <div className="avatar" aria-hidden="true">
                 {streamer.name.slice(0, 1)}
               </div>
-              <div>
+              <div className="streamer-identity">
                 <strong>{streamer.name}</strong>
                 <span className="site-code">{streamer.site}</span>
                 <small className="last-check">Last check {streamer.lastCheck}</small>
@@ -112,25 +112,27 @@ export function App(props: AppProps = {}): ReactElement {
                 >
                   {formatShowMode(streamer)}
                 </span>
-                <span
-                  className={`status-cell stream-state media-stream ${
-                    streamer.mediaStreamState === "recording"
-                      ? "recording"
-                      : "idle"
-                  }`}
-                  title={describeMediaStreamState(streamer)}
-                >
-                  {formatMediaStreamState(streamer)}
-                </span>
-                <span
-                  className={`status-cell stream-state information-stream ${
-                    streamer.informationStreamState === "recording"
-                      ? "recording"
-                      : "idle"
-                  }`}
-                  title={describeInformationStreamState(streamer)}
-                >
-                  {formatInformationStreamState(streamer)}
+                <span className="stream-state-row">
+                  <span
+                    className={`status-cell stream-state media-stream ${
+                      streamer.mediaStreamState === "recording"
+                        ? "recording"
+                        : "idle"
+                    }`}
+                    title={describeMediaStreamState(streamer)}
+                  >
+                    {formatMediaStreamState(streamer)}
+                  </span>
+                  <span
+                    className={`status-cell stream-state information-stream ${
+                      streamer.informationStreamState === "recording"
+                        ? "recording"
+                        : "idle"
+                    }`}
+                    title={describeInformationStreamState(streamer)}
+                  >
+                    {formatInformationStreamState(streamer)}
+                  </span>
                 </span>
               </div>
             </button>

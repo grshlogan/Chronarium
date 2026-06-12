@@ -1071,8 +1071,10 @@ unimplemented ideas as completed work.
   - Left streamer rows now show synthetic availability, show-mode,
     media-stream, and information-stream status lanes.
   - The status lanes were refined into a compact right-side status board:
-    short availability cell, wider show-mode cell, and full-width media/info
-    stream cells with hover descriptions.
+    short availability cell, wider show-mode cell, and equal-width side-by-side
+    media/info stream cells with hover descriptions.
+  - Streamer cards vertically center the avatar, the three-line identity block,
+    and the four-cell status board.
   - The status board does not implement real site detection, ticket/private-show
     handling, media capture, or information stream capture.
 - Verification:
@@ -1096,6 +1098,9 @@ unimplemented ideas as completed work.
   - Browser smoke confirmed the first status board is 120px wide, with a 35px
     availability cell, 81px show-mode cell, 120px media row, 120px information
     row, and no detected cell overflow.
+  - Later browser smoke confirmed the left rail is 438px wide, streamer cards
+    are 86px high, media/info cells share one row with equal 86px widths, and
+    avatar, identity block, and status board all align to the card centerline.
   - `git diff --check` produced no output.
   - trailing whitespace scan produced no output.
   - JSON/package config parse scan parsed 24 JSON files.

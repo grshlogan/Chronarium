@@ -167,8 +167,10 @@ stream capture, or information stream capture.
 
 The latest A01 UI refinement changed those loose status lanes into a compact
 right-side status board. The top row uses a short availability cell and a wider
-show-mode/ticket cell; the next two rows are full-width media-stream and
-information-stream states. Each cell has basic hover text through `title`.
+show-mode/ticket cell; the lower row now keeps media-stream and
+information-stream states side by side with equal widths. Each cell has basic
+hover text through `title`. The avatar, three-line identity block, and status
+board are vertically centered as three aligned blocks in each streamer card.
 
 ## Active Constraints
 
@@ -510,6 +512,9 @@ Checks already run during this continuation:
 - Browser smoke confirmed the first streamer status board is 120px wide, its
   top row is 35px plus 81px, its media/info rows are 120px wide, and no cell
   overflow was detected.
+- Later browser smoke confirmed the left rail is 438px wide, streamer cards are
+  86px high, media/info cells share one row with equal 86px widths, and avatar,
+  identity block, and status board all align to the card centerline.
 - `pnpm typecheck`: passed after fixing optional current-session updates.
 - `pnpm test`: passed 16 files and 69 tests after the Web dashboard streamer
   context update.

@@ -52,7 +52,9 @@ describe("desktop recording dashboard", () => {
   it("renders streamer status board with descriptive hover text", () => {
     const html = renderToStaticMarkup(<App />);
 
+    expect(html).toContain('class="streamer-identity"');
     expect(html).toContain('aria-label="LunaCeleste recording decision status"');
+    expect(html).toContain('class="stream-state-row"');
     expect(html).toContain('title="在线：监控已确认主播在线"');
     expect(html).toContain('title="票房/秀类型：买断票房"');
     expect(html).toContain('title="媒体流：正在录制"');

@@ -33,8 +33,11 @@ streamer drive the center workspace and right-side session context.
 - RED/GREEN 4: left streamer rows render expanded status lanes for recording
   decisions.
 - RED/GREEN 5: left streamer rows render a compact status board with hover
-  descriptions: short availability cell, wider show-mode cell, and full-width
-  media/info stream cells.
+  descriptions: short availability cell, wider show-mode cell, and stream state
+  cells that can be arranged by the card layout.
+- RED/GREEN 6: media-stream and information-stream cells sit side by side with
+  equal widths, while avatar, identity text, and status board are vertically
+  centered as three card blocks.
 
 ## Verification
 
@@ -78,6 +81,16 @@ streamer drive the center workspace and right-side session context.
 - Browser smoke confirmed the first streamer board at 120px wide, with no cell
   overflow and hover titles for availability, show mode, media stream, and
   information stream.
+- The status board was revised again so media-stream and information-stream
+  states sit side by side with equal widths instead of stacking vertically.
+- The left rail was widened to preserve text fit, status text is centered in
+  every cell, and streamer card height was reduced to 86px in browser smoke.
+- RED/GREEN 6 added an explicit `streamer-identity` structure and
+  `stream-state-row` so layout can keep the avatar, identity, and status board
+  centered as card-level blocks.
+- Browser smoke confirmed a 438px left rail, 86px streamer cards, a 176px
+  status board, equal 86px media/info cells on the same row, and zero centerline
+  delta for avatar, identity block, and status board.
 - RED/GREEN 4 failed until the left streamer rows exposed synthetic status
   lanes for availability, show mode, media-stream capture, and
   information-stream capture.
