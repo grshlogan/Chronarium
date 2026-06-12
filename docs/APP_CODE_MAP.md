@@ -828,6 +828,9 @@ Current status:
   context.
 - Streamer list rows render site and last-check time as separate lines to avoid
   inconsistent wrapping.
+- The left streamer rail now uses explicit width variables and wider streamer
+  rows. Each row shows synthetic status lanes for availability, show mode,
+  media-stream recording state, and information-stream recording state.
 - The UI exposes pause monitoring, resume monitoring, and check now controls for
   the selected streamer. The synthetic demo is presented as an offline
   self-test under maintenance diagnostics, not as a recording start action.
@@ -838,6 +841,8 @@ Current status:
 - It does not connect to core, read archives, query SQLite, start tasks,
   launch Electron, expose preload/IPC, preview live streams, or connect to real
   sites.
+- The status lanes do not implement real site state, ticket/private-show
+  detection, media stream capture, or information stream capture.
 
 ### `packages/types`
 

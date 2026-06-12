@@ -1047,9 +1047,10 @@ unimplemented ideas as completed work.
 - Conversation: user pointed out inconsistent `Last check` wrapping in the
   left streamer list and asked to continue with selected-streamer context
   linkage.
-- Landed: fixed left-list site/check-time wrapping and gave each synthetic
+- Landed: fixed left-list site/check-time wrapping, gave each synthetic
   streamer its own current session, no-current-recording state, history, latest
-  facts, room state, and summary metrics.
+  facts, room state, and summary metrics, and widened the left rail to show
+  richer streamer status lanes.
 - Files:
   - `README.md`
   - `docs/APP_CODE_MAP.md`
@@ -1067,14 +1068,25 @@ unimplemented ideas as completed work.
   - Paused and offline streamers show `No current recording` rather than
     reusing another streamer's active recording.
   - Site and check-time text in streamer rows are separate block elements.
+  - Left streamer rows now show synthetic availability, show-mode,
+    media-stream, and information-stream status lanes.
+  - The status lanes do not implement real site detection, ticket/private-show
+    handling, media capture, or information stream capture.
 - Verification:
   - TDD RED/GREEN: targeted dashboard test failed before separate site/check
     elements and selected context existed, then passed after implementation.
+  - TDD RED/GREEN: targeted dashboard test failed before expanded status lanes
+    existed, then passed after adding the synthetic status fields and widened
+    left rail rendering.
   - `pnpm typecheck` passed.
   - `pnpm test` passed 16 files and 69 tests.
   - `pnpm build` passed.
   - Browser smoke confirmed site/check-time block display plus `VelvetMoth` and
     `CyberCyan` selected-context behavior on `http://127.0.0.1:5187/`.
+  - After the expanded status-lane update, `pnpm typecheck` passed,
+    `pnpm test` passed 16 files and 70 tests, and `pnpm build` passed.
+  - Browser smoke confirmed a 382px left rail, four status chips per streamer
+    row, and no detected streamer-card overflow.
   - `git diff --check` produced no output.
   - trailing whitespace scan produced no output.
   - JSON/package config parse scan parsed 24 JSON files.

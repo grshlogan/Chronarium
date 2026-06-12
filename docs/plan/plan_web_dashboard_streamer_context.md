@@ -10,6 +10,8 @@ streamer drive the center workspace and right-side session context.
 - Render site and last-check time on separate lines in the left streamer list.
 - Give each synthetic streamer its own current session, history, latest facts,
   and summary metrics.
+- Expand the left streamer rail so rows can show availability, show mode,
+  media-stream recording state, and information-stream recording state.
 - Show a no-current-recording state for paused, waiting, or offline streamers.
 - Keep the work browser-local, synthetic-only, and under `apps/desktop`.
 
@@ -28,6 +30,8 @@ streamer drive the center workspace and right-side session context.
   session context to that streamer and removes the current-recording card.
 - RED/GREEN 3: selecting an offline streamer shows waiting/offline context and
   streamer-specific history/facts.
+- RED/GREEN 4: left streamer rows render expanded status lanes for recording
+  decisions.
 
 ## Verification
 
@@ -60,6 +64,24 @@ streamer drive the center workspace and right-side session context.
   current recording`, `VelvetMoth Jun 10`, and no leaked `12.46 GB` Luna size.
 - Browser smoke clicked `CyberCyan` and confirmed `CyberCyan offline`, `Room
   state: OFFLINE`, `No sessions archived yet.`, and `No current recording`.
+- `git diff --check`: produced no output.
+- trailing whitespace scan: produced no output.
+- JSON/package config parse scan: parsed 24 JSON files.
+- RED/GREEN 4 failed until the left streamer rows exposed synthetic status
+  lanes for availability, show mode, media-stream capture, and
+  information-stream capture.
+- The left rail now uses explicit width variables. The left rail is wider than
+  the first dashboard version so the status lanes can wrap cleanly.
+- The expanded status lanes remain synthetic UI state only. They do not imply
+  real site detection, private-show handling, stream capture, or information
+  stream capture exists.
+- Targeted dashboard TDD test passed with 7 tests.
+- `pnpm typecheck`: passed.
+- `pnpm test`: passed 16 files and 70 tests.
+- `pnpm build`: passed.
+- Browser smoke on `http://127.0.0.1:5187/` confirmed the left rail width is
+  382px, all 6 streamer rows have 4 status chips, and no streamer card overflow
+  was detected.
 - `git diff --check`: produced no output.
 - trailing whitespace scan: produced no output.
 - JSON/package config parse scan: parsed 24 JSON files.

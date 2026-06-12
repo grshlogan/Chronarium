@@ -89,6 +89,13 @@ Current state:
   right-side current-session card, history list, and streamer summary. Paused
   or offline streamers show `No current recording` instead of `Recording Now`.
 - Left streamer rows now render site and last-check time on separate lines.
+- The left streamer rail is widened with explicit CSS width variables. Streamer
+  rows now show synthetic status lanes for availability, show mode, media-stream
+  recording state, and information-stream recording state. These are UI mock
+  states only, not real site/capture detection.
+- Browser smoke confirmed the current left rail renders at 382px wide on
+  `http://127.0.0.1:5187/`; all six synthetic streamer rows have four status
+  chips and no detected card overflow.
 - `apps/desktop` defaults to `http://127.0.0.1:5187/` for dev. Do not use
   `5173` for Chronarium because the user uses that port for other local work.
 - Root-level TDD slices are now organized under `tdd-tests/` by owner path; the

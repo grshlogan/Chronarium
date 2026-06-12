@@ -33,6 +33,22 @@ describe("desktop recording dashboard", () => {
     );
   });
 
+  it("renders expanded streamer rail status lanes for recording decisions", () => {
+    const html = renderToStaticMarkup(<App />);
+
+    expect(html).toContain("在线");
+    expect(html).toContain("离线");
+    expect(html).toContain("暂离");
+    expect(html).toContain("买断票房");
+    expect(html).toContain("几时票房");
+    expect(html).toContain("P2P");
+    expect(html).toContain("私人秀");
+    expect(html).toContain("媒体流录制中");
+    expect(html).toContain("媒体流未录制");
+    expect(html).toContain("信息流录制中");
+    expect(html).toContain("信息流未录制");
+  });
+
   it("renders the offline self-test result after the demo action completes", () => {
     const started = reduceRecordingDashboard(
       createInitialRecordingDashboard(),

@@ -158,6 +158,13 @@ workspace and right-side session context. This remains browser-local synthetic
 state only and still does not call core, archive, SQLite, Electron, adapters, or
 real sites.
 
+The current A01 UI continuation also widened the left maintained-streamer rail
+and added synthetic status lanes for each streamer row: availability,
+show-mode/ticket context, media-stream recording state, and information-stream
+recording state. This is only a WebUI mock-state presentation layer. It does
+not implement real Chaturbate state detection, private-show handling, media
+stream capture, or information stream capture.
+
 ## Active Constraints
 
 - Work only inside `D:\live\Chronarium`.
@@ -474,6 +481,23 @@ Checks already run during this continuation:
   paused streamer selection still reused Luna's current recording context.
 - GREEN for Web dashboard streamer context: the targeted TDD file passed after
   adding per-streamer context data and selected-context rendering.
+- TDD RED for expanded streamer rail status lanes failed until the WebUI
+  rendered availability, show mode, media-stream recording state, and
+  information-stream recording state in the left maintained-streamer rows.
+- GREEN for expanded streamer rail status lanes: the targeted TDD file passed
+  after widening the left rail and adding synthetic status lane fields/rendering.
+- `pnpm typecheck`: passed after the expanded left-rail status update.
+- `pnpm test`: passed 16 files and 70 tests after the expanded left-rail
+  status update.
+- `pnpm build`: passed after the expanded left-rail status update.
+- Browser smoke on `http://127.0.0.1:5187/` confirmed a 382px left rail, four
+  status chips per streamer row, and no detected streamer-card overflow.
+- `git diff --check`: produced no output after the expanded left-rail status
+  update.
+- trailing whitespace scan: produced no output after the expanded left-rail
+  status update.
+- JSON/package config parse scan: parsed 24 JSON files after the expanded
+  left-rail status update.
 - `pnpm typecheck`: passed after fixing optional current-session updates.
 - `pnpm test`: passed 16 files and 69 tests after the Web dashboard streamer
   context update.

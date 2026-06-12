@@ -96,9 +96,31 @@ export function App(props: AppProps = {}): ReactElement {
                 <span className="site-code">{streamer.site}</span>
                 <small className="last-check">Last check {streamer.lastCheck}</small>
               </div>
-              <div className="streamer-state">
-                <span className={`dot ${streamer.status}`} />
-                <b>{formatStreamerState(streamer)}</b>
+              <div className="streamer-status-lanes" aria-label={`${streamer.name} status`}>
+                <span className={`status-chip ${streamer.status}`}>
+                  {formatAvailability(streamer)}
+                </span>
+                <span className="status-chip show-mode">
+                  {formatShowMode(streamer)}
+                </span>
+                <span
+                  className={`status-chip ${
+                    streamer.mediaStreamState === "recording"
+                      ? "recording"
+                      : "idle"
+                  }`}
+                >
+                  {formatMediaStreamState(streamer)}
+                </span>
+                <span
+                  className={`status-chip ${
+                    streamer.informationStreamState === "recording"
+                      ? "recording"
+                      : "idle"
+                  }`}
+                >
+                  {formatInformationStreamState(streamer)}
+                </span>
               </div>
             </button>
           ))}
@@ -135,7 +157,7 @@ export function App(props: AppProps = {}): ReactElement {
           <div>
             <p className="eyebrow">Selected streamer</p>
             <h2>{selectedStreamer.name}</h2>
-            <span className="status-pill">ONLINE</span>
+            <span className="status-pill">{formatAvailability(selectedStreamer)}</span>
           </div>
           <div className="header-actions">
             <span className="recording-pill">
@@ -381,14 +403,48 @@ function describeSelfTest(dashboard: RecordingDashboardState): string {
   }
 }
 
-function formatStreamerState(
+function formatAvailability(
   streamer: RecordingDashboardState["streamers"][number]
 ): string {
-  if (streamer.monitoringState === "paused") {
-    return "paused";
+  switch (streamer.status) {
+    case "online":
+      return "在线";
+    case "offline":
+      return "离线";
+    case "away":
+      return "暂离";
   }
+}
 
-  return streamer.captureState === "recording" ? "recording" : "monitoring";
+function formatShowMode(
+  streamer: RecordingDashboardState["streamers"][number]
+): string {
+  switch (streamer.showMode) {
+    case "buyoutTicket":
+      return "买断票房";
+    case "timedTicket":
+      return "几时票房";
+    case "p2p":
+      return "P2P";
+    case "privateShow":
+      return "私人秀";
+  }
+}
+
+function formatMediaStreamState(
+  streamer: RecordingDashboardState["streamers"][number]
+): string {
+  return streamer.mediaStreamState === "recording"
+    ? "媒体流录制中"
+    : "媒体流未录制";
+}
+
+function formatInformationStreamState(
+  streamer: RecordingDashboardState["streamers"][number]
+): string {
+  return streamer.informationStreamState === "recording"
+    ? "信息流录制中"
+    : "信息流未录制";
 }
 
 function formatSelectedCaptureState(

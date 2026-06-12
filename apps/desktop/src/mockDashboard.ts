@@ -2,9 +2,12 @@ export interface StreamerSummary {
   readonly id: string;
   readonly name: string;
   readonly site: string;
-  readonly status: "online" | "offline";
+  readonly status: "online" | "offline" | "away";
   readonly monitoringState: "active" | "paused";
   readonly captureState: "recording" | "waiting";
+  readonly showMode: "buyoutTicket" | "timedTicket" | "p2p" | "privateShow";
+  readonly mediaStreamState: "recording" | "notRecording";
+  readonly informationStreamState: "recording" | "notRecording";
   readonly lastCheck: string;
   readonly retentionDays: 1 | 3 | 7;
 }
@@ -60,6 +63,9 @@ export const dashboardViewModel: DashboardViewModel = {
       status: "online",
       monitoringState: "active",
       captureState: "recording",
+      showMode: "buyoutTicket",
+      mediaStreamState: "recording",
+      informationStreamState: "recording",
       lastCheck: "12:24:18",
       retentionDays: 7
     },
@@ -70,6 +76,9 @@ export const dashboardViewModel: DashboardViewModel = {
       status: "online",
       monitoringState: "active",
       captureState: "waiting",
+      showMode: "timedTicket",
+      mediaStreamState: "notRecording",
+      informationStreamState: "recording",
       lastCheck: "12:23:56",
       retentionDays: 3
     },
@@ -80,6 +89,9 @@ export const dashboardViewModel: DashboardViewModel = {
       status: "online",
       monitoringState: "active",
       captureState: "waiting",
+      showMode: "p2p",
+      mediaStreamState: "notRecording",
+      informationStreamState: "recording",
       lastCheck: "12:23:21",
       retentionDays: 1
     },
@@ -90,6 +102,9 @@ export const dashboardViewModel: DashboardViewModel = {
       status: "offline",
       monitoringState: "active",
       captureState: "waiting",
+      showMode: "timedTicket",
+      mediaStreamState: "notRecording",
+      informationStreamState: "notRecording",
       lastCheck: "12:20:42",
       retentionDays: 3
     },
@@ -97,9 +112,12 @@ export const dashboardViewModel: DashboardViewModel = {
       id: "velvet",
       name: "VelvetMoth",
       site: "CB",
-      status: "online",
+      status: "away",
       monitoringState: "paused",
       captureState: "waiting",
+      showMode: "privateShow",
+      mediaStreamState: "notRecording",
+      informationStreamState: "notRecording",
       lastCheck: "12:19:11",
       retentionDays: 7
     },
@@ -110,6 +128,9 @@ export const dashboardViewModel: DashboardViewModel = {
       status: "offline",
       monitoringState: "active",
       captureState: "waiting",
+      showMode: "p2p",
+      mediaStreamState: "notRecording",
+      informationStreamState: "notRecording",
       lastCheck: "12:16:03",
       retentionDays: 1
     }
