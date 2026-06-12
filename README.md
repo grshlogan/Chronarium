@@ -72,12 +72,14 @@ AI 可以快速接手局部问题
   health，并在运行时持有 archive/index service。
 - `packages/adapters/chaturbate` 已有第一个离线 split audio/video synthetic
   fixture，可生成 media track metadata 和 timeline facts，并通过 adapter
-  protocol fixture runner 测试。
+  protocol fixture runner 测试；该 fixture 也已可写入 synthetic `.chron`
+  archive，并被 archive reader/validator 和 SQLite indexer 消费。
 - 已添加 Vitest 行为测试，覆盖 synthetic session/timeline 写入 `.chron`
   package、读取 `.chron` package，以及 invalid JSONL、重复 eventId、
   sequence gap、manifest count/lastSequence mismatch、unsafe path、media track
   metadata 缺失/不一致、SQLite index 写入/查询、core archive/index service、
-  core runtime lifecycle 和 Chaturbate 离线 split-track fixture。
+  core runtime lifecycle、Chaturbate 离线 split-track fixture 和 fixture
+  archive/indexer flow。
 - 尚未实现 GUI、core task scheduler、adapter lifecycle、真实站点 adapter、
   SQLite index 与 GUI 集成、FFmpeg command builder、真实媒体分片写入、archive
   recovery/migration 或 replay player。
@@ -167,7 +169,7 @@ Chronarium 目标 GitHub 仓库：
 
 1. 设计 maintenance / ops 巡检模型，但先只用确定性检查，不接真实 AI 执行。
 2. 为 archive reader/validator 增加更完整的 fixture builder 和诊断样例。
-3. 把 Chaturbate split-track fixture 写入 synthetic `.chron` archive，验证
-   archive reader/indexer 能消费这些 facts。
+3. 继续扩展 Chaturbate fixture harness，增加断流、缺音频、时长不一致等
+   离线诊断场景。
 4. 设计真实媒体分片写入前的 FFmpeg / segment 边界。
-5. 扩展 Chaturbate fixture harness，但继续禁止真实站点连接和账号/session 处理。
+5. 开始 archive recovery 的 report-only 检测，但继续禁止真实站点连接和账号/session 处理。

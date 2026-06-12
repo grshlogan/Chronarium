@@ -604,3 +604,38 @@ unimplemented ideas as completed work.
   - JSON parse scan succeeded.
 - Next: write the split-track fixture into a synthetic `.chron` archive and
   verify archive reader/indexer consumption.
+
+## 2026-06-12: Chaturbate fixture archive flow
+
+- Conversation: user chose to skip upload/retention complexity for now and
+  continue with the next valuable foundation step.
+- Landed: added a test proving the synthetic Chaturbate split-track fixture can
+  be written into `.chron`, validated/read back, and indexed into SQLite.
+- Files:
+  - `README.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A03-chaturbate-offline-fixtures.md`
+  - `docs/plan/plan_chaturbate_fixture_archive_flow.md`
+  - `packages/adapters/chaturbate/tests/splitTrackArchiveFlow.test.ts`
+- Decisions:
+  - The test stays under the Chaturbate adapter package because it verifies
+    the adapter fixture's offline path through archive and indexer consumers.
+  - The test uses only synthetic media track metadata and timeline facts; it
+    does not write real media segments.
+  - Upload and retention policy work remains deferred.
+- Verification:
+  - `pnpm exec vitest run packages/adapters/chaturbate/tests` passed 2 files
+    and 4 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 7 files and 36 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON parse scan succeeded.
+- Next: add offline Chaturbate diagnostic fixtures for missing audio, duration
+  mismatch, stalled output, and reconnect/gap scenarios, or implement archive
+  recovery report-only detection.

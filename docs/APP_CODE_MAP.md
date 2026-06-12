@@ -63,6 +63,7 @@ docs/
     plan_foundation_docs_completion.md
     plan_archive_recovery.md
     plan_chaturbate_offline_split_fixture.md
+    plan_chaturbate_fixture_archive_flow.md
 packages/
   types/
   schemas/
@@ -431,6 +432,15 @@ Responsibility:
 - Records that the work is fixture-only and excludes live site capture,
   downloader integration, and credential handling.
 
+### `docs/plan/plan_chaturbate_fixture_archive_flow.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for writing the Chaturbate split-track
+  fixture into a synthetic `.chron` archive and indexing it.
+- Records that the flow remains offline, synthetic, and free of real media or
+  credential handling.
+
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 
 Responsibility:
@@ -513,6 +523,7 @@ packages/
         index.ts
         splitTrackFixture.ts
       tests/
+        splitTrackArchiveFlow.test.ts
         splitTrackFixture.test.ts
   archive/
     package.json
@@ -677,8 +688,10 @@ Current status:
   LL-HLS/CMAF topology.
 - It can parse that fixture into media track metadata and timeline facts, then
   emit those facts through the existing fixture adapter runner.
-- Its tests validate timeline envelopes, adapter protocol messages, and
-  rejection of network-looking or token-bearing fixture references.
+- Its tests validate timeline envelopes, adapter protocol messages, rejection
+  of network-looking or token-bearing fixture references, writing the fixture
+  into a synthetic `.chron` archive, archive reader/validator consumption, and
+  SQLite indexer queries.
 - It does not perform network requests, downloads, account handling, cookies, or
   session handling.
 

@@ -74,11 +74,14 @@ Current state:
 - The Chaturbate fixture code converts that fixture into media track metadata
   and timeline facts, then verifies those facts through the existing adapter
   protocol fixture runner.
+- The Chaturbate fixture can also be written into a synthetic `.chron` archive,
+  read/validated by `packages/archive`, and indexed by `packages/indexer`.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
-- Six Vitest behavior test files exercise synthetic archive writing, reading,
+- Seven Vitest behavior test files exercise synthetic archive writing, reading,
   validation failures, SQLite indexing, the core archive/index service, and
-  core runtime lifecycle, plus Chaturbate offline split-track fixture behavior.
+  core runtime lifecycle, plus Chaturbate offline split-track fixture behavior
+  and fixture archive/indexer flow.
 - No GUI, core task scheduler, adapter lifecycle, SQLite integration with GUI,
   FFmpeg command builder, real media segment writer/prober, archive
   recovery/migration, replay player, or real capture exists yet.
@@ -123,6 +126,7 @@ docs/plan/plan_cb_recording_references.md
 docs/plan/plan_foundation_docs_completion.md
 docs/plan/plan_archive_recovery.md
 docs/plan/plan_chaturbate_offline_split_fixture.md
+docs/plan/plan_chaturbate_fixture_archive_flow.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 docs/conversation-A02-foundation-docs-completion.md
 docs/conversation-A03-chaturbate-offline-fixtures.md
@@ -203,8 +207,8 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Write the Chaturbate split-track fixture into a synthetic `.chron` archive
-   and verify archive reader/indexer consumption.
+1. Add offline Chaturbate diagnostic fixtures for missing audio, duration
+   mismatch, stalled output, and reconnect/gap scenarios.
 2. Implement archive recovery following
    `docs/plan/plan_archive_recovery.md`, starting with report-only detection.
 3. Implement the first deterministic maintenance inspection types and archive
@@ -372,6 +376,20 @@ Chaturbate offline split-track fixture (A03) checks:
   3 tests.
 - `pnpm typecheck`: passed.
 - `pnpm test`: passed 6 files and 35 tests.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan with `Select-String -Pattern '[ \t]$'`: produced no
+  output.
+- JSON parse scan with `ConvertFrom-Json`: succeeded.
+
+Chaturbate fixture archive flow checks:
+
+- `pnpm exec vitest run packages/adapters/chaturbate/tests`: passed 2 files and
+  4 tests.
+- `pnpm typecheck`: passed.
+- `pnpm test`: passed 7 files and 36 tests.
 - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
   passed.
 - `pnpm build`: passed.

@@ -8,7 +8,7 @@ tests without connecting to Chaturbate.
 
 ## Current Status
 
-Completed.
+Completed again.
 
 Starting point:
 
@@ -29,6 +29,13 @@ Landed in this continuation:
   `media.track.discovered`, and `media.segment.observed`;
 - adapter protocol validation through the existing fixture runner;
 - tests rejecting network-looking and token-bearing fixture references.
+
+Current continuation:
+
+- verified that the same split-track fixture can be written into a synthetic
+  `.chron` archive;
+- verified that archive reader/validator and SQLite indexer can consume the
+  resulting facts.
 
 ## Active Constraints
 
@@ -58,9 +65,11 @@ Landed in this continuation:
 
 - `docs/conversation-A03-chaturbate-offline-fixtures.md`
 - `docs/plan/plan_chaturbate_offline_split_fixture.md`
+- `docs/plan/plan_chaturbate_fixture_archive_flow.md`
 - `packages/adapters/chaturbate/fixtures/`
 - `packages/adapters/chaturbate/src/`
 - `packages/adapters/chaturbate/tests/`
+- `packages/adapters/chaturbate/tests/splitTrackArchiveFlow.test.ts`
 - `docs/TIMELINE_SCHEMA_V1.md`
 - `README.md`
 - `docs/APP_CODE_MAP.md`
@@ -81,8 +90,19 @@ Checks run:
 - `git diff --check`: produced no output.
 - trailing whitespace scan: produced no output.
 - JSON parse scan: succeeded.
+- `pnpm exec vitest run packages/adapters/chaturbate/tests`: passed 2 files and
+  4 tests after adding archive/indexer flow coverage.
+- `pnpm typecheck`: passed.
+- `pnpm test`: passed 7 files and 36 tests.
+- `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+  passed.
+- `pnpm build`: passed.
+- `git diff --check`: produced no output.
+- trailing whitespace scan: produced no output.
+- JSON parse scan: succeeded.
 
 ## Next Safe Step
 
-Write the split-track fixture into a synthetic `.chron` archive and verify
-archive reader/indexer consumption.
+Add offline Chaturbate diagnostic fixtures for missing audio, duration
+mismatch, stalled output, and reconnect/gap scenarios, or implement archive
+recovery report-only detection.
