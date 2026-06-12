@@ -165,6 +165,26 @@ Use this naming pattern:
 docs/conversation-<conversation-id>-<short-english-slug>.md
 ```
 
+Conversation context ownership is strict:
+
+- Each real user/agent conversation or thread owns exactly one
+  `conversation-<conversation-id>-*.md` context document.
+- An agent may modify only the conversation context document explicitly assigned
+  or allowed for its current conversation. By default, this means its own
+  current conversation context document only.
+- Other `docs/conversation-*.md` files are read-only unless the user explicitly
+  authorizes editing that specific context document.
+- Do not rename, delete, migrate, rewrite, reclassify, or take over another
+  conversation's context document without explicit user approval.
+- Do not create a new conversation context document merely because the same
+  conversation moves into a new phase, milestone, or work package. Update the
+  allowed context document and, when useful, create or update a plan under
+  `docs/plan/`.
+- Every new conversation context document should state the conversation ID,
+  agent identity, owner/maintainer, topic, and scope near the top. Do not
+  retrofit identity fields into other conversations' existing context documents
+  unless explicitly approved.
+
 The document must record:
 
 - conversation topic and scope;

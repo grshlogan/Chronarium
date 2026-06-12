@@ -577,7 +577,7 @@ unimplemented ideas as completed work.
   - `docs/APP_CODE_MAP.md`
   - `docs/AI_HANDOFF.md`
   - `docs/AI_CHANGE_INDEX.md`
-  - `docs/conversation-A03-chaturbate-offline-fixtures.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
   - `docs/plan/plan_chaturbate_offline_split_fixture.md`
   - `packages/adapters/chaturbate/fixtures/README.md`
   - `packages/adapters/chaturbate/fixtures/split-audio-video.synthetic.json`
@@ -616,7 +616,7 @@ unimplemented ideas as completed work.
   - `docs/APP_CODE_MAP.md`
   - `docs/AI_HANDOFF.md`
   - `docs/AI_CHANGE_INDEX.md`
-  - `docs/conversation-A03-chaturbate-offline-fixtures.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
   - `docs/plan/plan_chaturbate_fixture_archive_flow.md`
   - `packages/adapters/chaturbate/tests/splitTrackArchiveFlow.test.ts`
 - Decisions:
@@ -655,7 +655,7 @@ unimplemented ideas as completed work.
   - `docs/APP_CODE_MAP.md`
   - `docs/AI_HANDOFF.md`
   - `docs/AI_CHANGE_INDEX.md`
-  - `docs/conversation-A03-chaturbate-offline-fixtures.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
   - `docs/plan/plan_chaturbate_offline_diagnostic_fixtures.md`
   - `packages/adapters/chaturbate/fixtures/README.md`
   - `packages/adapters/chaturbate/fixtures/missing-audio.synthetic.json`
@@ -699,7 +699,7 @@ unimplemented ideas as completed work.
   - `docs/APP_CODE_MAP.md`
   - `docs/AI_HANDOFF.md`
   - `docs/AI_CHANGE_INDEX.md`
-  - `docs/conversation-A04-core-maintenance-inspector-foundation.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
   - `docs/plan/plan_core_maintenance_inspector_foundation.md`
   - `packages/core/src/index.ts`
   - `packages/core/src/maintenance/index.ts`
@@ -726,3 +726,34 @@ unimplemented ideas as completed work.
     files.
 - Next: continue with archive recovery report-only detection or index freshness
   checks for the maintenance inspector.
+
+## 2026-06-12: Merge mistaken A03/A04 context files into A01
+
+- Conversation: user clarified that the project currently has only two active
+  conversation contexts: A01 for Codex and A02 for ClaudeCode. The A03 and A04
+  files were mistaken A01-internal labels.
+- Landed: merged the important A03/A04 continuity facts into A01, removed the
+  mistaken A03/A04 conversation context files, and updated indexes to list only
+  A01 and A02 as conversation contexts.
+- Files:
+  - `AGENTS.md`
+  - `README.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/conversation-A03-chaturbate-offline-fixtures.md` removed
+  - `docs/conversation-A04-core-maintenance-inspector-foundation.md` removed
+  - `docs/plan/plan_chaturbate_offline_diagnostic_fixtures.md`
+- Decisions:
+  - A01 is the only Codex-maintained conversation context in this thread.
+  - A02 remains independent and was not modified for the merge.
+  - Future A01 phases update A01 plus plan/index docs instead of creating A03,
+    A04, A05, or other pseudo-conversation files.
+- Verification:
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan succeeded.
+  - Conversation context file check now lists only A01 and A02.
+- Next: run docs-safe checks, then continue A01 with archive recovery or
+  maintenance index freshness work.

@@ -96,6 +96,13 @@ Current state:
   recovery/migration, replay player, or real capture exists yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
+- Conversation context files currently represent only two active conversation
+  contexts:
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md` for Codex.
+  - `docs/conversation-A02-foundation-docs-completion.md` for ClaudeCode.
+- The Chaturbate offline fixture and core maintenance inspector work are now
+  tracked inside A01. Do not recreate A03/A04 conversation context files for
+  those A01-internal phases.
 
 ## Files Created In The Foundation Steps
 
@@ -140,8 +147,6 @@ docs/plan/plan_chaturbate_offline_diagnostic_fixtures.md
 docs/plan/plan_core_maintenance_inspector_foundation.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
 docs/conversation-A02-foundation-docs-completion.md
-docs/conversation-A03-chaturbate-offline-fixtures.md
-docs/conversation-A04-core-maintenance-inspector-foundation.md
 .gitattributes
 .gitignore
 LICENSE
@@ -383,7 +388,7 @@ Foundation docs completion (A02) checks:
 - Regression guard on unchanged code: `pnpm typecheck` passed, `pnpm test`
   passed 5 Vitest files and 32 tests, `pnpm build` passed.
 
-Chaturbate offline split-track fixture (A03) checks:
+Chaturbate offline split-track fixture checks:
 
 - `pnpm exec vitest run packages/adapters/chaturbate/tests`: passed 1 file and
   3 tests.

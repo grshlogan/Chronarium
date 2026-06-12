@@ -45,8 +45,6 @@ docs/
   AI_CHANGE_INDEX.md
   conversation-A01-documentation-and-initial-skeleton.md
   conversation-A02-foundation-docs-completion.md
-  conversation-A03-chaturbate-offline-fixtures.md
-  conversation-A04-core-maintenance-inspector-foundation.md
   plan/
     README.md
     plan_workspace_schema_foundation.md
@@ -471,6 +469,9 @@ Responsibility:
 - Conversation-level continuity document for A01.
 - Records current status, constraints, decisions, files in scope,
   verification, and next safe step.
+- Also records the Chaturbate offline fixture and core maintenance inspector
+  work that was previously mislabeled as A03/A04 inside the same A01 Codex
+  conversation.
 
 ### `docs/conversation-A02-foundation-docs-completion.md`
 
@@ -479,20 +480,6 @@ Responsibility:
 - Conversation-level continuity document for A02.
 - Records the foundation documentation completion pass: scope, decisions,
   files changed, and verification.
-
-### `docs/conversation-A03-chaturbate-offline-fixtures.md`
-
-Responsibility:
-
-- Conversation-level continuity document for A03.
-- Records the Chaturbate offline split-track fixture and test continuation.
-
-### `docs/conversation-A04-core-maintenance-inspector-foundation.md`
-
-Responsibility:
-
-- Conversation-level continuity document for A04.
-- Records the first read-only core maintenance inspector implementation.
 
 ## Current Code Tree
 

@@ -81,7 +81,8 @@ Also run trailing whitespace and JSON parse scans.
 
 ## Progress / Decisions
 
-- Plan created during A03 after commit `54e83ef`.
+- Plan created during A01 after commit `54e83ef`; this work was later merged
+  into the A01 conversation context.
 - Added optional fixture diagnostics to `splitTrackFixture.ts`.
 - Added `missing-audio.synthetic.json`.
 - Added `diagnostic-anomalies.synthetic.json`.

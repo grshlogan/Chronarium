@@ -140,8 +140,6 @@ small module boundaries.
 - [docs/AI_CHANGE_INDEX.md](./docs/AI_CHANGE_INDEX.md)：AI 对话与结构性更改索引。
 - [docs/conversation-A01-documentation-and-initial-skeleton.md](./docs/conversation-A01-documentation-and-initial-skeleton.md)：A01 对话上下文维护文档。
 - [docs/conversation-A02-foundation-docs-completion.md](./docs/conversation-A02-foundation-docs-completion.md)：A02 对话上下文维护文档。
-- [docs/conversation-A03-chaturbate-offline-fixtures.md](./docs/conversation-A03-chaturbate-offline-fixtures.md)：A03 Chaturbate 离线 fixture 上下文维护文档。
-- [docs/conversation-A04-core-maintenance-inspector-foundation.md](./docs/conversation-A04-core-maintenance-inspector-foundation.md)：A04 core 只读巡检器上下文维护文档。
 - [docs/plan/README.md](./docs/plan/README.md)：后续计划文档入口和命名规则。
 
 ## 设计边界

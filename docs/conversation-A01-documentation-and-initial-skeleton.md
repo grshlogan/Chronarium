@@ -31,9 +31,15 @@ Chronarium now has:
   archive reading, and rebuildable SQLite indexing.
 - a minimal core runtime lifecycle shell for start/stop/health and archive
   index service ownership.
+- a first read-only core maintenance archive inspector that turns archive
+  validator issues and known timeline diagnostic facts into a structured
+  `MaintenanceReport`.
 - a maintenance / ops inspection design draft with external project references.
 - a CB recording reference design doc covering public GitHub projects and
   split audio/video LL-HLS/CMAF lessons.
+- synthetic Chaturbate offline fixtures covering split audio/video topology,
+  archive/indexer flow, and diagnostic scenarios for missing audio, media gap,
+  audio/video duration mismatch, and stalled output.
 
 The current A01 continuation added archive reader/validator foundations before
 any real site adapter work.
@@ -48,6 +54,37 @@ The active follow-up added a maintenance / ops design draft.
 
 The active follow-up also added a CB recording reference design document before
 any live CB adapter work.
+
+Later A01 work also added the offline Chaturbate fixture path that had been
+incorrectly tracked as `conversation-A03-chaturbate-offline-fixtures.md`.
+That work is part of this A01 conversation, not a separate project
+conversation. It added:
+
+- synthetic split audio/video fixture data;
+- adapter-local fixture parser and builders;
+- media track metadata and timeline facts for track topology, track discovery,
+  and observed media segments;
+- archive/index flow coverage proving synthetic fixture facts can be written
+  into `.chron`, validated/read back, and indexed into SQLite;
+- synthetic diagnostic fixtures for missing audio, media gap, duration
+  mismatch, and stalled output;
+- explicit evidence clarification that these are synthetic contract tests and
+  do not prove current live Chaturbate behavior.
+
+Later A01 work also added the core maintenance inspector foundation that had
+been incorrectly tracked as
+`conversation-A04-core-maintenance-inspector-foundation.md`. That work is part
+of this A01 conversation, not a separate project conversation. It added:
+
+- first maintenance report/finding/evidence/action suggestion types;
+- `createArchiveMaintenanceInspector`;
+- read-only archive inspection through the existing core archive/index service;
+- conversion of archive validator issues into maintenance findings;
+- conversion of known timeline diagnostic facts into maintenance findings for
+  `media.gap.detected`, `diagnostic.duration_mismatch`, and
+  `diagnostic.media_tool_output`;
+- core tests for healthy archives, diagnostic timeline facts, and archive
+  validator issue findings.
 
 ## Active Constraints
 
@@ -72,6 +109,15 @@ any live CB adapter work.
 - License is Apache-2.0.
 - Chaturbate work remains fixture-first until archive and timeline foundations
   are stronger.
+- This Codex thread may maintain only this A01 conversation context document by
+  default. Other `docs/conversation-*.md` files, including A02, are read-only
+  unless the user explicitly authorizes editing that specific context document.
+- The current project has two active conversation contexts: A01 for Codex and
+  A02 for ClaudeCode. A03/A04 were mistaken A01-internal labels and should not
+  remain as separate conversation context documents.
+- Future A01 phases should update this A01 context and plan/index documents
+  instead of creating `conversation-A03-*`, `conversation-A04-*`, or later
+  pseudo-conversation files.
 
 ## Files In Scope For This Continuation
 
@@ -82,8 +128,9 @@ Expected code changes:
 Expected documentation changes:
 
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
-- `docs/CB_RECORDING_REFERENCES.md`
-- `docs/plan/plan_cb_recording_references.md`
+- `docs/conversation-A03-chaturbate-offline-fixtures.md` deletion after merge
+- `docs/conversation-A04-core-maintenance-inspector-foundation.md` deletion
+  after merge
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
@@ -200,9 +247,32 @@ Checks already run during this continuation:
 - `git diff --check`: produced no output after CB recording references.
 - trailing whitespace scan: produced no output after CB recording references.
 - JSON/package config parse scan: succeeded after CB recording references.
+- `pnpm exec vitest run packages/adapters/chaturbate/tests`: passed 3 files
+  and 7 tests after synthetic Chaturbate diagnostic fixtures.
+- `pnpm typecheck`: passed after synthetic Chaturbate diagnostic fixtures.
+- `pnpm test`: passed 8 files and 39 tests after synthetic Chaturbate
+  diagnostic fixtures.
+- `pnpm build`: passed after synthetic Chaturbate diagnostic fixtures.
+- `git diff --check`: produced no output after synthetic Chaturbate diagnostic
+  fixtures.
+- trailing whitespace scan: produced no output after synthetic Chaturbate
+  diagnostic fixtures.
+- JSON parse scan: succeeded after synthetic Chaturbate diagnostic fixtures.
+- `pnpm exec vitest run packages/core/tests`: passed 3 files and 7 tests after
+  core maintenance inspector foundation.
+- `pnpm typecheck`: passed after core maintenance inspector foundation.
+- `pnpm test`: passed 9 files and 42 tests after core maintenance inspector
+  foundation.
+- `pnpm build`: passed after core maintenance inspector foundation.
+- `git diff --check`: produced no output after core maintenance inspector
+  foundation.
+- trailing whitespace scan: produced no output after core maintenance
+  inspector foundation.
+- JSON parse scan: succeeded after core maintenance inspector foundation.
 
 ## Next Safe Step
 
-Add offline split audio/video CB-like fixtures and schema drafts, implement the
-first deterministic maintenance inspection types under core, or add archive
-recovery behavior for interrupted metadata writes.
+Continue A01 with archive recovery report-only detection or maintenance
+inspector index freshness checks. Keep A02 independent and do not create A03,
+A04, or later conversation context files unless the user starts new real
+conversations and explicitly assigns those IDs.
