@@ -1191,3 +1191,67 @@ unimplemented ideas as completed work.
     local smoke run.
 - Next: move `packages/indexer` to consume `readTimelineEventBatches` so
   indexing no longer depends on full snapshot timeline arrays.
+
+## 2026-06-13: Timeline batch indexing and segment write boundary
+
+- Conversation: user asked to do the next two lower-level foundation steps
+  before real recording behavior: move the SQLite indexer to archive timeline
+  batches, and add the first archive media segment write boundary.
+- Landed: added streaming validation summary for archives, moved
+  `packages/indexer` timeline event insertion to `readTimelineEventBatches`,
+  and added fixture-safe media segment byte writes to the archive writer.
+- Files:
+  - `README.md`
+  - `docs/ARCHIVE_FORMAT_V1.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_media_track_archive_io.md`
+  - `docs/plan/plan_offline_fixture_capture_pipeline.md`
+  - `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
+  - `packages/archive/src/index.ts`
+  - `packages/archive/src/streamingValidator.ts`
+  - `packages/archive/src/writer.ts`
+  - `packages/archive/tests/syntheticArchiveWriter.test.ts`
+  - `packages/indexer/src/archiveIndexer.ts`
+  - `tdd-tests/packages/indexer/timeline-batches/indexerTimelineBatches.test.ts`
+- Decisions:
+  - `validateFileArchiveStreaming` returns archive summary, media tracks,
+    timeline event count, last sequence, and issues without returning a full
+    `timelineEvents` array.
+  - Indexing still validates first, then performs a second bounded batch scan
+    to insert timeline rows. This keeps memory bounded while preserving simple
+    behavior.
+  - `ArchiveWriter.writeMediaSegment` writes caller-provided synthetic bytes
+    only under a manifest-declared track.
+  - Segment names must be safe single path segments, undeclared tracks are
+    rejected, finalized archives are rejected, and existing segment files are
+    not overwritten.
+  - No real media download, probing, hashing, remuxing, FFmpeg execution,
+    segment reader, segment validator, or manifest segment inventory was added.
+- Verification:
+  - TDD RED: indexer batch-consumption test initially failed before
+    `readTimelineEventBatches` and `validateFileArchiveStreaming` were used by
+    `packages/indexer`.
+  - GREEN: targeted indexer tests passed after moving timeline insertion to the
+    batch reader.
+  - TDD RED: archive writer test failed before `writeMediaSegment` existed.
+  - GREEN: targeted archive writer tests passed after adding
+    `writeMediaSegment`.
+  - TDD RED: duplicate segment write test failed because a second write to the
+    same segment name resolved successfully.
+  - GREEN: targeted archive writer tests passed after rejecting existing
+    segment paths before rename.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 19 files and 84 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed as a
+    local smoke run.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON/package config parse scan parsed 21 JSON files.
+- Next: add media segment reader/validator coverage so archive validation can
+  report missing or unsafe segment files before real media probing exists.

@@ -30,9 +30,13 @@ It has:
   `timeline.jsonl`;
 - fixture-safe media track metadata IO for `tracks/<track-id>/track.json` plus
   empty `tracks/<track-id>/segments/` boundary directories;
+- fixture-safe media segment byte writing under declared track `segments/`
+  directories;
 - a rebuildable SQLite indexer that derives archive metadata, timeline events,
   and validation issues from synthetic `.chron` packages, with reindex,
   remove, clear, and filtered query contracts;
+- indexer timeline event insertion now consumes the archive timeline batch
+  reader instead of a full snapshot `timelineEvents` array;
 - a core archive/index service that validates archives, reads valid archives,
   reindexes archives, and exposes index queries through `packages/core`;
 - a minimal core runtime lifecycle shell that can start, stop, report health,
@@ -56,8 +60,8 @@ It does not yet have:
 
 - Electron shell, preload, or IPC;
 - live GUI binding to core/archive/indexer data;
-- real media segment writing or probing;
-- archive recovery or migration behavior;
+- real media probing;
+- archive repair or migration behavior;
 - maintenance background loop, AI operations, or automatic repair;
 - real site adapters;
 - replay player.

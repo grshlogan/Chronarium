@@ -22,7 +22,7 @@ In scope:
 
 Out of scope:
 
-- real media segment writing;
+- real media segment downloading, probing, hashing, or remuxing;
 - FFmpeg or ffprobe integration;
 - adapter media discovery;
 - network requests;
@@ -90,6 +90,12 @@ Also run trailing whitespace and JSON/package config parse scans.
   invalid, unsafe, or manifest-mismatched media track metadata.
 - Added archive writer, reader, and validator behavior tests for track
   metadata.
+- A later A01 pass added fixture-safe media segment byte writing on top of this
+  metadata boundary. `ArchiveWriter.writeMediaSegment` can write caller-provided
+  synthetic bytes under a declared track's `segments/` directory and rejects
+  unsafe names, undeclared tracks, finalized archives, and existing segment
+  files. It still does not read, validate, hash, probe, remux, or download real
+  media.
 - `pnpm exec vitest run packages/archive/tests` passed 2 files and 21 tests.
 - `pnpm typecheck` passed.
 - `pnpm test` passed 3 files and 28 tests.

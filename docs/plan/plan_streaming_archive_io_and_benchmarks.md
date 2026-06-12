@@ -48,7 +48,6 @@ Still pending:
 
 - `validateFileArchive` still returns full `timelineEvents` arrays.
 - `readFileArchive` still returns full `ArchiveSnapshot.timelineEvents`.
-- `packages/indexer` still consumes the snapshot-shaped archive reader.
 - GUI, replay, and maintenance consumers have not yet adopted the batch reader.
 - There is no Rust module.
 
@@ -153,8 +152,10 @@ Expected TDD order:
 2. GREEN: add the smallest public archive iterator/batch API. Done.
 3. RED: testkit can generate deterministic large timeline fixtures. Done.
 4. GREEN: add large timeline builder and small benchmark script. Done.
-5. RED: indexer can consume the streaming/batched API. Pending.
-6. GREEN: move indexer off full `timelineEvents` array dependency. Pending.
+5. RED: indexer can consume the streaming/batched API. Done.
+6. GREEN: move indexer off full `timelineEvents` array dependency. Done.
+7. RED/GREEN: move replay, GUI, and maintenance consumers where useful.
+   Pending.
 
 Validation should include:
 

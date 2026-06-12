@@ -16,13 +16,15 @@ fixture adapter messages -> core task -> .chron archive -> SQLite index -> GUI s
 - Core reindexes the resulting archive and exposes the result through the GUI
   service facade.
 - Adapter lifecycle failures map to task failures.
+- A later archive-layer pass can write caller-provided synthetic media segment
+  bytes, but this pipeline still does not use that segment boundary yet.
 
 ## Out Of Scope
 
 - No real site connection.
 - No adapter child process launch.
 - No FFmpeg or ffprobe execution.
-- No real media segment writing.
+- No real media segment download, probing, remuxing, or capture.
 - No cookie, session, header, token, signed URL, account, or private room data.
 - No Electron or React renderer implementation in this step.
 

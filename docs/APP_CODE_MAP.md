@@ -13,8 +13,8 @@ pipeline. It also has a first Web-first React/Vite recording dashboard shell
 under `apps/desktop`, backed by synthetic data, monitoring-first controls, and
 a browser-safe offline self-test action only. No Electron shell, preload/IPC,
 real site capture, real adapter child process, external media tool execution,
-real media segment writer/prober, archive repair/migration, or replay player
-exists yet.
+real media segment capture/reader/prober, archive repair/migration, or replay
+player exists yet.
 
 Current files:
 
@@ -206,7 +206,8 @@ Responsibility:
 
 Boundary:
 
-- Does not claim real media segment IO, recovery, or migration exists.
+- Does not claim real media segment capture/probing, archive repair, or
+  migration exists.
 
 ### `docs/TIMELINE_SCHEMA_V1.md`
 
@@ -713,6 +714,7 @@ packages/
       layout.ts
       reader.ts
       recovery.ts
+      streamingValidator.ts
       timelineReader.ts
       validator.ts
       writer.ts
@@ -754,6 +756,9 @@ tdd-tests/
     archive/
       timeline-reader/
         timelineReader.test.ts
+    indexer/
+      timeline-batches/
+        indexerTimelineBatches.test.ts
     testkit/
       large-timeline/
         largeSyntheticTimeline.test.ts
@@ -934,7 +939,7 @@ Current status:
 - Adapter errors and missing `adapter.finished` map to failed tasks and skip
   archive indexing.
 - Does not run live capture jobs, start adapter child processes, export media,
-  run ops loops, execute media tools, or write real media segments yet.
+  run ops loops, execute media tools, or capture real media segments yet.
 
 ### `packages/adapters/<site>`
 
@@ -984,6 +989,8 @@ Current status:
 - Writes fixture-safe media track metadata to
   `tracks/<track-id>/track.json`, updates manifest track inventory, and creates
   empty `tracks/<track-id>/segments/` boundary directories.
+- Writes fixture-safe synthetic media segment bytes under declared
+  `tracks/<track-id>/segments/<segment-name>` paths.
 - Rejects appending before manifest write, cross-session events,
   non-contiguous sequence values, duplicate event IDs, and appends after
   finalization for one writer session.
@@ -1002,11 +1009,13 @@ Current status:
   streaming-shaped timeline read entries. These read JSONL lines through a
   bounded public contract and return parsed events or validation issues without
   requiring callers to receive a full `timelineEvents` array.
-- Full archive validation still uses the older snapshot-shaped validator.
-  Indexer, replay, GUI, and maintenance consumers have not yet been migrated to
-  the new timeline batch reader.
-- Real media segment writing/reading/probing, archive repair, and migration are
-  still pending.
+- Exposes `validateFileArchiveStreaming` as the first validation summary that
+  does not return the full timeline event array.
+- Full snapshot archive validation still exists for small fixture workflows.
+  Replay, GUI, and maintenance consumers have not yet been migrated to the new
+  timeline batch reader.
+- Real media segment reading/probing, archive repair, and migration are still
+  pending.
 
 ### `packages/indexer`
 
@@ -1024,6 +1033,8 @@ Current status:
   local runtime.
 - Can index synthetic `.chron` archives from `packages/archive`.
 - Stores archive rows, timeline event rows, and archive validation issue rows.
+- Timeline event indexing consumes `readTimelineEventBatches` and no longer
+  inserts events from `validateFileArchive().timelineEvents`.
 - Supports explicit reindex, archive removal, clear-all, and filtered archive,
   timeline event, and validation issue queries.
 - SQLite is still a rebuildable cache/index, not the source of replay truth.

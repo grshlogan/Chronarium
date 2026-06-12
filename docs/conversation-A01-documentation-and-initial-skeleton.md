@@ -119,8 +119,19 @@ records or batches. `packages/testkit` now exposes
 timeline generation and JSONL chunk writing. The root
 `benchmark:timeline` script runs `tools/benchmarks/timeline-scan-benchmark.mjs`
 to generate and scan local synthetic archives under ignored `runtime/`.
-Existing full-snapshot archive APIs still exist, and indexer/replay/GUI/
-maintenance consumers have not yet migrated to the batch reader.
+Existing full-snapshot archive APIs still exist. The indexer has moved to the
+batch reader; replay, GUI, and maintenance consumers have not yet migrated.
+
+The current A01 foundation pass then moved `packages/indexer` onto that batch
+reader. Indexing now uses `validateFileArchiveStreaming` for archive summary
+and validation issues, then inserts timeline rows from `readTimelineEventBatches`
+instead of `validateFileArchive().timelineEvents`.
+
+The same pass added the first fixture-safe media segment write boundary to the
+archive writer. `writeMediaSegment` writes caller-provided synthetic bytes under
+declared `tracks/<track-id>/segments/<segment-name>` paths and rejects
+undeclared tracks, unsafe segment names, existing segment files, and writes
+after finalization. This is not real FFmpeg capture or media probing yet.
 
 The current A01 GUI pass added the first Web-first React/Vite recording
 dashboard shell under `apps/desktop`. It follows the streamer-maintenance
@@ -265,8 +276,12 @@ Documentation changes for this continuation:
 - `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
 - `tools/benchmarks/timeline-scan-benchmark.mjs`
 - `packages/archive/src/timelineReader.ts`
+- `packages/archive/src/streamingValidator.ts`
 - `packages/testkit/src/largeTimeline.ts`
+- `packages/indexer/src/archiveIndexer.ts`
+- `packages/archive/src/writer.ts`
 - `tdd-tests/packages/archive/timeline-reader/timelineReader.test.ts`
+- `tdd-tests/packages/indexer/timeline-batches/indexerTimelineBatches.test.ts`
 - `tdd-tests/packages/testkit/large-timeline/largeSyntheticTimeline.test.ts`
 - `docs/plan/plan_web_dashboard_offline_behavior.md`
 - `docs/plan/plan_web_dashboard_monitoring_semantics.md`
@@ -488,6 +503,19 @@ Checks already run during this continuation:
 - `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed as a
   local smoke. It generated and scanned 1000 synthetic events in ignored
   `runtime/benchmarks/`, then deleted the generated archive.
+- TDD RED for indexer batch consumption:
+  `pnpm exec vitest run
+  tdd-tests/packages/indexer/timeline-batches/indexerTimelineBatches.test.ts`
+  failed because indexer did not import `readTimelineEventBatches` and still
+  used `report.timelineEvents`.
+- GREEN for indexer batch consumption: added `validateFileArchiveStreaming` and
+  changed indexer timeline insertion to use `readTimelineEventBatches`; targeted
+  indexer tests passed.
+- TDD RED for media segment writer: archive writer tests failed because
+  `writeMediaSegment` did not exist.
+- GREEN for media segment writer: added fixture-safe media segment byte writes
+  and rejection tests for undeclared tracks, unsafe segment names, and writes
+  after finalization.
 - TDD RED for the Web-first recording dashboard:
   `pnpm exec vitest run
   tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
@@ -593,9 +621,9 @@ Checks already run during this continuation:
 
 ## Next Safe Step
 
-Move `packages/indexer` to consume `readTimelineEventBatches`, so indexing no
-longer depends on `validateFileArchive` returning full in-memory
-`timelineEvents` arrays. GUI visual polish is now intended for A03, while A01
-should keep working on lower-level archive/core foundations unless the user
-redirects. Keep A02 independent and do not create extra A01 pseudo-conversation
-files.
+Add media segment reader/validator coverage so archive validation can report
+missing or unsafe segment files before real media probing exists; or add
+ffprobe/ffmpeg output parser fixtures without executing real tools. GUI visual
+polish is now intended for A03, while A01 should keep working on lower-level
+archive/core foundations unless the user redirects. Keep A02 independent and do
+not create extra A01 pseudo-conversation files.

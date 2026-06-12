@@ -10,6 +10,7 @@ import {
 } from "@chronarium/schemas";
 import { mkdir, rename, stat, writeFile } from "node:fs/promises";
 import {
+  assertSafeArchivePathSegment,
   DEFAULT_ARCHIVE_LAYOUT,
   getMediaTrackDirectoryPath,
   getMediaTrackMetadataPath,
@@ -22,10 +23,24 @@ export interface ArchiveWriterOptions {
   readonly createIfMissing: boolean;
 }
 
+export interface MediaSegmentWriteInput {
+  readonly trackId: string;
+  readonly segmentName: string;
+  readonly data: Uint8Array | string;
+}
+
+export interface MediaSegmentWriteResult {
+  readonly trackId: string;
+  readonly segmentName: string;
+  readonly relativePath: string;
+  readonly byteLength: number;
+}
+
 export interface ArchiveWriter {
   readonly rootPath: string;
   writeManifest(manifest: ArchiveManifest): Promise<void>;
   writeMediaTrack(track: MediaTrack): Promise<void>;
+  writeMediaSegment(input: MediaSegmentWriteInput): Promise<MediaSegmentWriteResult>;
   appendTimelineEvent(event: TimelineEventEnvelope): Promise<void>;
   finalize(): Promise<ArchiveManifest>;
 }
@@ -95,6 +110,44 @@ class FileArchiveWriter implements ArchiveWriter {
     this.manifest = nextManifest;
     this.trackIds.add(parsed.id);
     this.wroteMediaTrack = true;
+  }
+
+  async writeMediaSegment(
+    input: MediaSegmentWriteInput
+  ): Promise<MediaSegmentWriteResult> {
+    if (this.finalizedManifest) {
+      throw new Error("Cannot write media segments after finalization.");
+    }
+    if (!this.manifest) {
+      throw new Error("Cannot write media segments before a manifest is written.");
+    }
+
+    assertSafeArchivePathSegment(input.segmentName, "media segment name");
+
+    if (!this.trackIds.has(input.trackId)) {
+      throw new Error(
+        `Cannot write media segment for undeclared track: ${input.trackId}`
+      );
+    }
+
+    const relativePath = `${getMediaTrackSegmentsPath(input.trackId)}/${
+      input.segmentName
+    }`;
+    const finalPath = this.safePath(relativePath);
+    const temporaryPath = `${finalPath}.tmp`;
+
+    await this.assertPathDoesNotExist(finalPath, "media segment");
+    await writeFile(temporaryPath, input.data, {
+      flag: "wx"
+    });
+    await rename(temporaryPath, finalPath);
+
+    return {
+      trackId: input.trackId,
+      segmentName: input.segmentName,
+      relativePath,
+      byteLength: getByteLength(input.data)
+    };
   }
 
   async appendTimelineEvent(event: TimelineEventEnvelope): Promise<void> {
@@ -240,6 +293,23 @@ class FileArchiveWriter implements ArchiveWriter {
   private safePath(relativePath: string): string {
     return resolveArchivePath(this.rootPath, relativePath);
   }
+
+  private async assertPathDoesNotExist(
+    targetPath: string,
+    label: string
+  ): Promise<void> {
+    try {
+      await stat(targetPath);
+    } catch (error) {
+      if (isErrorWithCode(error, "ENOENT")) {
+        return;
+      }
+
+      throw error;
+    }
+
+    throw new Error(`Cannot write ${label} because it already exists.`);
+  }
 }
 
 export async function createFileArchiveWriter(
@@ -265,4 +335,17 @@ export function createFileArchiveWriterFactory(): ArchiveWriterFactory {
 
 export function createArchiveWriterContract(): ArchiveWriterFactory {
   return createFileArchiveWriterFactory();
+}
+
+function getByteLength(data: Uint8Array | string): number {
+  return typeof data === "string" ? Buffer.byteLength(data) : data.byteLength;
+}
+
+function isErrorWithCode(error: unknown, code: string): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === code
+  );
 }

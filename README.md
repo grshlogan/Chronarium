@@ -58,17 +58,21 @@ AI 可以快速接手局部问题
 - archive writer 已支持 fixture-safe media track metadata 写入：更新
   manifest track inventory，写 `tracks/<track-id>/track.json`，并创建空的
   `tracks/<track-id>/segments/` 边界目录。
+- archive writer 已支持 fixture-safe media segment byte 写入，可把合成媒体
+  分片写到已声明 track 的 `tracks/<track-id>/segments/<segment-name>` 下。
 - 已实现 `packages/archive` 的首个 fixture-safe reader/validator，可读取
   `manifest.json`、`timeline.jsonl` 和 media track metadata，并报告
   timeline / track 一致性问题。
 - `packages/archive` 已增加第一版 timeline 流式/分批读取入口：
-  `iterateTimelineRecords` 和 `readTimelineEventBatches`，供未来 GUI、indexer、
-  replay 和 maintenance 避免只依赖完整 `timelineEvents` 数组。
+  `iterateTimelineRecords` 和 `readTimelineEventBatches`，供未来 GUI、replay
+  和 maintenance 避免只依赖完整 `timelineEvents` 数组。
 - 已实现 `packages/indexer` 的首个 rebuildable SQLite index，可从
   synthetic `.chron` archive 派生 archive metadata、timeline events 和
   validation issues。
 - `packages/indexer` 已提供 reindex、remove、clear 和按 archive/session/
   site/type/code 过滤查询的初版契约。
+- `packages/indexer` 已改用 timeline batch reader 索引 timeline events，
+  不再依赖 `validateFileArchive` 返回完整 `timelineEvents` 数组。
 - `packages/core` 已有第一个 archive/index service，可通过 core 调用
   archive validate/read 和 SQLite reindex/query。
 - `packages/core` 已有最小 runtime lifecycle shell，可 start/stop、返回
@@ -211,9 +215,9 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 让 indexer 优先消费新的 timeline 分批读取入口，减少它对完整
-   `timelineEvents` 数组的依赖。
-2. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
+1. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
+2. 增加 media segment reader/validator，检查 segment 文件存在、大小和路径
+   安全，仍不探测真实媒体内容。
 3. 继续推进 Web-first 录制工作台的信息密度和行为入口：添加链接表单、
    监控暂停/恢复/立即检查的状态反馈，以及 offline self-test 诊断结果。
 4. 把 Web-first 录制工作台里的浏览器 self-test action 替换成 GUI-facing

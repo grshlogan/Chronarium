@@ -7,8 +7,9 @@ directories. A first reader/validator now reads `manifest.json` and
 support fixture-safe media-track metadata at `tracks/<track-id>/track.json`.
 The archive package also exposes the first timeline record iterator and bounded
 batch reader so future consumers do not have to receive a full `timelineEvents`
-array. Real media segment writing, repair, and migration behavior are not
-implemented yet.
+array. The fixture-safe writer can now write synthetic media segment bytes under
+declared track segment directories. Real media probing, repair, and migration
+behavior are not implemented yet.
 
 ## Purpose
 
@@ -158,9 +159,13 @@ The first implementation enforces:
 - track IDs must not repeat in one writer session;
 - `segmentsPath` must be `tracks/<track-id>/segments`;
 - track metadata must match the manifest-declared track identity and kind;
-- `segments/` is only a boundary directory for future media segment files.
+- media segment writes must target a declared track;
+- media segment names must be safe single path segments;
+- media segment writes are rejected after archive finalization.
 
-It does not write, read, hash, probe, or remux real media segments yet.
+The current segment write boundary can write caller-provided synthetic bytes to
+`tracks/<track-id>/segments/<segment-name>`. It does not read, hash, probe, or
+remux real media segments yet.
 
 ## Path Rules
 

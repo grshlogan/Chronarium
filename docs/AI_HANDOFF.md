@@ -40,6 +40,10 @@ Current state:
 - `packages/archive` has fixture-safe media track metadata IO for
   `tracks/<track-id>/track.json` and empty `tracks/<track-id>/segments/`
   boundary directories.
+- `packages/archive` has fixture-safe media segment byte writing for declared
+  tracks. It writes caller-provided synthetic bytes under
+  `tracks/<track-id>/segments/<segment-name>` and rejects undeclared tracks,
+  unsafe segment names, and writes after finalization.
 - `packages/archive` has a fixture-safe reader/validator for `manifest.json`,
   `timeline.jsonl`, and manifest-declared media track metadata, including basic
   timeline and track consistency diagnostics.
@@ -47,6 +51,9 @@ Current state:
   archive metadata, timeline events, and validation issues.
 - `packages/indexer` has explicit reindex, archive removal, clear-all, and
   filtered query contracts.
+- `packages/indexer` now consumes archive timeline batches when inserting
+  timeline event rows. It no longer depends on `validateFileArchive` returning
+  a full `timelineEvents` array for indexing.
 - `packages/core` has a first archive/index service that coordinates archive
   validation, archive reading, reindexing, and index queries.
 - `packages/core` has a minimal runtime lifecycle shell that can start, stop,
@@ -157,8 +164,8 @@ Current state:
   `pnpm benchmark:timeline -- --events 1000 --batch-size 128`.
 - `docs/plan/plan_streaming_archive_io_and_benchmarks.md` now tracks the first
   implemented archive timeline batch API, testkit builder, and benchmark smoke.
-  Indexer, replay, GUI, and maintenance consumers have not yet moved to the
-  batch reader.
+  The indexer has moved to the batch reader; replay, GUI, and maintenance
+  consumers have not yet moved.
 - `docs/plan/plan_web_dashboard_offline_behavior.md` records the historical
   safe first behavior slice for the Web dashboard: synthetic demo action only,
   no core filesystem calls from the browser renderer.
@@ -179,8 +186,8 @@ Current state:
   behavior and fixture archive/indexer and diagnostic flows.
 - No Electron shell, preload/IPC, live GUI-core binding, live task execution,
   real adapter child process, external media tool execution, real media segment
-  writer/prober, archive repair/migration, replay player, or real site capture
-  exists yet.
+  capture/reader/prober, archive repair/migration, replay player, or real site
+  capture exists yet.
 - GitHub target provided by the user:
   `https://github.com/grshlogan/Chronarium.git`.
 - Conversation context files currently represent only two active conversation
@@ -318,9 +325,8 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Move `packages/indexer` to consume `readTimelineEventBatches` so indexing no
-   longer depends on `validateFileArchive` returning a full `timelineEvents`
-   array.
+1. Add media segment reader/validator coverage so archive validation can report
+   missing or unsafe segment files before real media probing exists.
 2. Continue WebUI behavior with add-link form validation and clearer
    pause/resume/check state feedback, still synthetic-only.
 3. Replace the browser-only offline self-test action with a real GUI-facing
@@ -334,8 +340,8 @@ The project should optimize for AI-assisted long-term maintenance:
    archive list, timeline facts, validation, recovery, and maintenance status.
 7. Extend the maintenance inspector with index freshness comparison, keeping
    writes as explicit safe-rebuild suggestions rather than automatic actions.
-8. Add real media segment IO only after the media-track metadata validator
-   remains stable.
+8. Add real media segment IO only after segment reader/validator coverage and
+   media-track metadata validation remain stable.
 9. If real Chaturbate behavior needs validation, first prepare separately
    approved redacted evidence or synthetic reproductions derived from approved
    local samples.

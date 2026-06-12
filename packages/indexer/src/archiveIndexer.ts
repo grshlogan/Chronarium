@@ -1,6 +1,7 @@
 import {
   type ArchiveValidationIssue,
-  validateFileArchive
+  readTimelineEventBatches,
+  validateFileArchiveStreaming
 } from "@chronarium/archive";
 import type { TimelineEventEnvelope } from "@chronarium/types";
 import { DatabaseSync } from "node:sqlite";
@@ -138,8 +139,9 @@ class SqliteChronariumIndex implements ChronariumIndex {
   async reindexArchiveFromPath(
     archiveRootPath: string
   ): Promise<ArchiveIndexSummary> {
-    const report = await validateFileArchive({
-      rootPath: archiveRootPath
+    const report = await validateFileArchiveStreaming({
+      rootPath: archiveRootPath,
+      timelineBatchSize: 1024
     });
 
     if (!report.manifest) {
@@ -186,13 +188,17 @@ class SqliteChronariumIndex implements ChronariumIndex {
           manifest.session.createdAt,
           manifest.createdAt,
           manifest.updatedAt,
-          report.timelineEvents.length,
+          report.timelineEventCount,
           manifest.timeline.lastSequence ?? null,
           report.ok ? 1 : 0,
           indexedAt
         );
 
-      this.insertTimelineEvents(manifest.archiveId, report.timelineEvents);
+      await this.insertTimelineEventBatches(
+        manifest.archiveId,
+        archiveRootPath,
+        manifest.timeline.path
+      );
       this.insertValidationIssues(
         manifest.archiveId,
         manifest.session.id,
@@ -209,7 +215,7 @@ class SqliteChronariumIndex implements ChronariumIndex {
       sessionId: manifest.session.id,
       archiveRootPath,
       validationOk: report.ok,
-      timelineEventCount: report.timelineEvents.length,
+      timelineEventCount: report.timelineEventCount,
       validationIssueCount: report.issues.length
     };
   }
@@ -380,6 +386,20 @@ class SqliteChronariumIndex implements ChronariumIndex {
 
   close(): void {
     this.database.close();
+  }
+
+  private async insertTimelineEventBatches(
+    archiveId: string,
+    archiveRootPath: string,
+    relativeTimelinePath: string
+  ): Promise<void> {
+    for await (const batch of readTimelineEventBatches({
+      rootPath: archiveRootPath,
+      relativeTimelinePath,
+      batchSize: 1024
+    })) {
+      this.insertTimelineEvents(archiveId, batch.events);
+    }
   }
 
   private insertTimelineEvents(

@@ -1,6 +1,7 @@
 import {
   createFileArchiveWriter,
   DEFAULT_ARCHIVE_LAYOUT,
+  getMediaTrackSegmentsPath,
   getMediaTrackMetadataPath
 } from "@chronarium/archive";
 import {
@@ -149,6 +150,122 @@ describe("synthetic archive writer", () => {
     });
     expect(finalized.tracks).toHaveLength(1);
     expect(segmentsDirectory.isDirectory()).toBe(true);
+  });
+
+  it("writes fixture-safe media segment bytes under a declared track", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+    const track = createSyntheticMediaTrack();
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+    await writer.writeMediaTrack(track);
+    const result = await writer.writeMediaSegment({
+      trackId: track.id,
+      segmentName: "segment-000001.m4s",
+      data: Buffer.from("synthetic segment")
+    });
+
+    const segmentPath = path.join(
+      archiveRoot,
+      ...getMediaTrackSegmentsPath(track.id).split("/"),
+      "segment-000001.m4s"
+    );
+    const segmentText = await readFile(segmentPath, "utf8");
+
+    expect(result).toEqual({
+      trackId: track.id,
+      segmentName: "segment-000001.m4s",
+      relativePath: `${getMediaTrackSegmentsPath(track.id)}/segment-000001.m4s`,
+      byteLength: 17
+    });
+    expect(segmentText).toBe("synthetic segment");
+  });
+
+  it("rejects media segment writes for undeclared tracks", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+
+    await expect(
+      writer.writeMediaSegment({
+        trackId: "track-missing",
+        segmentName: "segment-000001.m4s",
+        data: Buffer.from("synthetic segment")
+      })
+    ).rejects.toThrow(/Cannot write media segment for undeclared track/);
+  });
+
+  it("rejects overwriting an existing media segment", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+    const track = createSyntheticMediaTrack();
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+    await writer.writeMediaTrack(track);
+    await writer.writeMediaSegment({
+      trackId: track.id,
+      segmentName: "segment-000001.m4s",
+      data: Buffer.from("synthetic segment")
+    });
+
+    await expect(
+      writer.writeMediaSegment({
+        trackId: track.id,
+        segmentName: "segment-000001.m4s",
+        data: Buffer.from("replacement")
+      })
+    ).rejects.toThrow(/already exists/);
+  });
+
+  it("rejects unsafe media segment names", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+    const track = createSyntheticMediaTrack();
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+    await writer.writeMediaTrack(track);
+
+    await expect(
+      writer.writeMediaSegment({
+        trackId: track.id,
+        segmentName: "../segment-000001.m4s",
+        data: Buffer.from("synthetic segment")
+      })
+    ).rejects.toThrow(/Unsafe media segment name/);
+  });
+
+  it("rejects writing media segments after finalization", async () => {
+    const archiveRoot = await createTemporaryArchiveRoot();
+    const writer = await createFileArchiveWriter({
+      rootPath: archiveRoot,
+      createIfMissing: true
+    });
+    const track = createSyntheticMediaTrack();
+
+    await writer.writeManifest(createSyntheticArchiveManifest());
+    await writer.writeMediaTrack(track);
+    await writer.finalize();
+
+    await expect(
+      writer.writeMediaSegment({
+        trackId: track.id,
+        segmentName: "segment-000001.m4s",
+        data: Buffer.from("synthetic segment")
+      })
+    ).rejects.toThrow(/after finalization/);
   });
 
   it("rejects timeline events for another session", async () => {
