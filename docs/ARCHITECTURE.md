@@ -310,15 +310,17 @@ These decisions are intentionally deferred:
 Native modules must be driven by measured bottlenecks, not by preference.
 
 For archive and timeline paths, the first prerequisite is a TypeScript-facing
-streaming or batched API. Current whole-snapshot readers are useful for small
-fixtures, but future GUI, indexer, replay, and maintenance code should be able
-to consume timeline facts without receiving the entire `timeline.jsonl` as one
-array.
+streaming or batched API. Chronarium now has the first archive-level
+`iterateTimelineRecords` and `readTimelineEventBatches` entry points. Current
+whole-snapshot readers are still useful for small fixtures, but future GUI,
+indexer, replay, and maintenance code should prefer bounded timeline scans
+instead of receiving the entire `timeline.jsonl` as one array.
 
-The second prerequisite is benchmark evidence. `packages/testkit` should grow
-deterministic large synthetic timeline builders, such as 100,000 and 1,000,000
-event archives, plus a small benchmark script that reports time and memory for
-archive validation, indexing, and replay scans.
+The second prerequisite is benchmark evidence. `packages/testkit` now has a
+deterministic large synthetic timeline builder, and
+`tools/benchmarks/timeline-scan-benchmark.mjs` can generate and scan synthetic
+archives locally. These numbers are local evidence only; they are not CI gates
+or a Rust decision by themselves.
 
 Only after those boundaries and measurements exist should Rust be evaluated for
 archive verification, timeline scanning, hashing, repair, compaction, or media

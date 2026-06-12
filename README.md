@@ -61,6 +61,9 @@ AI 可以快速接手局部问题
 - 已实现 `packages/archive` 的首个 fixture-safe reader/validator，可读取
   `manifest.json`、`timeline.jsonl` 和 media track metadata，并报告
   timeline / track 一致性问题。
+- `packages/archive` 已增加第一版 timeline 流式/分批读取入口：
+  `iterateTimelineRecords` 和 `readTimelineEventBatches`，供未来 GUI、indexer、
+  replay 和 maintenance 避免只依赖完整 `timelineEvents` 数组。
 - 已实现 `packages/indexer` 的首个 rebuildable SQLite index，可从
   synthetic `.chron` archive 派生 archive metadata、timeline events 和
   validation issues。
@@ -104,6 +107,11 @@ AI 可以快速接手局部问题
 - `packages/adapters/chaturbate` 已增加离线 synthetic diagnostic fixtures，
   覆盖缺音频、media gap、音视频时长不一致和输出停滞等故障模型。这些是合成
   契约测试，用来证明 Chronarium 能保存坏录制事实，不代表真实 CB 站点行为已验证。
+- `packages/testkit` 已增加大规模 synthetic timeline builder，可确定性生成
+  JSONL chunks 或 synthetic `.chron` fixture。根脚本
+  `pnpm benchmark:timeline -- --events 1000 --batch-size 128` 可本地生成并
+  分批扫描合成 archive，输出时间和内存指标；它不是 CI 门槛，也不是 Rust
+  决策本身。
 - 已添加 Vitest 行为测试，覆盖 synthetic session/timeline 写入 `.chron`
   package、读取 `.chron` package，以及 invalid JSONL、重复 eventId、
   sequence gap、manifest count/lastSequence mismatch、unsafe path、media track
@@ -203,9 +211,8 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 在 archive 包契约中补流式/分批 timeline 读取入口，并在 testkit 规划
-   大规模 synthetic timeline builder/benchmark，避免 GUI/indexer/replay
-   固化整读 `timelineEvents` 数组。
+1. 让 indexer 优先消费新的 timeline 分批读取入口，减少它对完整
+   `timelineEvents` 数组的依赖。
 2. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
 3. 继续推进 Web-first 录制工作台的信息密度和行为入口：添加链接表单、
    监控暂停/恢复/立即检查的状态反馈，以及 offline self-test 诊断结果。

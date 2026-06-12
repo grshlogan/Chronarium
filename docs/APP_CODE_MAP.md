@@ -79,6 +79,9 @@ docs/
     plan_web_dashboard_streamer_selection.md
     plan_web_dashboard_streamer_context.md
     plan_web_first_recording_dashboard.md
+tools/
+  benchmarks/
+    timeline-scan-benchmark.mjs
 apps/
   desktop/
     package.json
@@ -710,6 +713,7 @@ packages/
       layout.ts
       reader.ts
       recovery.ts
+      timelineReader.ts
       validator.ts
       writer.ts
     tests/
@@ -743,8 +747,16 @@ packages/
     src/
       fixtures.ts
       index.ts
+      largeTimeline.ts
 tdd-tests/
   README.md
+  packages/
+    archive/
+      timeline-reader/
+        timelineReader.test.ts
+    testkit/
+      large-timeline/
+        largeSyntheticTimeline.test.ts
   apps/
     desktop/
       recording-dashboard/
@@ -986,9 +998,13 @@ Current status:
   invalid timeline JSONL lines, missing/finalized manifest counts, manifest
   count mismatches, orphan `.tmp` files, undeclared track directories, and
   missing manifest-declared track metadata.
-- Streaming or batched timeline read/validation entry points are planned in
-  `docs/plan/plan_streaming_archive_io_and_benchmarks.md`; they do not exist
-  yet.
+- Exposes `iterateTimelineRecords` and `readTimelineEventBatches` as the first
+  streaming-shaped timeline read entries. These read JSONL lines through a
+  bounded public contract and return parsed events or validation issues without
+  requiring callers to receive a full `timelineEvents` array.
+- Full archive validation still uses the older snapshot-shaped validator.
+  Indexer, replay, GUI, and maintenance consumers have not yet been migrated to
+  the new timeline batch reader.
 - Real media segment writing/reading/probing, archive repair, and migration are
   still pending.
 
@@ -1054,9 +1070,26 @@ Current status:
 - Exists with helpers for synthetic sessions and timeline events.
 - Includes a helper for synthetic archive manifests.
 - Includes a helper for synthetic media tracks.
-- Large deterministic timeline builders and benchmark helpers are planned in
-  `docs/plan/plan_streaming_archive_io_and_benchmarks.md`; they do not exist
-  yet.
+- Includes `createLargeSyntheticTimelineBuilder`, which can generate
+  deterministic large synthetic timeline events, stream JSONL chunks, and write
+  a synthetic `.chron` fixture without constructing one giant event array.
+
+## Tools
+
+### `tools/benchmarks/timeline-scan-benchmark.mjs`
+
+Responsibility:
+
+- Generate a local synthetic `.chron` archive and scan its timeline through
+  `readTimelineEventBatches`.
+- Report event count, batch size, write time, scan time, and process memory
+  usage as local evidence for future performance work.
+
+Boundary:
+
+- Not a CI pass/fail gate.
+- Not a Rust decision by itself.
+- Uses synthetic archives under ignored `runtime/benchmarks/`.
 
 ## Root Workspace Files
 
@@ -1074,13 +1107,16 @@ Responsibility:
 
 - Root private workspace metadata.
 - SPDX license identifier.
-- Delegating scripts for future build, typecheck, test, and lint commands.
+- Delegating scripts for build, typecheck, test, lint, and local timeline
+  benchmark commands.
 
 Current status:
 
 - Root license is `Apache-2.0`.
 - Package manager is pinned to `pnpm@11.5.3`.
 - Root dev dependencies include TypeScript, Vitest, and Node types.
+- `benchmark:timeline` builds the workspace and runs the local synthetic
+  timeline scan benchmark.
 
 ### `pnpm-lock.yaml`
 

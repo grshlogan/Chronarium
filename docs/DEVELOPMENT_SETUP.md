@@ -26,6 +26,8 @@ It has:
   append-time timeline invariants;
 - a fixture-safe archive reader/validator that reads `manifest.json` and
   `timeline.jsonl`;
+- archive timeline record and batch readers for bounded scans of
+  `timeline.jsonl`;
 - fixture-safe media track metadata IO for `tracks/<track-id>/track.json` plus
   empty `tracks/<track-id>/segments/` boundary directories;
 - a rebuildable SQLite indexer that derives archive metadata, timeline events,
@@ -46,6 +48,9 @@ It has:
   metadata diagnostics, SQLite indexing, core archive/index service
   coordination, core runtime lifecycle, core maintenance inspection, offline
   fixture capture, and the first desktop recording dashboard.
+- a local timeline scan benchmark script that generates synthetic `.chron`
+  archives under `runtime/benchmarks/` and scans them through the bounded batch
+  reader.
 
 It does not yet have:
 
@@ -89,10 +94,16 @@ pnpm typecheck
 pnpm test
 pnpm build
 pnpm --filter @chronarium/desktop dev
+pnpm benchmark:timeline -- --events 1000 --batch-size 128
 ```
 
 The desktop Web UI dev server uses `http://127.0.0.1:5187/` by default. Avoid
 using `5173`, which may be occupied by unrelated local projects.
+
+`pnpm benchmark:timeline` first builds the workspace, then runs
+`tools/benchmarks/timeline-scan-benchmark.mjs`. It defaults to a small synthetic
+run and writes temporary archives under ignored `runtime/benchmarks/`. Use
+larger event counts only for explicit local benchmarking, not as a normal test.
 
 ## Safe Checks
 

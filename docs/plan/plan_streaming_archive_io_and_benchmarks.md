@@ -20,6 +20,38 @@ That shape is convenient for small synthetic fixtures, but risky as a public
 contract. If GUI, indexer, replay, or maintenance code hard-depends on complete
 in-memory event arrays, large archives will force a broad refactor later.
 
+## Implemented Slice
+
+This plan now has a first implementation slice.
+
+Implemented:
+
+- `packages/archive/src/timelineReader.ts`
+  - `iterateTimelineRecords(options)` reads `timeline.jsonl` line by line and
+    yields parsed events or validation issues.
+  - `readTimelineEventBatches(options)` yields bounded batches with line ranges,
+    parsed events, and issues.
+- `packages/testkit/src/largeTimeline.ts`
+  - `createLargeSyntheticTimelineBuilder(options)` generates deterministic
+    synthetic events.
+  - The builder can stream JSONL chunks and write a synthetic `.chron` fixture
+    without constructing one giant event array.
+- `tools/benchmarks/timeline-scan-benchmark.mjs`
+  - Generates a synthetic archive under ignored `runtime/benchmarks/`.
+  - Scans it through `readTimelineEventBatches`.
+  - Reports archive size, event count, batch size, write time, scan time, and
+    memory usage.
+- Root command:
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128`
+
+Still pending:
+
+- `validateFileArchive` still returns full `timelineEvents` arrays.
+- `readFileArchive` still returns full `ArchiveSnapshot.timelineEvents`.
+- `packages/indexer` still consumes the snapshot-shaped archive reader.
+- GUI, replay, and maintenance consumers have not yet adopted the batch reader.
+- There is no Rust module.
+
 ## Planned Work
 
 ### 1. Add Streaming Or Batched Archive Timeline Entry Points
@@ -27,15 +59,11 @@ in-memory event arrays, large archives will force a broad refactor later.
 Add new public archive package entry points before more consumers are built on
 top of full snapshots.
 
-The exact implementation may still use the current whole-file reader at first,
-but the public contract should be stream/batch-shaped from the start.
-
 Candidate API directions:
 
 ```ts
-iterateTimelineEvents(options): AsyncIterable<TimelineEventEnvelope>
 iterateTimelineRecords(options): AsyncIterable<TimelineRecord>
-readTimelineBatch(options): Promise<TimelineBatch>
+readTimelineEventBatches(options): AsyncIterable<TimelineEventBatch>
 validateFileArchiveStreaming(options): Promise<ArchiveValidationSummary>
 ```
 
@@ -108,25 +136,25 @@ become a parallel source of truth for archive semantics.
 
 ## Out Of Scope
 
-- No immediate implementation in this plan.
 - No GUI work.
 - No replay player changes.
 - No Chaturbate live capture.
 - No media segment writer/prober.
 - No Rust toolchain requirement.
-- No benchmark numbers claimed before scripts exist and are run.
+- No benchmark numbers should be treated as general performance claims until
+  explicit local benchmark runs are requested and recorded.
 
 ## Verification For Future Implementation
 
 Expected TDD order:
 
 1. RED: a large synthetic archive can be scanned through a bounded streaming or
-   batched public API without requiring callers to receive a full array.
-2. GREEN: add the smallest public archive iterator/batch API.
-3. RED: indexer can consume the streaming/batched API.
-4. GREEN: move indexer off full `timelineEvents` array dependency.
-5. RED: testkit can generate a 100,000 event synthetic archive deterministically.
-6. GREEN: add large timeline builder and small benchmark script.
+   batched public API without requiring callers to receive a full array. Done.
+2. GREEN: add the smallest public archive iterator/batch API. Done.
+3. RED: testkit can generate deterministic large timeline fixtures. Done.
+4. GREEN: add large timeline builder and small benchmark script. Done.
+5. RED: indexer can consume the streaming/batched API. Pending.
+6. GREEN: move indexer off full `timelineEvents` array dependency. Pending.
 
 Validation should include:
 

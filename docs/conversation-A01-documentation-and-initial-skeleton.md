@@ -111,6 +111,17 @@ deeply on that shape, Chronarium should add streaming or batched archive
 timeline entry points and large synthetic timeline benchmark fixtures. This is
 tracked in `docs/plan/plan_streaming_archive_io_and_benchmarks.md`.
 
+The current A01 archive performance pass implemented the first part of that
+plan. `packages/archive` now exposes `iterateTimelineRecords` and
+`readTimelineEventBatches` so callers can scan timeline JSONL through bounded
+records or batches. `packages/testkit` now exposes
+`createLargeSyntheticTimelineBuilder` for deterministic large synthetic
+timeline generation and JSONL chunk writing. The root
+`benchmark:timeline` script runs `tools/benchmarks/timeline-scan-benchmark.mjs`
+to generate and scan local synthetic archives under ignored `runtime/`.
+Existing full-snapshot archive APIs still exist, and indexer/replay/GUI/
+maintenance consumers have not yet migrated to the batch reader.
+
 The current A01 GUI pass added the first Web-first React/Vite recording
 dashboard shell under `apps/desktop`. It follows the streamer-maintenance
 layout direction: maintained streamers on the left, selected streamer recording
@@ -252,6 +263,11 @@ Documentation changes for this continuation:
 - `docs/PRODUCT_SPEC.md`
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
 - `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
+- `tools/benchmarks/timeline-scan-benchmark.mjs`
+- `packages/archive/src/timelineReader.ts`
+- `packages/testkit/src/largeTimeline.ts`
+- `tdd-tests/packages/archive/timeline-reader/timelineReader.test.ts`
+- `tdd-tests/packages/testkit/large-timeline/largeSyntheticTimeline.test.ts`
 - `docs/plan/plan_web_dashboard_offline_behavior.md`
 - `docs/plan/plan_web_dashboard_monitoring_semantics.md`
 - `docs/plan/plan_web_dashboard_streamer_selection.md`
@@ -454,6 +470,24 @@ Checks already run during this continuation:
 - Added `docs/plan/plan_streaming_archive_io_and_benchmarks.md` as a planning
   document only. No streaming archive API, large timeline builder, benchmark
   script, or Rust module was implemented in this planning pass.
+- TDD RED for archive timeline batches:
+  `pnpm exec vitest run
+  tdd-tests/packages/archive/timeline-reader/timelineReader.test.ts` failed
+  because `readTimelineEventBatches` did not exist.
+- GREEN for archive timeline batches: added `iterateTimelineRecords` and
+  `readTimelineEventBatches`; the targeted archive timeline reader test passed.
+- Added coverage that invalid timeline JSONL lines stream as diagnostics rather
+  than throwing or disappearing.
+- TDD RED for the large synthetic timeline builder:
+  `pnpm exec vitest run
+  tdd-tests/packages/testkit/large-timeline/largeSyntheticTimeline.test.ts`
+  failed because `createLargeSyntheticTimelineBuilder` did not exist.
+- GREEN for the large synthetic timeline builder: added deterministic event
+  generation, JSONL chunk streaming, and synthetic `.chron` fixture writing; the
+  targeted testkit test passed.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed as a
+  local smoke. It generated and scanned 1000 synthetic events in ignored
+  `runtime/benchmarks/`, then deleted the generated archive.
 - TDD RED for the Web-first recording dashboard:
   `pnpm exec vitest run
   tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
@@ -559,9 +593,9 @@ Checks already run during this continuation:
 
 ## Next Safe Step
 
-Continue the WebUI behavior layer with add-link form validation,
-pause/resume/check feedback, and a cleaner diagnostics/self-test surface; or
-implement the streaming/batched archive timeline API and benchmark groundwork
-before deeper archive consumers hard-code full in-memory arrays. Keep A02
-independent and do not create A03, A04, or later conversation context files
-unless the user starts new real conversations and explicitly assigns those IDs.
+Move `packages/indexer` to consume `readTimelineEventBatches`, so indexing no
+longer depends on `validateFileArchive` returning full in-memory
+`timelineEvents` arrays. GUI visual polish is now intended for A03, while A01
+should keep working on lower-level archive/core foundations unless the user
+redirects. Keep A02 independent and do not create extra A01 pseudo-conversation
+files.

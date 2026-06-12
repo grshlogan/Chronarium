@@ -10,7 +10,8 @@
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "vitest run",
-    "lint": "pnpm -r --if-present lint"
+    "lint": "pnpm -r --if-present lint",
+    "benchmark:timeline": "pnpm build && node tools/benchmarks/timeline-scan-benchmark.mjs"
   },
   "devDependencies": {
     "@types/node": "^25.9.2",

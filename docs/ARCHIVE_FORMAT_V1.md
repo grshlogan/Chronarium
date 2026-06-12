@@ -5,7 +5,9 @@ Status: draft storage contract. A fixture-safe writer now creates a minimal
 directories. A first reader/validator now reads `manifest.json` and
 `timeline.jsonl` and reports basic consistency issues. The writer/reader now
 support fixture-safe media-track metadata at `tracks/<track-id>/track.json`.
-Real media segment writing, recovery, and migration behavior are not
+The archive package also exposes the first timeline record iterator and bounded
+batch reader so future consumers do not have to receive a full `timelineEvents`
+array. Real media segment writing, repair, and migration behavior are not
 implemented yet.
 
 ## Purpose
@@ -120,6 +122,19 @@ duplicate event IDs, sequence gaps, session mismatches, manifest event-count
 mismatches, manifest last-sequence mismatches, missing or invalid media-track
 metadata, media-track manifest mismatches, and unsafe archive-relative paths.
 It does not yet repair or quarantine corrupted records.
+
+For large archives, callers should prefer the streaming-shaped timeline entry
+points:
+
+- `iterateTimelineRecords(options)` yields one parsed event or one validation
+  issue per JSONL line.
+- `readTimelineEventBatches(options)` yields bounded batches of parsed events
+  and issues.
+
+The older `readFileArchive` and `validateFileArchive` snapshot APIs remain for
+small fixtures and simple workflows. They still expose full `timelineEvents`
+arrays, so new GUI, indexer, replay, and maintenance code should avoid making
+that shape their only dependency.
 
 The current fixture-safe writer rejects preventable timeline errors before
 writing: missing manifest, session mismatch, non-contiguous sequence, duplicate

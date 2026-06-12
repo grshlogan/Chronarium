@@ -1138,3 +1138,56 @@ unimplemented ideas as completed work.
 - Next: run full workspace verification, commit/push this UI refinement, then
   continue with add-link behavior, clearer monitoring feedback, or GUI-core DTO
   boundaries.
+
+## 2026-06-13: Streaming timeline reader and benchmark groundwork
+
+- Conversation: after GUI polish was split to A03, A01 continued with the
+  archive foundation needed before large GUI/indexer/replay consumers hard-code
+  full `timelineEvents` arrays.
+- Landed: added archive timeline record/batch readers, deterministic large
+  synthetic timeline builders, a local timeline scan benchmark script, TDD
+  coverage, and documentation updates.
+- Files:
+  - `package.json`
+  - `README.md`
+  - `docs/ARCHITECTURE.md`
+  - `docs/ARCHIVE_FORMAT_V1.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
+  - `packages/archive/src/index.ts`
+  - `packages/archive/src/timelineReader.ts`
+  - `packages/testkit/src/index.ts`
+  - `packages/testkit/src/largeTimeline.ts`
+  - `tdd-tests/packages/archive/timeline-reader/timelineReader.test.ts`
+  - `tdd-tests/packages/testkit/large-timeline/largeSyntheticTimeline.test.ts`
+  - `tools/benchmarks/timeline-scan-benchmark.mjs`
+- Decisions:
+  - `iterateTimelineRecords` yields one parsed event or one validation issue per
+    JSONL line.
+  - `readTimelineEventBatches` yields bounded batches with line ranges, parsed
+    events, and issues.
+  - `createLargeSyntheticTimelineBuilder` streams deterministic synthetic JSONL
+    chunks and can write synthetic `.chron` fixtures without constructing one
+    giant event array.
+  - `pnpm benchmark:timeline` is a local evidence tool, not a CI gate and not a
+    Rust decision.
+  - Existing full-snapshot archive APIs remain for small fixtures. Indexer,
+    replay, GUI, and maintenance consumers have not yet moved to the batch
+    reader.
+- Verification:
+  - TDD RED: archive timeline reader test failed before
+    `readTimelineEventBatches` existed.
+  - GREEN: targeted archive timeline reader test passed after adding
+    `iterateTimelineRecords` and `readTimelineEventBatches`.
+  - TDD RED: large synthetic timeline test failed before
+    `createLargeSyntheticTimelineBuilder` existed.
+  - GREEN: targeted testkit large timeline test passed after adding the
+    builder.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed as a
+    local smoke run.
+- Next: move `packages/indexer` to consume `readTimelineEventBatches` so
+  indexing no longer depends on full snapshot timeline arrays.

@@ -144,10 +144,21 @@ Current state:
   Chaturbate behavior.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
-- `docs/plan/plan_streaming_archive_io_and_benchmarks.md` records a planned
-  pre-GUI/pre-replay archive contract step: add streaming or batched timeline
-  read/validation entry points and large synthetic timeline benchmarks before
-  consumers hard-code full `timelineEvents` arrays.
+- `packages/archive` has first streaming-shaped timeline read entries:
+  `iterateTimelineRecords` and `readTimelineEventBatches`. They parse JSONL
+  line by line and yield events or validation issues through bounded records or
+  batches.
+- `packages/testkit` has `createLargeSyntheticTimelineBuilder` for deterministic
+  large timeline event generation, JSONL chunk streaming, and synthetic `.chron`
+  fixture writing without constructing one giant event array.
+- `tools/benchmarks/timeline-scan-benchmark.mjs` can generate and scan a local
+  synthetic `.chron` archive under ignored `runtime/benchmarks/`, reporting time
+  and memory data. The root script is
+  `pnpm benchmark:timeline -- --events 1000 --batch-size 128`.
+- `docs/plan/plan_streaming_archive_io_and_benchmarks.md` now tracks the first
+  implemented archive timeline batch API, testkit builder, and benchmark smoke.
+  Indexer, replay, GUI, and maintenance consumers have not yet moved to the
+  batch reader.
 - `docs/plan/plan_web_dashboard_offline_behavior.md` records the historical
   safe first behavior slice for the Web dashboard: synthetic demo action only,
   no core filesystem calls from the browser renderer.
@@ -307,9 +318,9 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Implement the streaming/batched archive timeline API and large synthetic
-   timeline benchmark plan before archive-heavy GUI/indexer/replay work further
-   depends on full-array `timelineEvents`.
+1. Move `packages/indexer` to consume `readTimelineEventBatches` so indexing no
+   longer depends on `validateFileArchive` returning a full `timelineEvents`
+   array.
 2. Continue WebUI behavior with add-link form validation and clearer
    pause/resume/check state feedback, still synthetic-only.
 3. Replace the browser-only offline self-test action with a real GUI-facing
