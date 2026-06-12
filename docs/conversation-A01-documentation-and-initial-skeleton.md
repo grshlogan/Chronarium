@@ -135,6 +135,21 @@ facts. This is not a core/archive/indexer integration yet; it deliberately does
 not write `.chron` archives, query SQLite, call Node APIs from the browser, or
 connect to a real site.
 
+The current A01 UI semantics pass corrected that Web dashboard behavior to the
+real Chronarium product model. The visible recording workflow is now
+monitoring-first: users add and maintain streamer links, pause monitoring,
+resume monitoring, or check now. Recording is shown as an automatic result of a
+monitored streamer being live, not as a manual "start recording" command. The
+old browser-safe fixture demo is now presented as `Run offline self-test` under
+maintenance diagnostics, still synthetic-only and still not connected to core,
+filesystem, SQLite, Electron, or real sites.
+
+The same A01 UI continuation then added the first left-rail streamer selection
+behavior. Maintained streamer rows are now clickable buttons, and selecting a
+streamer updates the browser-local selected workspace. This remains synthetic
+state only; it does not persist streamer records, parse real links, call core,
+or connect to live sites.
+
 ## Active Constraints
 
 - Work only inside `D:\live\Chronarium`.
@@ -177,6 +192,9 @@ connect to a real site.
 - The offline fixture capture button in the Web renderer is a browser-safe demo
   action only. A future Electron/preload or GUI DTO client must replace it
   before it can call `CoreGuiService`.
+- The Web renderer must not present manual "start recording" as the main user
+  action. The main action model is add streamer link, automatic monitoring,
+  pause/resume monitoring, and check now.
 - Chronarium desktop Web UI development should use port `5187`, not `5173`.
 
 ## Files In Scope For This Continuation
@@ -207,6 +225,8 @@ Documentation changes for this continuation:
 - `docs/conversation-A01-documentation-and-initial-skeleton.md`
 - `docs/plan/plan_streaming_archive_io_and_benchmarks.md`
 - `docs/plan/plan_web_dashboard_offline_behavior.md`
+- `docs/plan/plan_web_dashboard_monitoring_semantics.md`
+- `docs/plan/plan_web_dashboard_streamer_selection.md`
 - `docs/plan/plan_web_first_recording_dashboard.md`
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
@@ -423,12 +443,41 @@ Checks already run during this continuation:
   `http://127.0.0.1:5187/` and confirmed `Completed`,
   `Synthetic archive written`, `Fixture capture completed`, and
   `3 timeline facts` were rendered without detected text overflow.
+- TDD RED for the Web dashboard monitoring semantics:
+  `pnpm exec vitest run
+  tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+  failed because the dashboard did not render `Pause monitoring`,
+  `Resume monitoring`, `Check now`, or `Offline self-test`.
+- GREEN for the Web dashboard monitoring semantics: the targeted TDD file
+  passed after updating the dashboard state/reducer, monitor controls, and
+  offline self-test labels.
+- `pnpm typecheck`: passed after the monitoring semantics update.
+- TDD RED for Web dashboard streamer selection:
+  `pnpm exec vitest run
+  tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+  failed because selecting `velvet` did not update the selected workspace.
+- GREEN for Web dashboard streamer selection: the targeted TDD file passed
+  after adding `streamer.select` and clickable streamer rows.
+- Browser smoke on `http://127.0.0.1:5187/` confirmed pause/resume/check and
+  `Run offline self-test` render, old `Run fixture capture` is absent, `Check
+  now` queues a visible fact, offline self-test completes, and clicking
+  `VelvetMoth` updates the selected paused workspace.
+- `pnpm typecheck`: passed after the WebUI monitoring/selection update.
+- `pnpm test`: passed 16 files and 66 tests after the WebUI
+  monitoring/selection update.
+- `pnpm build`: passed after the WebUI monitoring/selection update.
+- `git diff --check`: produced no output after the WebUI
+  monitoring/selection update.
+- trailing whitespace scan: produced no output after the WebUI
+  monitoring/selection update.
+- JSON/package config parse scan: parsed 24 JSON files after the WebUI
+  monitoring/selection update.
 
 ## Next Safe Step
 
-Either implement the streaming/batched archive timeline API and benchmark
-groundwork before deeper archive consumers hard-code full in-memory arrays, or
-replace the Web dashboard's browser-only demo action with an Electron/preload
-or GUI DTO boundary that can call `CoreGuiService` safely. Keep A02 independent
-and do not create A03, A04, or later conversation context files unless the user
-starts new real conversations and explicitly assigns those IDs.
+Continue the WebUI behavior layer with add-link form validation,
+pause/resume/check feedback, and a cleaner diagnostics/self-test surface; or
+implement the streaming/batched archive timeline API and benchmark groundwork
+before deeper archive consumers hard-code full in-memory arrays. Keep A02
+independent and do not create A03, A04, or later conversation context files
+unless the user starts new real conversations and explicitly assigns those IDs.

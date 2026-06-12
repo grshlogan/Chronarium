@@ -1,12 +1,13 @@
 export { App } from "./App.js";
 export {
   createInitialRecordingDashboard,
+  getSelectedStreamer,
   reduceRecordingDashboard,
-  runOfflineFixtureCaptureDemo
+  runOfflineSelfTestDemo
 } from "./recordingDashboard.js";
 export type {
-  OfflineFixtureCaptureDemo,
-  OfflineFixtureCaptureDemoStatus,
+  OfflineSelfTest,
+  OfflineSelfTestStatus,
   RecordingDashboardAction,
   RecordingDashboardState
 } from "./recordingDashboard.js";

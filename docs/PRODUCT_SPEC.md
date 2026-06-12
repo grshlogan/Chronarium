@@ -65,6 +65,16 @@ The user or test harness creates synthetic session metadata, media-track facts,
 timeline events, and diagnostics. Chronarium should be able to validate the
 facts without touching a live site.
 
+### Maintain Streamers
+
+The user adds a streamer by link and Chronarium maintains that streamer until
+the user pauses or removes monitoring. The normal recording path is automatic:
+Chronarium checks streamer state on a schedule or on demand, records when the
+streamer is live, finalizes the archive when the stream ends, then continues
+monitoring for the next session. The recording GUI should expose pause
+monitoring, resume monitoring, and check now controls rather than a manual
+"start recording" button.
+
 ### Inspect A Session Archive
 
 Chronarium should load a `.chron` package, read the manifest and timeline, show
@@ -118,9 +128,12 @@ service facade exposes health, archive/index, maintenance, and recovery
 inspection calls for a future GUI. Core also has a fixture-only task scheduler,
 adapter lifecycle host, typed media command builders, and an offline
 capture-like pipeline. `apps/desktop` now contains a static Web-first
-React/Vite recording dashboard shell using synthetic data only. Electron shell,
-preload/IPC, live GUI-core binding, real media segment writing/probing, archive
-repair/migration, replay player, and real adapters remain unimplemented.
+React/Vite recording dashboard shell using synthetic data only. The dashboard
+now models streamer monitoring as the primary operation, with pause/resume/check
+controls and an offline self-test diagnostic action instead of a manual start
+recording action. Electron shell, preload/IPC, live GUI-core binding, real media
+segment writing/probing, archive repair/migration, replay player, and real
+adapters remain unimplemented.
 
 ## Open Product Decisions
 

@@ -3,7 +3,8 @@ export interface StreamerSummary {
   readonly name: string;
   readonly site: string;
   readonly status: "online" | "offline";
-  readonly captureState: "recording" | "idle" | "paused";
+  readonly monitoringState: "active" | "paused";
+  readonly captureState: "recording" | "waiting";
   readonly lastCheck: string;
   readonly retentionDays: 1 | 3 | 7;
 }
@@ -40,6 +41,7 @@ export const dashboardViewModel: DashboardViewModel = {
       name: "LunaCeleste",
       site: "CB",
       status: "online",
+      monitoringState: "active",
       captureState: "recording",
       lastCheck: "12:24:18",
       retentionDays: 7
@@ -49,7 +51,8 @@ export const dashboardViewModel: DashboardViewModel = {
       name: "AuroraRaven",
       site: "CB",
       status: "online",
-      captureState: "idle",
+      monitoringState: "active",
+      captureState: "waiting",
       lastCheck: "12:23:56",
       retentionDays: 3
     },
@@ -58,7 +61,8 @@ export const dashboardViewModel: DashboardViewModel = {
       name: "NeoKitsune",
       site: "CB",
       status: "online",
-      captureState: "idle",
+      monitoringState: "active",
+      captureState: "waiting",
       lastCheck: "12:23:21",
       retentionDays: 1
     },
@@ -67,7 +71,8 @@ export const dashboardViewModel: DashboardViewModel = {
       name: "PixelPanda",
       site: "CB",
       status: "offline",
-      captureState: "idle",
+      monitoringState: "active",
+      captureState: "waiting",
       lastCheck: "12:20:42",
       retentionDays: 3
     },
@@ -76,7 +81,8 @@ export const dashboardViewModel: DashboardViewModel = {
       name: "VelvetMoth",
       site: "CB",
       status: "online",
-      captureState: "paused",
+      monitoringState: "paused",
+      captureState: "waiting",
       lastCheck: "12:19:11",
       retentionDays: 7
     },
@@ -85,7 +91,8 @@ export const dashboardViewModel: DashboardViewModel = {
       name: "CyberCyan",
       site: "CB",
       status: "offline",
-      captureState: "idle",
+      monitoringState: "active",
+      captureState: "waiting",
       lastCheck: "12:16:03",
       retentionDays: 1
     }

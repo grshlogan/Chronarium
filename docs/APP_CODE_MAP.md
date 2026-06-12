@@ -10,10 +10,11 @@ chain. The package code is still early and fixture-first. It has a report-only
 archive recovery inspector, a core GUI-facing facade, fixture task/lifecycle
 skeletons, typed media command builders, and the first offline capture-like
 pipeline. It also has a first Web-first React/Vite recording dashboard shell
-under `apps/desktop`, backed by synthetic data and a browser-safe offline
-fixture capture demo action only. No Electron shell, preload/IPC, real site
-capture, real adapter child process, external media tool execution, real media
-segment writer/prober, archive repair/migration, or replay player exists yet.
+under `apps/desktop`, backed by synthetic data, monitoring-first controls, and
+a browser-safe offline self-test action only. No Electron shell, preload/IPC,
+real site capture, real adapter child process, external media tool execution,
+real media segment writer/prober, archive repair/migration, or replay player
+exists yet.
 
 Current files:
 
@@ -74,6 +75,8 @@ docs/
     plan_offline_fixture_capture_pipeline.md
     plan_streaming_archive_io_and_benchmarks.md
     plan_web_dashboard_offline_behavior.md
+    plan_web_dashboard_monitoring_semantics.md
+    plan_web_dashboard_streamer_selection.md
     plan_web_first_recording_dashboard.md
 apps/
   desktop/
@@ -501,10 +504,29 @@ Responsibility:
 
 Responsibility:
 
-- Plan, scope, and verification notes for the first browser-safe behavior slice
-  in the Web-first recording dashboard.
+- Historical plan, scope, and verification notes for the first browser-safe
+  behavior slice in the Web-first recording dashboard.
 - Records that the button uses a synthetic demo action only and must not call
   Node-only core/archive/indexer APIs from the renderer.
+
+### `docs/plan/plan_web_dashboard_monitoring_semantics.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for correcting the Web recording
+  dashboard to a monitoring-first product model.
+- Records that the visible controls are pause monitoring, resume monitoring,
+  and check now, while synthetic fixture behavior is presented as an offline
+  self-test diagnostic action.
+
+### `docs/plan/plan_web_dashboard_streamer_selection.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for making the maintained streamer list
+  select the active dashboard workspace.
+- Records that selection is browser-local synthetic state only and does not
+  persist streamer records or call core.
 
 ### `docs/plan/plan_web_first_recording_dashboard.md`
 
@@ -781,14 +803,20 @@ Must not own:
 Current status:
 
 - Exists as a Web-first React + Vite app with a recording dashboard and a
-  browser-safe synthetic offline capture demo.
-- The first screen focuses on maintained streamers, selected streamer recording
-  state, disabled live-preview placeholder, recording information, pinned
-  current session, history, and global information.
-- `recordingDashboard.ts` owns the browser-safe dashboard state, reducer, and
-  synthetic demo action.
-- The UI can run the demo action from a button and render completed/failed
-  status into history and latest facts.
+  browser-safe synthetic offline self-test.
+- The first screen focuses on maintained streamers, selected streamer
+  monitoring state, automatic recording state, disabled live-preview
+  placeholder, recording information, pinned current session, history, and
+  global information.
+- `recordingDashboard.ts` owns the browser-safe dashboard state, reducer,
+  monitoring actions, and synthetic offline self-test action.
+- The left maintained-streamer list is clickable and updates the selected
+  workspace using browser-local synthetic state.
+- The UI exposes pause monitoring, resume monitoring, and check now controls for
+  the selected streamer. The synthetic demo is presented as an offline
+  self-test under maintenance diagnostics, not as a recording start action.
+- The UI can run the self-test action from a button and render
+  completed/failed status into history and latest facts.
 - The dev server defaults to `http://127.0.0.1:5187/` with `--strictPort`.
 - It uses synthetic mock view-model/demo data only.
 - It does not connect to core, read archives, query SQLite, start tasks,

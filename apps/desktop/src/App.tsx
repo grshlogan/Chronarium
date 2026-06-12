@@ -1,8 +1,9 @@
 import { useState, type ReactElement } from "react";
 import {
   createInitialRecordingDashboard,
+  getSelectedStreamer,
   reduceRecordingDashboard,
-  runOfflineFixtureCaptureDemo,
+  runOfflineSelfTestDemo,
   type RecordingDashboardState
 } from "./recordingDashboard.js";
 
@@ -15,34 +16,38 @@ export function App(props: AppProps = {}): ReactElement {
     () => props.dashboard ?? createInitialRecordingDashboard()
   );
   const dashboard = props.dashboard ?? interactiveDashboard;
-  const selectedStreamer = dashboard.streamers.find(
-    (streamer) => streamer.id === dashboard.selectedStreamerId
-  );
+  const selectedStreamer = getSelectedStreamer(dashboard);
+  const selectedMonitoringPaused =
+    selectedStreamer.monitoringState === "paused";
 
-  if (selectedStreamer === undefined) {
-    throw new Error("Selected streamer is missing from the dashboard view model.");
-  }
+  const dispatchDashboardAction = (
+    action: Parameters<typeof reduceRecordingDashboard>[1]
+  ): void => {
+    setInteractiveDashboard((current) =>
+      reduceRecordingDashboard(current, action)
+    );
+  };
 
-  const runDemoCapture = async (): Promise<void> => {
+  const runSelfTest = async (): Promise<void> => {
     setInteractiveDashboard((current) =>
       reduceRecordingDashboard(current, {
-        type: "offlineFixtureCapture.started"
+        type: "offlineSelfTest.started"
       })
     );
 
     try {
-      const action = await runOfflineFixtureCaptureDemo();
+      const action = await runOfflineSelfTestDemo();
       setInteractiveDashboard((current) =>
         reduceRecordingDashboard(current, action)
       );
     } catch (error) {
       setInteractiveDashboard((current) =>
         reduceRecordingDashboard(current, {
-          type: "offlineFixtureCapture.failed",
+          type: "offlineSelfTest.failed",
           errorMessage:
             error instanceof Error
               ? error.message
-              : "Offline fixture capture failed."
+              : "Offline self-test failed."
         })
       );
     }
@@ -65,13 +70,20 @@ export function App(props: AppProps = {}): ReactElement {
         </button>
         <section className="streamer-list">
           {dashboard.streamers.map((streamer) => (
-            <article
+            <button
               className={
                 streamer.id === selectedStreamer.id
                   ? "streamer-card selected"
                   : "streamer-card"
               }
               key={streamer.id}
+              type="button"
+              onClick={() => {
+                dispatchDashboardAction({
+                  type: "streamer.select",
+                  streamerId: streamer.id
+                });
+              }}
             >
               <div className="avatar" aria-hidden="true">
                 {streamer.name.slice(0, 1)}
@@ -83,9 +95,9 @@ export function App(props: AppProps = {}): ReactElement {
               </div>
               <div className="streamer-state">
                 <span className={`dot ${streamer.status}`} />
-                <b>{streamer.captureState}</b>
+                <b>{formatStreamerState(streamer)}</b>
               </div>
-            </article>
+            </button>
           ))}
         </section>
         <section className="global-info">
@@ -123,16 +135,66 @@ export function App(props: AppProps = {}): ReactElement {
             <span className="status-pill">ONLINE</span>
           </div>
           <div className="header-actions">
-            <span className="recording-pill">Recording</span>
+            <span className="recording-pill">
+              {formatSelectedCaptureState(selectedStreamer)}
+            </span>
             <span className="safe-pill">Privacy safe</span>
           </div>
         </header>
 
+        <section className="monitoring-controls" aria-label="Monitoring controls">
+          <div>
+            <p className="eyebrow">Monitoring controls</p>
+            <h2>{selectedMonitoringPaused ? "Monitoring paused" : "Monitoring active"}</h2>
+            <p>
+              Streamer links are maintained automatically. Recording starts when
+              a monitored streamer is detected live.
+            </p>
+          </div>
+          <div className="control-buttons">
+            <button
+              className="control-button"
+              type="button"
+              disabled={selectedMonitoringPaused}
+              onClick={() => {
+                dispatchDashboardAction({
+                  type: "monitoring.pauseSelected"
+                });
+              }}
+            >
+              Pause monitoring
+            </button>
+            <button
+              className="control-button"
+              type="button"
+              disabled={!selectedMonitoringPaused}
+              onClick={() => {
+                dispatchDashboardAction({
+                  type: "monitoring.resumeSelected"
+                });
+              }}
+            >
+              Resume monitoring
+            </button>
+            <button
+              className="control-button primary"
+              type="button"
+              onClick={() => {
+                dispatchDashboardAction({
+                  type: "monitoring.checkNow"
+                });
+              }}
+            >
+              Check now
+            </button>
+          </div>
+        </section>
+
         <section className="main-surface">
           <div className="capture-metrics">
             <span>Room state: LIVE</span>
-            <span>Adapter: Fixture HLS</span>
-            <span>Lifecycle: Running</span>
+            <span>Monitor: {selectedMonitoringPaused ? "Paused" : "Active"}</span>
+            <span>Auto capture: {formatSelectedCaptureState(selectedStreamer)}</span>
           </div>
           <div className="preview-disabled">
             <div className="preview-icon" aria-hidden="true" />
@@ -180,21 +242,21 @@ export function App(props: AppProps = {}): ReactElement {
           </div>
         </section>
 
-        <section className="offline-capture-panel" aria-label="Offline fixture capture">
+        <section className="offline-capture-panel" aria-label="Offline self-test">
           <div>
-            <p className="eyebrow">Offline fixture capture</p>
-            <h2>{formatFixtureCaptureStatus(dashboard.offlineFixtureCapture.status)}</h2>
-            <p>{describeFixtureCapture(dashboard)}</p>
+            <p className="eyebrow">Maintenance diagnostics</p>
+            <h2>{formatSelfTestStatus(dashboard.offlineSelfTest.status)}</h2>
+            <p>{describeSelfTest(dashboard)}</p>
           </div>
           <button
             className="run-capture"
             type="button"
-            disabled={dashboard.offlineFixtureCapture.status === "running"}
+            disabled={dashboard.offlineSelfTest.status === "running"}
             onClick={() => {
-              void runDemoCapture();
+              void runSelfTest();
             }}
           >
-            Run fixture capture
+            Run offline self-test
           </button>
         </section>
       </section>
@@ -262,8 +324,8 @@ export function App(props: AppProps = {}): ReactElement {
   );
 }
 
-function formatFixtureCaptureStatus(
-  status: RecordingDashboardState["offlineFixtureCapture"]["status"]
+function formatSelfTestStatus(
+  status: RecordingDashboardState["offlineSelfTest"]["status"]
 ): string {
   switch (status) {
     case "idle":
@@ -277,19 +339,39 @@ function formatFixtureCaptureStatus(
   }
 }
 
-function describeFixtureCapture(dashboard: RecordingDashboardState): string {
-  const capture = dashboard.offlineFixtureCapture;
+function describeSelfTest(dashboard: RecordingDashboardState): string {
+  const selfTest = dashboard.offlineSelfTest;
 
-  switch (capture.status) {
+  switch (selfTest.status) {
     case "idle":
-      return "Run a local synthetic capture path without contacting a live site.";
+      return "Run a local synthetic self-test without contacting a live site.";
     case "running":
-      return "Synthetic adapter facts are being passed through the UI behavior path.";
+      return "Synthetic adapter facts are being checked through the UI behavior path.";
     case "completed":
-      return `${capture.archiveLabel ?? "Synthetic archive written"} · ${
-        capture.timelineEventCount ?? 0
+      return `${selfTest.archiveLabel ?? "Synthetic archive validated"} · ${
+        selfTest.timelineEventCount ?? 0
       } timeline facts`;
     case "failed":
-      return capture.errorMessage ?? "Offline fixture capture failed.";
+      return selfTest.errorMessage ?? "Offline self-test failed.";
   }
+}
+
+function formatStreamerState(
+  streamer: RecordingDashboardState["streamers"][number]
+): string {
+  if (streamer.monitoringState === "paused") {
+    return "paused";
+  }
+
+  return streamer.captureState === "recording" ? "recording" : "monitoring";
+}
+
+function formatSelectedCaptureState(
+  streamer: RecordingDashboardState["streamers"][number]
+): string {
+  if (streamer.monitoringState === "paused") {
+    return "Paused";
+  }
+
+  return streamer.captureState === "recording" ? "Recording" : "Monitoring";
 }

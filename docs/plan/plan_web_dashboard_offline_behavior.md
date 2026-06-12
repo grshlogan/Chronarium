@@ -6,6 +6,10 @@ Give the first Web-first recording dashboard one safe behavior path: a user can
 trigger an offline fixture capture demo and see the UI move from ready/running
 to completed or failed.
 
+Note: a later monitoring-semantics pass renamed the visible GUI action to
+`Run offline self-test` and moved it under maintenance diagnostics. This file
+is kept as the historical plan for the first browser-safe behavior slice.
+
 ## Scope
 
 - Add a small `apps/desktop` recording dashboard state model.
@@ -57,3 +61,7 @@ view state shape.
 - Browser smoke confirmed clicking the button renders `Completed`,
   `Synthetic archive written`, `Fixture capture completed`, and
   `3 timeline facts`.
+- Superseded in the GUI surface by
+  `docs/plan/plan_web_dashboard_monitoring_semantics.md`, which keeps the
+  synthetic path but presents it as `Run offline self-test` instead of a
+  recording action.

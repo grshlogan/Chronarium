@@ -75,13 +75,15 @@ Current state:
 - Adapter lifecycle errors and missing `adapter.finished` messages map to
   failed tasks and skip archive indexing.
 - `apps/desktop` has the first Web-first React/Vite recording dashboard shell.
-  It renders maintained streamers, a selected streamer recording workspace,
-  disabled recording preview placeholder, recording information, pinned current
-  session, history, and global information from synthetic static data only.
+  It renders maintained streamers, a selected streamer monitoring workspace,
+  automatic recording state, disabled recording preview placeholder, recording
+  information, pinned current session, history, and global information from
+  synthetic static data only.
 - `apps/desktop/src/recordingDashboard.ts` now owns a browser-safe dashboard
-  state/reducer and synthetic offline fixture capture demo action. The renderer
-  can click `Run fixture capture` and show completed/failure state without
-  calling Node-only core/archive/indexer APIs.
+  state/reducer, monitoring actions, and synthetic offline self-test action.
+  The renderer can select streamers from the left rail, click pause monitoring,
+  resume monitoring, check now, and `Run offline self-test` without calling
+  Node-only core/archive/indexer APIs.
 - `apps/desktop` defaults to `http://127.0.0.1:5187/` for dev. Do not use
   `5173` for Chronarium because the user uses that port for other local work.
 - Root-level TDD slices are now organized under `tdd-tests/` by owner path; the
@@ -126,9 +128,15 @@ Current state:
   pre-GUI/pre-replay archive contract step: add streaming or batched timeline
   read/validation entry points and large synthetic timeline benchmarks before
   consumers hard-code full `timelineEvents` arrays.
-- `docs/plan/plan_web_dashboard_offline_behavior.md` records the safe first
-  behavior slice for the Web dashboard: synthetic demo action only, no core
-  filesystem calls from the browser renderer.
+- `docs/plan/plan_web_dashboard_offline_behavior.md` records the historical
+  safe first behavior slice for the Web dashboard: synthetic demo action only,
+  no core filesystem calls from the browser renderer.
+- `docs/plan/plan_web_dashboard_monitoring_semantics.md` records the current
+  correction: recording is automatic after streamer monitoring detects a live
+  session, while the visible controls are pause monitoring, resume monitoring,
+  check now, and offline self-test.
+- `docs/plan/plan_web_dashboard_streamer_selection.md` records the first
+  selectable maintained-streamer list behavior.
 - Sixteen Vitest behavior test files exercise synthetic archive writing, reading,
   validation failures, SQLite indexing, the core archive/index service, core
   runtime lifecycle, core maintenance inspection, archive recovery inspection,
@@ -280,20 +288,22 @@ The project should optimize for AI-assisted long-term maintenance:
 1. Implement the streaming/batched archive timeline API and large synthetic
    timeline benchmark plan before archive-heavy GUI/indexer/replay work further
    depends on full-array `timelineEvents`.
-2. Replace the browser-only offline capture demo action with a real GUI-facing
+2. Continue WebUI behavior with add-link form validation and clearer
+   pause/resume/check state feedback, still synthetic-only.
+3. Replace the browser-only offline self-test action with a real GUI-facing
    DTO/preload boundary, then connect it to `CoreGuiService` without letting the
    renderer call archive/indexer internals directly.
-3. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
+4. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
    real tools.
-4. Build the Electron shell and preload/IPC boundary around the existing
+5. Build the Electron shell and preload/IPC boundary around the existing
    Web-first renderer only after the GUI/core DTO boundary is stable.
-5. Let the Web renderer use the offline fixture capture pipeline to show
+6. Let the Web renderer use the offline fixture capture pipeline to show
    archive list, timeline facts, validation, recovery, and maintenance status.
-6. Extend the maintenance inspector with index freshness comparison, keeping
+7. Extend the maintenance inspector with index freshness comparison, keeping
    writes as explicit safe-rebuild suggestions rather than automatic actions.
-7. Add real media segment IO only after the media-track metadata validator
+8. Add real media segment IO only after the media-track metadata validator
    remains stable.
-8. If real Chaturbate behavior needs validation, first prepare separately
+9. If real Chaturbate behavior needs validation, first prepare separately
    approved redacted evidence or synthetic reproductions derived from approved
    local samples.
 

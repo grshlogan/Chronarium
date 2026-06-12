@@ -989,3 +989,55 @@ unimplemented ideas as completed work.
     `http://127.0.0.1:5187/` and confirmed the completed result rendered.
 - Next: run full workspace verification, then connect the demo action to a real
   GUI-facing DTO/preload boundary or implement archive streaming benchmarks.
+
+## 2026-06-12: Web dashboard monitoring semantics
+
+- Conversation: user clarified that real recording has no manual "start
+  recording" operation. The product flow is add streamer link, monitor streamer
+  state, automatically record when live, finish archive when ended, and keep
+  polling.
+- Landed: corrected the Web-first recording dashboard to expose pause
+  monitoring, resume monitoring, check now, offline self-test controls, and
+  browser-local maintained-streamer selection.
+- Files:
+  - `README.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/GUI_CORE_PROTOCOL.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_web_dashboard_monitoring_semantics.md`
+  - `docs/plan/plan_web_dashboard_streamer_selection.md`
+  - `apps/desktop/src/App.tsx`
+  - `apps/desktop/src/index.ts`
+  - `apps/desktop/src/mockDashboard.ts`
+  - `apps/desktop/src/recordingDashboard.ts`
+  - `apps/desktop/src/styles.css`
+  - `tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+- Decisions:
+  - Main GUI recording semantics are monitoring-first, not manual recording
+    start.
+  - The browser-safe synthetic fixture action is now an offline self-test under
+    maintenance diagnostics.
+  - The left streamer list can update the selected workspace in browser-local
+    synthetic state.
+  - The renderer still does not call core, archive, SQLite, Electron, adapter,
+    or live site code.
+- Verification:
+  - TDD RED: targeted dashboard test failed on missing pause/resume/check and
+    offline self-test UI.
+  - GREEN: targeted dashboard test passed after implementation.
+  - TDD RED/GREEN: targeted dashboard test failed before `streamer.select`
+    updated the selected workspace, then passed after adding clickable streamer
+    rows.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 16 files and 66 tests.
+  - `pnpm build` passed.
+  - Browser smoke confirmed pause/resume/check, offline self-test, and
+    streamer selection on `http://127.0.0.1:5187/`.
+  - `git diff --check` produced no output.
+  - trailing whitespace scan produced no output.
+  - JSON/package config parse scan parsed 24 JSON files.
+- Next: continue with add-link behavior, clearer pause/resume/check feedback,
+  or GUI/core DTO boundaries.

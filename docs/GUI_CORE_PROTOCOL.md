@@ -23,6 +23,11 @@ contract changes here first.
 The protocol is message-based so the same shapes work whether core runs inside
 Electron main or as a separate supervised process.
 
+The recording surface follows a monitoring-first product model. The GUI should
+submit intents such as "add streamer", "pause monitoring", "resume monitoring",
+and "check now". It should not expose "start recording" as the primary action:
+recording is the automatic result of a maintained streamer being detected live.
+
 ## Process Boundary
 
 ```text
@@ -199,6 +204,9 @@ Required fields:
 These families are declared so names stay stable, but they are not specified
 and nothing implements them:
 
+- `streamer.*` (maintained streamer CRUD and link parsing);
+- `monitoring.*` (pause, resume, check now, polling state, and automatic
+  recording decisions);
 - `task.*` (task lifecycle: planned with core task state);
 - `adapter.*` (Adapter Worker control: planned per
   `docs/ADAPTER_PROTOCOL.md`; the GUI never talks to adapters directly);
@@ -229,6 +237,8 @@ index summary so archive lists can refresh without polling.
 
 ### Reserved events
 
+- `streamer.state.changed`;
+- `monitoring.check.completed`;
 - `task.state.changed`;
 - `maintenance.finding.surfaced`.
 

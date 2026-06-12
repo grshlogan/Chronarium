@@ -81,9 +81,10 @@ AI 可以快速接手局部问题
   health、archive validate/read/reindex/list、maintenance inspect 和 recovery
   inspect 串到一个 core 入口。
 - `apps/desktop` 已有第一版 Web-first React + Vite 录制工作台静态空壳，围绕
-  主播维护、当前录制状态、历史场次和全局信息展示；默认开发端口为
-  `127.0.0.1:5187`。它已经有一个浏览器安全的 synthetic offline fixture
-  capture demo 按钮，但还没有接入 core、Electron shell、preload 或 IPC。
+  主播维护、自动录制状态、历史场次和全局信息展示；默认开发端口为
+  `127.0.0.1:5187`。它已经把主操作语义修正为暂停监控、恢复监控和立即检查，
+  并把浏览器安全的 synthetic fixture 行为收进 offline self-test 诊断入口；还没有
+  接入 core、Electron shell、preload 或 IPC。
 - `packages/core` 已有最小 task scheduler 骨架，可创建、启动、停止、失败和
   查询 fixture capture task；尚未驱动真实录制。
 - `packages/core` 已有 fixture-only adapter lifecycle host，可消费 adapter
@@ -166,6 +167,8 @@ small module boundaries.
 - [docs/plan/plan_streaming_archive_io_and_benchmarks.md](./docs/plan/plan_streaming_archive_io_and_benchmarks.md)：archive 流式/分批读取入口与大规模 timeline benchmark 的计划。
 - [docs/plan/plan_web_first_recording_dashboard.md](./docs/plan/plan_web_first_recording_dashboard.md)：第一版 Web-first 录制工作台计划和验证记录。
 - [docs/plan/plan_web_dashboard_offline_behavior.md](./docs/plan/plan_web_dashboard_offline_behavior.md)：Web 录制工作台离线 demo 行为计划。
+- [docs/plan/plan_web_dashboard_monitoring_semantics.md](./docs/plan/plan_web_dashboard_monitoring_semantics.md)：Web 录制工作台监控/自检语义修正计划。
+- [docs/plan/plan_web_dashboard_streamer_selection.md](./docs/plan/plan_web_dashboard_streamer_selection.md)：Web 录制工作台主播选择行为计划。
 
 ## 设计边界
 
@@ -202,8 +205,10 @@ Chronarium 目标 GitHub 仓库：
    大规模 synthetic timeline builder/benchmark，避免 GUI/indexer/replay
    固化整读 `timelineEvents` 数组。
 2. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
-3. 把 Web-first 录制工作台里的浏览器 demo action 替换成 GUI-facing
+3. 继续推进 Web-first 录制工作台的信息密度和行为入口：添加链接表单、
+   监控暂停/恢复/立即检查的状态反馈，以及 offline self-test 诊断结果。
+4. 把 Web-first 录制工作台里的浏览器 self-test action 替换成 GUI-facing
    DTO/preload 边界，再接入 core facade 显示 health/status。
-4. 让 Web renderer 接入离线 capture-like pipeline，展示 archive 列表、
+5. 让 Web renderer 接入离线 capture-like pipeline，展示 archive 列表、
    timeline facts、validation / maintenance / recovery 状态。
-5. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。
+6. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。
