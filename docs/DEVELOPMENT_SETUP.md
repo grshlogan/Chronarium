@@ -8,7 +8,8 @@ The repository now has a minimal TypeScript workspace skeleton, installed
 development dependencies, runtime schema validation, a fixture-only archive
 writer path, a first fixture-safe archive reader/validator, and a first
 rebuildable SQLite indexer. `packages/core` now has a first small archive/index
-service and a minimal runtime lifecycle shell.
+service, a minimal runtime lifecycle shell, and a first read-only maintenance
+archive inspector.
 
 It has:
 
@@ -34,10 +35,12 @@ It has:
 - a minimal core runtime lifecycle shell that can start, stop, report health,
   create local data/archive directories, and expose the archive/index service
   while running;
+- a read-only core maintenance archive inspector that turns archive validator
+  issues and known timeline diagnostic facts into `MaintenanceReport` findings;
 - Vitest behavior tests for synthetic `.chron` writing, reading, and basic
   timeline consistency failures, writer append-time rejection, media track
   metadata diagnostics, SQLite indexing, core archive/index service
-  coordination, plus core runtime lifecycle.
+  coordination, core runtime lifecycle, and core maintenance inspection.
 
 It does not yet have:
 
@@ -45,6 +48,7 @@ It does not yet have:
 - core task scheduler or adapter lifecycle;
 - real media segment writing or probing;
 - archive recovery or migration behavior;
+- maintenance background loop, AI operations, or automatic repair;
 - SQLite integration with GUI;
 - real site adapters;
 - FFmpeg / ffprobe command builders;

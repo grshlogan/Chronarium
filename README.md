@@ -70,6 +70,9 @@ AI 可以快速接手局部问题
   archive validate/read 和 SQLite reindex/query。
 - `packages/core` 已有最小 runtime lifecycle shell，可 start/stop、返回
   health，并在运行时持有 archive/index service。
+- `packages/core` 已有第一版只读 maintenance archive inspector，可把 archive
+  validator issues 和 timeline diagnostic facts 转成结构化 MaintenanceReport。
+  它只报告，不自动修复、不 reindex、不接 AI。
 - `packages/adapters/chaturbate` 已有第一个离线 split audio/video synthetic
   fixture，可生成 media track metadata 和 timeline facts，并通过 adapter
   protocol fixture runner 测试；该 fixture 也已可写入 synthetic `.chron`
@@ -81,8 +84,9 @@ AI 可以快速接手局部问题
   package、读取 `.chron` package，以及 invalid JSONL、重复 eventId、
   sequence gap、manifest count/lastSequence mismatch、unsafe path、media track
   metadata 缺失/不一致、SQLite index 写入/查询、core archive/index service、
-  core runtime lifecycle、Chaturbate 离线 split-track fixture、fixture
-  archive/indexer flow 和 synthetic diagnostic fixture。
+  core runtime lifecycle、core maintenance inspector、Chaturbate 离线
+  split-track fixture、fixture archive/indexer flow 和 synthetic diagnostic
+  fixture。
 - 尚未实现 GUI、core task scheduler、adapter lifecycle、真实站点 adapter、
   SQLite index 与 GUI 集成、FFmpeg command builder、真实媒体分片写入、archive
   recovery/migration 或 replay player。
@@ -137,6 +141,7 @@ small module boundaries.
 - [docs/conversation-A01-documentation-and-initial-skeleton.md](./docs/conversation-A01-documentation-and-initial-skeleton.md)：A01 对话上下文维护文档。
 - [docs/conversation-A02-foundation-docs-completion.md](./docs/conversation-A02-foundation-docs-completion.md)：A02 对话上下文维护文档。
 - [docs/conversation-A03-chaturbate-offline-fixtures.md](./docs/conversation-A03-chaturbate-offline-fixtures.md)：A03 Chaturbate 离线 fixture 上下文维护文档。
+- [docs/conversation-A04-core-maintenance-inspector-foundation.md](./docs/conversation-A04-core-maintenance-inspector-foundation.md)：A04 core 只读巡检器上下文维护文档。
 - [docs/plan/README.md](./docs/plan/README.md)：后续计划文档入口和命名规则。
 
 ## 设计边界
@@ -170,8 +175,7 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 设计 maintenance / ops 巡检模型，但先只用确定性检查，不接真实 AI 执行。
-2. 开始 archive recovery 的 report-only 检测，但继续禁止真实站点连接和账号/session 处理。
-3. 实现第一组 deterministic maintenance inspection 类型，让巡检能读取 archive/indexer 结果。
-4. 设计真实媒体分片写入前的 FFmpeg / segment 边界。
-5. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。
+1. 开始 archive recovery 的 report-only 检测，但继续禁止真实站点连接和账号/session 处理。
+2. 给 maintenance inspector 增加 index freshness 对比，仍只读或只建议 safe rebuild。
+3. 设计真实媒体分片写入前的 FFmpeg / segment 边界。
+4. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。

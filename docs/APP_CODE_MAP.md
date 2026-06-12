@@ -46,6 +46,7 @@ docs/
   conversation-A01-documentation-and-initial-skeleton.md
   conversation-A02-foundation-docs-completion.md
   conversation-A03-chaturbate-offline-fixtures.md
+  conversation-A04-core-maintenance-inspector-foundation.md
   plan/
     README.md
     plan_workspace_schema_foundation.md
@@ -65,6 +66,7 @@ docs/
     plan_chaturbate_offline_split_fixture.md
     plan_chaturbate_fixture_archive_flow.md
     plan_chaturbate_offline_diagnostic_fixtures.md
+    plan_core_maintenance_inspector_foundation.md
 packages/
   types/
   schemas/
@@ -452,6 +454,16 @@ Responsibility:
   scenarios are contract tests for Chronarium's storage/query behavior, not
   proof of current live Chaturbate behavior.
 
+### `docs/plan/plan_core_maintenance_inspector_foundation.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first read-only maintenance
+  archive inspector under core.
+- Records that the inspector reports archive validator issues and timeline
+  diagnostic facts without AI calls, repair actions, real media probing, or
+  reindex writes.
+
 ### `docs/conversation-A01-documentation-and-initial-skeleton.md`
 
 Responsibility:
@@ -474,6 +486,13 @@ Responsibility:
 
 - Conversation-level continuity document for A03.
 - Records the Chaturbate offline split-track fixture and test continuation.
+
+### `docs/conversation-A04-core-maintenance-inspector-foundation.md`
+
+Responsibility:
+
+- Conversation-level continuity document for A04.
+- Records the first read-only core maintenance inspector implementation.
 
 ## Current Code Tree
 
@@ -518,9 +537,14 @@ packages/
     src/
       archiveIndexService.ts
       index.ts
+      maintenance/
+        archiveInspector.ts
+        index.ts
+        inspectionTypes.ts
       runtime.ts
     tests/
       archiveIndexService.test.ts
+      maintenanceInspector.test.ts
       runtime.test.ts
   adapters/
     chaturbate/
@@ -680,6 +704,10 @@ Current status:
   archive/index service while running.
 - The archive/index service validates archives, reads valid archives, reindexes
   archives, and exposes index queries through core.
+- The maintenance archive inspector produces read-only `MaintenanceReport`
+  data from archive validator issues and known timeline diagnostic facts.
+- The maintenance inspector does not start AI, repair archives, run media tools,
+  reindex SQLite, or touch live sites.
 - Does not start tasks, adapters, capture jobs, exports, ops loops, or media
   tools yet.
 

@@ -686,3 +686,43 @@ unimplemented ideas as completed work.
 - Next: run full workspace verification, commit/push this step, then continue
   with archive recovery report-only detection or deterministic maintenance
   inspection types.
+
+## 2026-06-12: Core maintenance inspector foundation
+
+- Conversation: user accepted the recommendation to start the next phase with
+  a deterministic read-only maintenance inspector before any AI operations.
+- Landed: added first maintenance report/finding/evidence/action suggestion
+  types, a core archive maintenance inspector, and tests for healthy archives,
+  archive validator issues, and known timeline diagnostic facts.
+- Files:
+  - `README.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A04-core-maintenance-inspector-foundation.md`
+  - `docs/plan/plan_core_maintenance_inspector_foundation.md`
+  - `packages/core/src/index.ts`
+  - `packages/core/src/maintenance/index.ts`
+  - `packages/core/src/maintenance/archiveInspector.ts`
+  - `packages/core/src/maintenance/inspectionTypes.ts`
+  - `packages/core/tests/maintenanceInspector.test.ts`
+- Decisions:
+  - The first maintenance inspector is Level 0: Report Only.
+  - It reads through `CoreArchiveIndexService.validateArchive`.
+  - It does not call `reindexArchive`, repair archives, run media tools, call
+    AI, or connect to live sites.
+  - Core tests construct generic timeline diagnostic facts directly instead of
+    importing a site adapter, preserving the core/adapter boundary.
+- Verification:
+  - `pnpm exec vitest run packages/core/tests` passed 3 files and 7 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 9 files and 42 tests.
+  - `pnpm test` emitted Node's `node:sqlite` ExperimentalWarning; tests still
+    passed.
+  - `pnpm build` passed.
+  - `git diff --check` produced no output.
+  - Trailing whitespace scan produced no output.
+  - JSON parse scan succeeded for package/config and synthetic fixture JSON
+    files.
+- Next: continue with archive recovery report-only detection or index freshness
+  checks for the maintenance inspector.

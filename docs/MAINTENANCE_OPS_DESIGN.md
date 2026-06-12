@@ -1,7 +1,9 @@
 # Maintenance Ops Design
 
-Status: design draft. No maintenance runtime, AI agent, scheduler, GUI, or
-automatic repair implementation exists yet.
+Status: design draft with first implementation slice. A read-only archive
+maintenance inspector now exists in `packages/core/src/maintenance/`. No
+maintenance runtime, AI agent, scheduler, GUI, or automatic repair
+implementation exists yet.
 
 ## Purpose
 
@@ -270,6 +272,14 @@ First source:
 
 - `packages/archive.validateFileArchive`.
 
+Current implementation:
+
+- `packages/core/src/maintenance/archiveInspector.ts` converts archive
+  validator issues and known timeline diagnostic facts into a structured
+  `MaintenanceReport`.
+- It is read-only: no repair, migration, reindexing, media probing, AI call, or
+  live site connection.
+
 ### Index Health
 
 Checks:
@@ -423,26 +433,33 @@ Never allowed from automatic maintenance:
 
 ## First Implementation Boundary
 
-Recommended first implementation:
+First implementation:
 
 ```text
 packages/core/src/maintenance/
   inspectionTypes.ts
   archiveInspector.ts
-  indexInspector.ts
-  runtimeInspector.ts
-  maintenanceReport.ts
+  index.ts
 ```
 
-First behavior:
+Current behavior:
 
 - inspect one archive path;
-- inspect runtime health;
-- optionally compare and rebuild index;
+- convert archive validator issues into findings;
+- convert known timeline diagnostic facts into findings;
 - return a structured report;
 - no background loop;
 - no AI call;
 - no destructive action.
+
+Still planned:
+
+- index freshness checks;
+- runtime health inspection;
+- storage health inspection;
+- report persistence;
+- optional safe rebuild suggestions;
+- GUI presentation.
 
 First report should answer:
 
