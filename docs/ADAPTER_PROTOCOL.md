@@ -246,6 +246,23 @@ The parser:
 This is only a parser boundary. It does not spawn child processes or connect to
 live sites.
 
+## Worker Command Descriptor
+
+`packages/core` also exposes `createAdapterWorkerCommand` as the first typed
+command-description boundary for future adapter workers.
+
+The builder:
+
+- returns `executablePath`, `argv`, `redactedArgv`, and `shell: false`;
+- puts adapter id, runtime mode, session id, capabilities, and optional fixture
+  name into structured argv fields;
+- requires absolute executable and worker entry paths;
+- rejects empty values and newline-bearing values;
+- does not accept arbitrary shell strings;
+- does not check file existence or spawn child processes.
+
+The actual launcher/supervisor is still pending.
+
 ## Security Rules
 
 - GUI must never talk directly to site adapters.

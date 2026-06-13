@@ -1532,3 +1532,47 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan parsed 26 JSON files.
 - Next: add a typed adapter child-process command builder or supervised
   stdout/stderr harness, still without connecting to real sites.
+
+## 2026-06-13: Adapter worker command builder
+
+- Conversation: continued adapter worker readiness after adding the JSONL
+  message stream parser.
+- Landed: added a typed command descriptor builder for future adapter
+  child-process launching.
+- Files:
+  - `README.md`
+  - `docs/ADAPTER_PROTOCOL.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_adapter_worker_command_builder.md`
+  - `packages/core/src/adapters/adapterWorkerCommand.ts`
+  - `packages/core/src/adapters/index.ts`
+  - `tdd-tests/packages/core/adapter-worker-command/adapterWorkerCommand.test.ts`
+- Decisions:
+  - `createAdapterWorkerCommand` returns `executablePath`, `argv`,
+    `redactedArgv`, and `shell: false`.
+  - Adapter id, runtime mode, session id, capabilities, and optional fixture
+    name are structured argv fields.
+  - The builder requires absolute executable and worker entry paths, rejects
+    empty values and newline-bearing values, and does not spawn child processes.
+  - The actual process launcher/supervisor remains pending.
+- Verification:
+  - TDD RED: targeted adapter worker command test failed because
+    `createAdapterWorkerCommand` did not exist.
+  - GREEN: targeted test passed after adding the builder and core export.
+  - Safety coverage rejects relative worker entry paths and newline-bearing
+    arguments.
+  - Targeted adapter worker command tests passed 1 file and 2 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 25 files and 105 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed.
+  - `git diff --check` passed.
+  - trailing whitespace scan passed.
+  - JSON/package config parse scan parsed 26 JSON files.
+- Next: add a supervised stdout/stderr harness or process lifecycle test around
+  the worker command descriptor and JSONL parser, still without connecting to
+  real sites.

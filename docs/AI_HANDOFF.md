@@ -93,6 +93,10 @@ Current state:
   adapter-to-core messages, ignores blank lines, and reports invalid JSON or
   invalid protocol with stable code/lineNumber errors without echoing raw
   worker output.
+- `packages/core` has `createAdapterWorkerCommand`, the first typed adapter
+  worker command descriptor builder. It returns `executablePath`, `argv`,
+  `redactedArgv`, and `shell: false`, rejects relative paths, empty values, and
+  newline-bearing arguments, and does not spawn processes.
 - `packages/core` has an adapter catalog that registers adapter manifests,
   lists adapters, looks up by adapter id, rejects duplicate adapter ids, and
   rejects manifests that declare sensitive source field emission.
@@ -224,6 +228,8 @@ Current state:
   wrapping fix and selected-streamer context linkage.
 - `docs/plan/plan_adapter_worker_message_stream.md` records the adapter worker
   JSONL stdout parsing boundary.
+- `docs/plan/plan_adapter_worker_command_builder.md` records the typed adapter
+  worker command descriptor boundary.
 - `docs/ADAPTER_SITE_READINESS.md` records the practical checklist for new
   adapter packages: manifest, synthetic/redacted fixtures, parser/builders,
   protocol fixture runner, readiness gate, catalog registration, and core task
@@ -388,9 +394,8 @@ The project should optimize for AI-assisted long-term maintenance:
    `docs/ADAPTER_SITE_READINESS.md`: add synthetic or approved redacted
    fixtures for playlist parsing, room state, chat/event extraction,
    reconnect/gap handling, and error handling before any live-site request.
-2. Continue the adapter worker boundary with a typed child-process command
-   builder or supervised stdout/stderr harness, still without connecting to
-   real sites.
+2. Continue the adapter worker boundary with a supervised stdout/stderr harness
+   or process lifecycle tests, still without connecting to real sites.
 3. Add media segment hash and duration validation fixtures, still without
    executing media tools.
 4. Add schema drafts and fixtures for processed-output facts, derivation facts,
@@ -666,6 +671,24 @@ Adapter worker JSONL message stream checks:
 - Targeted adapter message stream tests passed 1 file and 3 tests.
 - `pnpm typecheck`: passed.
 - `pnpm test`: passed 24 files and 103 tests, with the known Node
+  `node:sqlite` ExperimentalWarning.
+- `pnpm build`: passed.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan produced no output.
+- JSON/package config parse scan parsed 26 JSON files.
+
+Adapter worker command builder checks:
+
+- TDD RED: targeted worker command test failed because
+  `createAdapterWorkerCommand` did not exist.
+- GREEN: targeted test passed after adding the typed command descriptor builder
+  and exporting it through core adapters.
+- Added safety coverage for relative worker paths and newline-bearing
+  arguments.
+- Targeted adapter worker command tests passed 1 file and 2 tests.
+- `pnpm typecheck`: passed.
+- `pnpm test`: passed 25 files and 105 tests, with the known Node
   `node:sqlite` ExperimentalWarning.
 - `pnpm build`: passed.
 - `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed.

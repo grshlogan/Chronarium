@@ -206,6 +206,13 @@ schema, and throws line-numbered `AdapterWorkerMessageStreamError` values for
 invalid JSON or invalid protocol without echoing raw worker output. It does not
 spawn workers, connect to live sites, or execute media tools.
 
+The same adapter worker boundary pass added `createAdapterWorkerCommand` in
+`packages/core`. It returns a typed future `spawn` descriptor with
+`executablePath`, `argv`, `redactedArgv`, and `shell: false`. It models adapter
+id, runtime mode, session id, capabilities, and optional fixture name as
+structured arguments, rejects relative paths, empty values, and newline-bearing
+values, and does not spawn processes.
+
 The current A01 GUI pass added the first Web-first React/Vite recording
 dashboard shell under `apps/desktop`. It follows the streamer-maintenance
 layout direction: maintained streamers on the left, selected streamer recording
@@ -402,11 +409,14 @@ Current long-run adapter readiness continuation adds:
 - `packages/core/src/guiService.ts`
 - `packages/core/src/offlineFixtureCapturePipeline.ts`
 - `packages/core/src/adapters/adapterMessageStream.ts`
+- `packages/core/src/adapters/adapterWorkerCommand.ts`
 - `packages/core/src/adapters/index.ts`
 - `tdd-tests/packages/adapters/stripchat/stripchatCombinedFixture.test.ts`
 - `tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts`
 - `tdd-tests/packages/core/adapter-message-stream/adapterMessageStream.test.ts`
+- `tdd-tests/packages/core/adapter-worker-command/adapterWorkerCommand.test.ts`
 - `docs/plan/plan_adapter_worker_message_stream.md`
+- `docs/plan/plan_adapter_worker_command_builder.md`
 - `tsconfig.json`
 - `vitest.config.ts`
 
@@ -847,16 +857,38 @@ Checks already run during this continuation:
   parser.
 - JSON/package config parse scan: parsed 26 JSON files after adapter worker
   JSONL message stream parser.
+- TDD RED for adapter worker command builder:
+  `pnpm exec vitest run
+  tdd-tests/packages/core/adapter-worker-command/adapterWorkerCommand.test.ts`
+  failed because `createAdapterWorkerCommand` did not exist.
+- GREEN for adapter worker command builder: added a typed command descriptor
+  builder and exported it through core adapters; targeted test passed.
+- Added safety coverage that rejects relative worker entry paths and
+  newline-bearing arguments.
+- Targeted adapter worker command tests passed 1 file and 2 tests.
+- `pnpm typecheck`: passed after adapter worker command builder.
+- `pnpm test`: passed 25 files and 105 tests after adapter worker command
+  builder, with the known Node `node:sqlite` ExperimentalWarning.
+- `pnpm build`: passed after adapter worker command builder.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed after
+  adapter worker command builder.
+- `git diff --check`: passed after adapter worker command builder.
+- trailing whitespace scan: passed after adapter worker command builder.
+- JSON/package config parse scan: parsed 26 JSON files after adapter worker
+  command builder.
 
 ## Next Safe Step
 
 Use `docs/ADAPTER_SITE_READINESS.md` for the next adapter behavior: add more
 synthetic or approved redacted fixtures for playlist parsing, room state,
 chat/event extraction, reconnect/gap handling, and error handling before any
-live-site request. In parallel, add media segment hash/duration validation
-fixtures plus schema drafts for editable processing plans, processed-output,
-derivation, playable-validation, retention/upload decision, and deletion-record
-facts, still without executing real media tools or deleting files. GUI visual
-polish is intended for a separate allowed GUI thread, while A01 should keep
-working on lower-level archive/core foundations unless the user redirects. Keep
-A02 independent and do not create extra A01 pseudo-conversation files.
+live-site request. The next worker-boundary step is a supervised stdout/stderr
+harness or process lifecycle test around the JSONL parser and command
+descriptor, still without connecting to real sites. In parallel, add media
+segment hash/duration validation fixtures plus schema drafts for editable
+processing plans, processed-output, derivation, playable-validation,
+retention/upload decision, and deletion-record facts, still without executing
+real media tools or deleting files. GUI visual polish is intended for a
+separate allowed GUI thread, while A01 should keep working on lower-level
+archive/core foundations unless the user redirects. Keep A02 independent and do
+not create extra A01 pseudo-conversation files.
