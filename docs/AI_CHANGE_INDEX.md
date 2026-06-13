@@ -1916,3 +1916,57 @@ unimplemented ideas as completed work.
 - Next: the next requested line is credential/Cookie B-line work, but only
   after user instruction. Otherwise continue fixture-first adapter bring-up or
   adapter worker process-supervisor foundations without live-site access.
+
+## 2026-06-14: Fixture credential task gate and session facts
+
+- Conversation: A01 continued the approved credential foundation line in a
+  fixture-only way, without real cookies or live requests.
+- Landed: core offline fixture capture preflight for gated recording intents
+  plus redacted session credential payload schemas.
+- Files:
+  - `packages/core/src/tasks/taskTypes.ts`
+  - `packages/core/src/runtime.ts`
+  - `packages/core/src/guiService.ts`
+  - `packages/core/src/offlineFixtureCapturePipeline.ts`
+  - `packages/types/src/timeline.ts`
+  - `packages/schemas/src/timelinePayloadSchemas.ts`
+  - `tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts`
+  - `tdd-tests/packages/schemas/timeline-payloads/timelinePayloadSchemas.test.ts`
+  - `README.md`
+  - `docs/CREDENTIALS_AND_SESSIONS.md`
+  - `docs/TIMELINE_SCHEMA_V1.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_credential_task_gate_and_session_facts.md`
+- Decisions:
+  - `CoreTaskRequest` may carry optional `recordingIntent` and redacted
+    `streamerRef`; missing intent defaults to `public`.
+  - `ticket`, `private`, and `spy` are gated intents. The offline fixture
+    pipeline rejects them before adapter startup when no usable bound
+    credential profile exists.
+  - The session credential fact schemas carry only intent and redacted
+    `CredentialRef` metadata. Raw cookies, headers, tokens, signed URLs, and
+    account material remain forbidden.
+  - Real credential storage, import, injection, and live adapter request paths
+    remain prohibited until a specific live adapter is explicitly approved.
+- Verification:
+  - TDD RED: gated ticket capture without a usable credential consumed adapter
+    messages; GREEN after the credential gate failed preflight with
+    `credential.missing`.
+  - TDD RED: session credential parse functions and registry entries were
+    missing; GREEN after adding the four session payload schemas.
+  - Targeted adapter-gate test passed 1 file and 4 tests.
+  - Targeted timeline payload schema test passed 1 file and 33 tests.
+  - `pnpm test` passed 30 files and 166 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm typecheck` passed.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed with
+    1000 scanned events, 8 batches, and 0 issues.
+  - `git diff --check` passed.
+  - trailing whitespace scan found no matches.
+  - JSON/package parse scan parsed 29 JSON files.
+- Next: continue fixture-first adapter work or worker process-supervisor
+  foundations; do not implement real cookies without explicit approval.

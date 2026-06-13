@@ -978,18 +978,56 @@ Checks already run during this continuation:
 - Final `git diff --check`: passed.
 - Final trailing whitespace scan: found no matches.
 - Final JSON/package config parse scan: parsed 29 JSON files.
+- Added `docs/plan/plan_credential_task_gate_and_session_facts.md` for the
+  fixture-only credential line continuation. This scope explicitly excludes
+  real cookies, headers, tokens, signed URLs, encrypted storage, import,
+  injection, live requests, and browser cookie extraction.
+- TDD RED for core credential gate:
+  `pnpm exec vitest run tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts`
+  failed because a gated `ticket` capture with no usable credential still
+  consumed adapter messages.
+- GREEN for core credential gate: `CoreTaskRequest` can now carry
+  `recordingIntent` and redacted `streamerRef`; `CoreRuntime` can hold a
+  fixture-only `CredentialStore`; `CoreGuiService` passes it into the offline
+  fixture capture pipeline; and gated `ticket` / `private` / `spy` captures
+  fail preflight with `credential.missing` before adapter startup when no
+  usable bound profile exists.
+- TDD RED for session credential payload schemas:
+  `pnpm exec vitest run tdd-tests/packages/schemas/timeline-payloads/timelinePayloadSchemas.test.ts`
+  failed because the session credential parse functions and registry entries
+  did not exist.
+- GREEN for session credential payload schemas: added redacted payload types,
+  schemas, parse functions, and registry entries for `session.intent_selected`,
+  `session.credential_selected`, `session.credential_failover`, and
+  `session.credential_missing`.
+- Targeted credential gate test passed 1 file and 4 tests.
+- Targeted timeline payload schema test passed 1 file and 33 tests.
+- Early `pnpm typecheck`: passed after the credential gate and session schema
+  implementation.
+- Final `pnpm test`: passed 30 files and 166 tests after the credential task
+  gate and session fact schema implementation.
+- Final `pnpm typecheck`: passed.
+- Final `pnpm build`: passed.
+- Final `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed
+  with 1000 scanned events, 8 batches, and 0 issues.
+- Final `git diff --check`: passed.
+- Final trailing whitespace scan: found no matches.
+- Final JSON/package config parse scan: parsed 29 JSON files.
 
 ## Next Safe Step
 
 Use `docs/ADAPTER_SITE_READINESS.md` for the next adapter behavior: add more
 synthetic or approved redacted fixtures for playlist parsing, room state,
 chat/event extraction, reconnect/gap handling, and error handling before any
-live-site request. The next worker-boundary step can be a real process
-launcher/supervisor shell fed by fixture workers first, still without connecting
-to real sites. In parallel, add media segment hash/duration validation fixtures
-plus schema drafts for editable processing plans, processed-output,
-derivation, playable-validation, retention/upload decision, and deletion-record
-facts, still without executing real media tools or deleting files. GUI visual
-polish is intended for a separate allowed GUI thread, while A01 should keep
-working on lower-level archive/core foundations unless the user redirects. Keep
-A02 independent and do not create extra A01 pseudo-conversation files.
+live-site request. Do not continue into real credential/Cookie work without
+explicit approval for a specific live adapter: encrypted storage, import,
+injection, real cookies, and live request paths remain prohibited. The next
+worker-boundary step can be a real process launcher/supervisor shell fed by
+fixture workers first, still without connecting to real sites. In parallel, add
+media segment hash/duration validation fixtures plus schema drafts for editable
+processing plans, processed-output, derivation, playable-validation,
+retention/upload decision, and deletion-record facts, still without executing
+real media tools or deleting files. GUI visual polish is intended for a separate
+allowed GUI thread, while A01 should keep working on lower-level archive/core
+foundations unless the user redirects. Keep A02 independent and do not create
+extra A01 pseudo-conversation files.

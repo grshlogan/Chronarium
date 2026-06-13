@@ -5,9 +5,12 @@ envelope and for these initial payload families:
 `media.track.topology_observed`, `media.track.discovered`,
 `media.segment.observed`, `media.gap.detected`, `diagnostic.note`,
 `diagnostic.duration_mismatch`, `diagnostic.media_tool_output`,
-`room.state.changed`, `chat.message.observed`, `network.disconnected`, and
-`network.reconnected`. Archive validation reports `payload.schema_invalid` for
-registered payload families from both snapshot and streaming validation paths.
+`room.state.changed`, `chat.message.observed`, `network.disconnected`,
+`network.reconnected`, `session.intent_selected`,
+`session.credential_selected`, `session.credential_failover`, and
+`session.credential_missing`. Archive validation reports
+`payload.schema_invalid` for registered payload families from both snapshot and
+streaming validation paths.
 
 ## Principle
 
@@ -285,6 +288,63 @@ Current Stripchat offline fixture payload fields:
 - `redactionStatus`: currently `synthetic` for committed fixtures;
 - optional `role`;
 - `syntheticOnly`: `true`.
+
+### `session.intent_selected`
+
+Records the capture intent selected for a session or task. It must never carry
+raw credential material.
+
+Required payload fields:
+
+- `intent`: one of `public`, `ticket`, `private`, `spy`.
+
+Optional payload fields:
+
+- `selectionPolicy`;
+- `syntheticOnly`.
+
+### `session.credential_selected`
+
+Records which redacted credential reference was selected for a gated capture.
+
+Required payload fields:
+
+- `credentialRef`: redacted object with `profileId`;
+- `intent`.
+
+Optional payload fields:
+
+- `entitlementMatched`: redacted entitlement metadata (`intent`, `scope`);
+- `syntheticOnly`.
+
+### `session.credential_failover`
+
+Records a switch from one redacted credential reference to another.
+
+Required payload fields:
+
+- `fromRef`;
+- `toRef`;
+- `intent`;
+- `reason`.
+
+### `session.credential_missing`
+
+Records that no usable credential was available for a gated capture. This fact
+supports "skip gated capture but continue monitoring" behavior.
+
+Required payload fields:
+
+- `intent`;
+- `reason`.
+
+Forbidden payload fields for all session credential facts:
+
+- raw cookies;
+- request headers;
+- bearer tokens;
+- signed URLs;
+- account passwords or full account identifiers.
 
 ### `diagnostic.note`
 

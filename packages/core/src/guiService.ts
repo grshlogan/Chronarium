@@ -98,10 +98,12 @@ class DefaultCoreGuiService implements CoreGuiService {
     input: OfflineFixtureCaptureInput
   ): Promise<OfflineFixtureCaptureResult> {
     const adapterCatalog = this.runtime.getAdapterCatalog();
+    const credentialStore = this.runtime.getCredentialStore();
 
     return runOfflineFixtureCapture(input, {
       archiveIndexService: this.runtime.getArchiveIndexService(),
-      ...(adapterCatalog ? { adapterCatalog } : {})
+      ...(adapterCatalog ? { adapterCatalog } : {}),
+      ...(credentialStore ? { credentialStore } : {})
     });
   }
 

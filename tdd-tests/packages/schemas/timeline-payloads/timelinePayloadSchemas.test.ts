@@ -10,6 +10,10 @@ import {
   parseNetworkDisconnectedPayloadV1,
   parseNetworkReconnectedPayloadV1,
   parseRoomStateChangedPayloadV1,
+  parseSessionCredentialFailoverPayloadV1,
+  parseSessionCredentialMissingPayloadV1,
+  parseSessionCredentialSelectedPayloadV1,
+  parseSessionIntentSelectedPayloadV1,
   validateTimelineEventPayloadV1
 } from "@chronarium/schemas";
 import { describe, expect, it } from "vitest";
@@ -323,5 +327,82 @@ describe("network reconnect payload schemas", () => {
     });
 
     expect(issue?.message).toMatch(/disconnectedEventId/);
+  });
+});
+
+describe("session credential payload schemas", () => {
+  it("accepts session.intent_selected payloads with a recording intent", () => {
+    expect(() =>
+      parseSessionIntentSelectedPayloadV1({
+        intent: "ticket",
+        selectionPolicy: "capability-match-failover",
+        syntheticOnly: true
+      })
+    ).not.toThrow();
+  });
+
+  it("rejects session.intent_selected payloads with an unknown intent", () => {
+    expect(() =>
+      parseSessionIntentSelectedPayloadV1({
+        intent: "premium"
+      })
+    ).toThrow();
+  });
+
+  it("accepts session.credential_selected payloads with a redacted credential ref", () => {
+    expect(() =>
+      parseSessionCredentialSelectedPayloadV1({
+        credentialRef: { profileId: "profile-ticket-001" },
+        intent: "ticket",
+        entitlementMatched: {
+          intent: "ticket",
+          scope: "site"
+        },
+        syntheticOnly: true
+      })
+    ).not.toThrow();
+  });
+
+  it("accepts session.credential_failover payloads without raw credential material", () => {
+    expect(() =>
+      parseSessionCredentialFailoverPayloadV1({
+        fromRef: { profileId: "profile-ticket-001" },
+        toRef: { profileId: "profile-ticket-002" },
+        intent: "ticket",
+        reason: "profile health changed to expired",
+        syntheticOnly: true
+      })
+    ).not.toThrow();
+  });
+
+  it("accepts session.credential_missing payloads for gated captures", () => {
+    expect(() =>
+      parseSessionCredentialMissingPayloadV1({
+        intent: "private",
+        reason: "No usable credential profile is bound.",
+        syntheticOnly: true
+      })
+    ).not.toThrow();
+  });
+
+  it("dispatches session credential payload validation by canonical event type", () => {
+    expect(
+      validateTimelineEventPayloadV1({
+        type: "session.credential_selected",
+        payload: {
+          credentialRef: { profileId: "profile-ticket-001" },
+          intent: "ticket"
+        }
+      })
+    ).toBeUndefined();
+
+    const issue = validateTimelineEventPayloadV1({
+      type: "session.credential_selected",
+      payload: {
+        intent: "ticket"
+      }
+    });
+
+    expect(issue?.message).toMatch(/credentialRef/);
   });
 });

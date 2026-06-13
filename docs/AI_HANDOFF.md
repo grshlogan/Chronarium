@@ -244,9 +244,19 @@ Current state:
   `storageHandle` and rejects raw-secret-looking strings; the selector implements
   capability-match-failover, returns only a redacted `CredentialRef`, treats
   `public` as `not-required`, and returns `missing` (caller degrades) when no
-  usable bound profile is entitled. No encryption, import, injection, real
-  cookies, or live path exists; the core task gate and reserved
-  `session.credential_*` timeline schemas are the next slices.
+  usable bound profile is entitled.
+- `packages/core` now gates offline fixture captures with gated intents
+  (`ticket`, `private`, `spy`) before adapter startup. `CoreTaskRequest` can
+  carry `recordingIntent` and a redacted `streamerRef`; when a credential store
+  is configured, the pipeline calls `selectCredentialForCapture`, rejects
+  missing or unusable bindings with `credential.missing`, and does not consume
+  adapter messages or write an archive.
+- `@chronarium/schemas` now registers redacted payload schemas for
+  `session.intent_selected`, `session.credential_selected`,
+  `session.credential_failover`, and `session.credential_missing`. These facts
+  carry only intent and `CredentialRef` metadata, never cookies, headers,
+  tokens, or signed URLs.
+- No encryption, import, injection, real cookies, or live credential path exists.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
 - `packages/testkit` has `verifyAdapterFixtureReadiness`, a reusable offline
@@ -449,11 +459,10 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Wait for explicit user direction before continuing the credential/Cookie
-   line. The approved next B-line slices are core task gating for gated intents
-   and reserved `session.credential_*` timeline fact schemas; encrypted storage,
-   import/injection, real cookies, and live request paths remain prohibited
-   until a specific live adapter is approved.
+1. Do not continue into real credential/Cookie work without explicit approval
+   for a specific live adapter. The fixture-only credential gate and redacted
+   session credential fact schemas now exist; encrypted storage,
+   import/injection, real cookies, and live request paths remain prohibited.
 2. For the next site adapter behavior, follow
    `docs/REAL_SITE_ADAPTER_BRINGUP.md`: begin fixture-first bring-up with
    synthetic or approved redacted fixtures for playlist parsing, room state,
@@ -861,6 +870,27 @@ Timeline payload schemas Round 3-5 checks:
   `docs/plan/plan_timeline_payload_schemas_round3_4_5.md`.
 - Targeted Round 3/4/5 tests passed 4 files and 38 tests.
 - `pnpm test` passed 30 files and 158 tests, with the known Node
+  `node:sqlite` ExperimentalWarning.
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed with 1000
+  scanned events, 8 batches, and 0 issues.
+- `git diff --check` passed.
+- trailing whitespace scan found no matches.
+- JSON/package parse scan parsed 29 JSON files.
+
+Fixture credential task gate and session facts checks:
+
+- TDD RED: gated ticket capture without a usable credential consumed adapter
+  messages; GREEN after the offline fixture capture preflight failed with
+  `credential.missing` before adapter startup.
+- TDD RED: session credential parse functions and registry entries were
+  missing; GREEN after adding schemas for `session.intent_selected`,
+  `session.credential_selected`, `session.credential_failover`, and
+  `session.credential_missing`.
+- Targeted adapter-gate test passed 1 file and 4 tests.
+- Targeted timeline payload schema test passed 1 file and 33 tests.
+- `pnpm test` passed 30 files and 166 tests, with the known Node
   `node:sqlite` ExperimentalWarning.
 - `pnpm typecheck` passed.
 - `pnpm build` passed.

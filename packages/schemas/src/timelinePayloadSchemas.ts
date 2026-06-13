@@ -9,7 +9,11 @@ import type {
   MediaTrackTopologyObservedPayload,
   NetworkDisconnectedPayload,
   NetworkReconnectedPayload,
-  RoomStateChangedPayload
+  RoomStateChangedPayload,
+  SessionCredentialFailoverPayload,
+  SessionCredentialMissingPayload,
+  SessionCredentialSelectedPayload,
+  SessionIntentSelectedPayload
 } from "@chronarium/types";
 import { z } from "zod";
 import { mediaTrackKindSchema } from "./mediaSchemas.js";
@@ -122,6 +126,44 @@ export const networkReconnectedPayloadV1Schema = z.object({
   syntheticOnly: z.boolean().optional()
 });
 
+const recordingIntentV1Schema = z.enum(["public", "ticket", "private", "spy"]);
+
+const credentialRefV1Schema = z.object({
+  profileId: z.string().min(1)
+});
+
+const credentialEntitlementV1Schema = z.object({
+  intent: recordingIntentV1Schema,
+  scope: z.string().min(1)
+});
+
+export const sessionIntentSelectedPayloadV1Schema = z.object({
+  intent: recordingIntentV1Schema,
+  selectionPolicy: z.string().min(1).optional(),
+  syntheticOnly: z.boolean().optional()
+});
+
+export const sessionCredentialSelectedPayloadV1Schema = z.object({
+  credentialRef: credentialRefV1Schema,
+  intent: recordingIntentV1Schema,
+  entitlementMatched: credentialEntitlementV1Schema.optional(),
+  syntheticOnly: z.boolean().optional()
+});
+
+export const sessionCredentialFailoverPayloadV1Schema = z.object({
+  fromRef: credentialRefV1Schema,
+  toRef: credentialRefV1Schema,
+  intent: recordingIntentV1Schema,
+  reason: z.string().min(1),
+  syntheticOnly: z.boolean().optional()
+});
+
+export const sessionCredentialMissingPayloadV1Schema = z.object({
+  intent: recordingIntentV1Schema,
+  reason: z.string().min(1),
+  syntheticOnly: z.boolean().optional()
+});
+
 export function parseMediaTrackTopologyObservedPayloadV1(
   value: unknown
 ): MediaTrackTopologyObservedPayload {
@@ -204,6 +246,38 @@ export function parseNetworkReconnectedPayloadV1(
   ) as NetworkReconnectedPayload;
 }
 
+export function parseSessionIntentSelectedPayloadV1(
+  value: unknown
+): SessionIntentSelectedPayload {
+  return sessionIntentSelectedPayloadV1Schema.parse(
+    value
+  ) as SessionIntentSelectedPayload;
+}
+
+export function parseSessionCredentialSelectedPayloadV1(
+  value: unknown
+): SessionCredentialSelectedPayload {
+  return sessionCredentialSelectedPayloadV1Schema.parse(
+    value
+  ) as SessionCredentialSelectedPayload;
+}
+
+export function parseSessionCredentialFailoverPayloadV1(
+  value: unknown
+): SessionCredentialFailoverPayload {
+  return sessionCredentialFailoverPayloadV1Schema.parse(
+    value
+  ) as SessionCredentialFailoverPayload;
+}
+
+export function parseSessionCredentialMissingPayloadV1(
+  value: unknown
+): SessionCredentialMissingPayload {
+  return sessionCredentialMissingPayloadV1Schema.parse(
+    value
+  ) as SessionCredentialMissingPayload;
+}
+
 /**
  * Canonical registry of timeline event type -> payload schema. Keys are the
  * exact event type strings; this is the single place that pins the canonical
@@ -220,7 +294,11 @@ export const TIMELINE_PAYLOAD_SCHEMAS_V1 = {
   "room.state.changed": roomStateChangedPayloadV1Schema,
   "chat.message.observed": chatMessageObservedPayloadV1Schema,
   "network.disconnected": networkDisconnectedPayloadV1Schema,
-  "network.reconnected": networkReconnectedPayloadV1Schema
+  "network.reconnected": networkReconnectedPayloadV1Schema,
+  "session.intent_selected": sessionIntentSelectedPayloadV1Schema,
+  "session.credential_selected": sessionCredentialSelectedPayloadV1Schema,
+  "session.credential_failover": sessionCredentialFailoverPayloadV1Schema,
+  "session.credential_missing": sessionCredentialMissingPayloadV1Schema
 } as const;
 
 export type SchemaBackedTimelineEventType =

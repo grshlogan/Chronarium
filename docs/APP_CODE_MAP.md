@@ -725,6 +725,15 @@ Responsibility:
   `CredentialRef` values only, with no cookies, encryption, import, injection,
   or live request path.
 
+### `docs/plan/plan_credential_task_gate_and_session_facts.md`
+
+Responsibility:
+
+- Plan, scope, TDD notes, and verification record for the fixture-only
+  credential task gate and redacted session credential timeline payload schemas.
+- Records that gated `ticket` / `private` / `spy` capture intents are refused
+  before adapter startup when no usable bound fixture credential exists.
+
 ### `docs/plan/plan_real_site_adapter_bringup_checklist.md`
 
 Responsibility:
@@ -1252,8 +1261,12 @@ Current status:
 - The fixture-only credential store (`createCredentialStore`) and per-streamer
   selector (`selectCredentialForCapture`) resolve which redacted credential
   profile a gated capture would use (capability-match-failover), reject
-  raw-secret-looking profile material, and never hold or return cookies. No
-  encryption, import, injection, real cookies, or live path exists.
+  raw-secret-looking profile material, and never hold or return cookies.
+- `CoreTaskRequest` can carry an optional `recordingIntent` and redacted
+  `streamerRef`. The offline fixture capture pipeline uses the fixture-only
+  credential store to reject `ticket` / `private` / `spy` captures without a
+  usable bound profile before adapter messages are consumed.
+- No encryption, import, injection, real cookies, or live path exists.
 - Does not run live capture jobs, start adapter child processes, export media,
   run ops loops, execute media tools, or capture real media segments yet.
 

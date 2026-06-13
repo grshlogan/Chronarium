@@ -7,6 +7,11 @@ import type {
   SiteId
 } from "./primitives.js";
 import type { MediaTrackKind } from "./media.js";
+import type {
+  CredentialEntitlement,
+  CredentialRef,
+  RecordingIntent
+} from "./credentials.js";
 
 export type TimelineEventFamily =
   | "session"
@@ -151,5 +156,32 @@ export interface NetworkReconnectedPayload {
   readonly disconnectedEventId: string;
   readonly outageDurationMs?: number;
   readonly affectedTrackIds?: readonly string[];
+  readonly syntheticOnly?: boolean;
+}
+
+export interface SessionIntentSelectedPayload {
+  readonly intent: RecordingIntent;
+  readonly selectionPolicy?: string;
+  readonly syntheticOnly?: boolean;
+}
+
+export interface SessionCredentialSelectedPayload {
+  readonly credentialRef: CredentialRef;
+  readonly intent: RecordingIntent;
+  readonly entitlementMatched?: CredentialEntitlement;
+  readonly syntheticOnly?: boolean;
+}
+
+export interface SessionCredentialFailoverPayload {
+  readonly fromRef: CredentialRef;
+  readonly toRef: CredentialRef;
+  readonly intent: RecordingIntent;
+  readonly reason: string;
+  readonly syntheticOnly?: boolean;
+}
+
+export interface SessionCredentialMissingPayload {
+  readonly intent: RecordingIntent;
+  readonly reason: string;
   readonly syntheticOnly?: boolean;
 }

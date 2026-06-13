@@ -6,11 +6,16 @@ import type {
   AdapterErrorMessage,
   AdapterToCoreMessage,
   ArchiveManifest,
-  MediaTrack
+  MediaTrack,
+  RecordingIntent
 } from "@chronarium/types";
 import type { ArchiveIndexSummary } from "@chronarium/indexer";
 import type { AdapterCatalog } from "./adapters/index.js";
 import type { CoreArchiveIndexService } from "./archiveIndexService.js";
+import {
+  selectCredentialForCapture,
+  type CredentialStore
+} from "./credentials/index.js";
 import {
   createFixtureAdapterLifecycleHost,
   type AdapterLifecycleSnapshot,
@@ -47,6 +52,7 @@ export interface OfflineFixtureCapturePipelineOptions {
   readonly lifecycleHost?: FixtureAdapterLifecycleHost;
   readonly archiveWriterFactory?: ArchiveWriterFactory;
   readonly adapterCatalog?: AdapterCatalog;
+  readonly credentialStore?: CredentialStore;
 }
 
 export async function runOfflineFixtureCapture(
@@ -66,7 +72,7 @@ export async function runOfflineFixtureCapture(
   const gateFailure = getAdapterTaskGateFailure(
     input.task,
     options.adapterCatalog
-  );
+  ) ?? getCredentialTaskGateFailure(input, options.credentialStore);
   if (gateFailure) {
     const failedTask = taskScheduler.failTask(runningTask.taskId, gateFailure);
 
@@ -192,4 +198,54 @@ function getAdapterTaskGateFailure(
   }
 
   return undefined;
+}
+
+function getCredentialTaskGateFailure(
+  input: OfflineFixtureCaptureInput,
+  credentialStore: CredentialStore | undefined
+): CoreTaskSnapshot["failure"] | undefined {
+  const intent = input.task.recordingIntent ?? "public";
+  if (!isGatedIntent(intent)) {
+    return undefined;
+  }
+
+  const streamerRef = input.task.streamerRef;
+  if (!streamerRef) {
+    return {
+      code: "credential.streamer_ref_missing",
+      message: `Gated ${intent} capture requires a redacted streamerRef before adapter startup.`,
+      retryable: false
+    };
+  }
+
+  if (!credentialStore) {
+    return {
+      code: "credential.missing",
+      message: `No credential store is configured for gated ${intent} capture on ${streamerRef}.`,
+      retryable: false
+    };
+  }
+
+  const selection = selectCredentialForCapture({
+    store: credentialStore,
+    streamerRef,
+    siteId: input.manifest.session.site.siteId,
+    intent
+  });
+
+  if (selection.status === "selected") {
+    return undefined;
+  }
+
+  return {
+    code: "credential.missing",
+    message:
+      selection.reason ??
+      `No usable credential profile is bound for gated ${intent} capture on ${streamerRef}.`,
+    retryable: false
+  };
+}
+
+function isGatedIntent(intent: RecordingIntent): boolean {
+  return intent !== "public";
 }

@@ -17,6 +17,7 @@ import {
   createCoreArchiveIndexService,
   type CoreArchiveIndexService
 } from "./archiveIndexService.js";
+import type { CredentialStore } from "./credentials/index.js";
 
 export type CoreRuntimeStatus = "not-started" | "running" | "stopped" | "error";
 
@@ -25,6 +26,7 @@ export interface CoreRuntimeOptions {
   readonly archiveRoot: string;
   readonly adapters: readonly AdapterId[];
   readonly adapterManifests?: readonly AdapterManifest[];
+  readonly credentialStore?: CredentialStore;
   readonly indexDatabasePath?: string;
 }
 
@@ -40,6 +42,7 @@ export interface CoreRuntime {
   getHealth(): Promise<CoreHealthSnapshot>;
   getArchiveIndexService(): CoreArchiveIndexService;
   getAdapterCatalog(): AdapterCatalog | undefined;
+  getCredentialStore(): CredentialStore | undefined;
 }
 
 export function createCoreRuntime(options: CoreRuntimeOptions): CoreRuntime {
@@ -135,6 +138,10 @@ class DefaultCoreRuntime implements CoreRuntime {
 
   getAdapterCatalog(): AdapterCatalog | undefined {
     return this.adapterCatalog;
+  }
+
+  getCredentialStore(): CredentialStore | undefined {
+    return this.options.credentialStore;
   }
 
   private getIndexDatabasePath(): string {

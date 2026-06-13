@@ -168,8 +168,10 @@ AI 可以快速接手局部问题
   （`selectCredentialForCapture`），凭据模型类型在 `packages/types`。档案只存脱敏
   元数据 + 不透明 `storageHandle`,store 会拒绝带原始密文痕迹的档案;选择器实现
   能力匹配→容灾,只返回脱敏 `CredentialRef`,`public` 返回 `not-required`,无可用
-  绑定档案时返回 `missing`(调用方降级,绝不阻塞监控)。尚无加密/导入/注入/真实
-  Cookie/直连;core 任务门槛与 `session.credential_*` 事实 schema 是后续切片。
+  绑定档案时返回 `missing`(调用方降级,绝不阻塞监控)。core 离线 fixture capture
+  预检现在会在 adapter 启动前拒绝缺少可用凭据的 `ticket` / `private` / `spy`
+  capture，并已为 `session.intent_selected` 与 `session.credential_*` 事实补上脱敏
+  payload schema。尚无加密/导入/注入/真实 Cookie/直连。
 - 尚未实现 Electron 桌面壳、preload/IPC、真实 task 执行、真实 adapter
   child process、真实站点 adapter、外部媒体工具执行、真实媒体分片写入、
   archive repair/migration 或 replay player。
@@ -246,6 +248,7 @@ small module boundaries.
 - [docs/plan/plan_timeline_payload_schemas_round2.md](./docs/plan/plan_timeline_payload_schemas_round2.md)：媒体事实族 timeline payload schema 与 gap 形状统一的计划。
 - [docs/plan/plan_timeline_payload_schemas_round3_4_5.md](./docs/plan/plan_timeline_payload_schemas_round3_4_5.md)：diagnostic、room/chat、network/reconnect payload schema 与 fixture 地基收尾计划。
 - [docs/plan/plan_credential_store_selector_fixture.md](./docs/plan/plan_credential_store_selector_fixture.md)：fixture-only 凭据库与按主播选择器（能力匹配→容灾）的计划。
+- [docs/plan/plan_credential_task_gate_and_session_facts.md](./docs/plan/plan_credential_task_gate_and_session_facts.md)：凭据任务门槛与脱敏 session credential 事实 schema 的计划。
 
 ## 设计边界
 

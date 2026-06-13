@@ -3,7 +3,8 @@ import type {
   AdapterId,
   AdapterRuntimeMode,
   ChronariumId,
-  IsoDateTimeString
+  IsoDateTimeString,
+  RecordingIntent
 } from "@chronarium/types";
 
 export type CoreTaskKind = "capture";
@@ -23,6 +24,8 @@ export interface CoreTaskRequest {
   readonly adapterId: AdapterId;
   readonly mode: AdapterRuntimeMode;
   readonly capabilitiesRequested: readonly AdapterCapability[];
+  readonly recordingIntent?: RecordingIntent;
+  readonly streamerRef?: string;
 }
 
 export interface CoreTaskSnapshot extends CoreTaskRequest {

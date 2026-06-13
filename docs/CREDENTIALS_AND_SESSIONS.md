@@ -1,11 +1,11 @@
 # Credentials And Sessions
 
-Status: design draft. Nothing here is implemented. No real cookies, headers,
-tokens, accounts, or live requests exist yet. This document defines the model
-and the safety boundaries for authenticated recording (ticket / private / spy
-shows) so that a future fixture-first credential layer can be built without
-leaking secrets. It elaborates the "Secrets And Credentials" rule in
-`docs/SECURITY_PRIVACY.md` and the live-promotion gate in
+Status: fixture-only foundation partly implemented. No real cookies, headers,
+tokens, accounts, imports, injection, encrypted storage, or live requests exist
+yet. This document defines the model and the safety boundaries for
+authenticated recording (ticket / private / spy shows) so the credential layer
+can grow without leaking secrets. It elaborates the "Secrets And Credentials"
+rule in `docs/SECURITY_PRIVACY.md` and the live-promotion gate in
 `docs/REAL_SITE_ADAPTER_BRINGUP.md`.
 
 ## Why Credentials Are Needed
@@ -37,7 +37,7 @@ unit Chronarium stores is therefore a whole jar per account, not one cookie.
 - This is a new security boundary. No live cookie use happens until a specific
   live adapter is separately approved.
 
-## Core Concepts (design types, not yet implemented)
+## Core Concepts
 
 ```text
 RecordingIntent = "public" | "ticket" | "private" | "spy"
@@ -72,6 +72,16 @@ ResolvedCredential   // runtime-only, in-memory, never serialized
 The model object holds metadata plus an opaque `storageHandle`. The actual
 cookie material lives only in the encrypted store and only enters memory when a
 task resolves it.
+
+Implemented today:
+
+- `packages/types/src/credentials.ts` defines the fixture-safe metadata types.
+- `packages/core/src/credentials` provides an in-memory fixture-only
+  `createCredentialStore` and `selectCredentialForCapture`.
+- The store holds redacted profile metadata plus an opaque `storageHandle`; it
+  rejects raw-secret-looking strings.
+- The selector returns only `not-required`, `missing`, or a redacted
+  `CredentialRef`.
 
 ## Per-Streamer Selection (capability-match → failover)
 
@@ -116,19 +126,22 @@ that opt into them.
 - The adapter uses the jar for requests but emits only a `CredentialRef` in
   facts and diagnostics. `verifyAdapterFixtureReadiness` continues to reject
   cookie / authorization / token / signed-url traces.
-- When a runtime requires credentials, the core task gate must refuse a live
-  task for a streamer that has no usable bound profile for the requested intent.
+- The core offline fixture capture preflight refuses a gated capture
+  (`ticket`, `private`, `spy`) before adapter startup when no usable bound
+  profile exists for the requested streamer and intent. This is implemented
+  for the fixture path; live task gating must reuse the same rule before any
+  future live adapter can start.
 
-## Timeline Facts (reserved, redacted only)
+## Timeline Facts (redacted only)
 
 Authenticated capture should leave queryable, replay-useful facts — carrying the
-redacted ref and intent only, never the cookie. Proposed reserved shapes (need
-payload schemas in a later round):
+redacted ref and intent only, never the cookie. The v1 payload schemas are now
+registered for these fact types:
 
 ```text
-session.intent_selected      { intent }
+session.intent_selected      { intent, selectionPolicy? }
 session.credential_selected  { credentialRef, intent, entitlementMatched }
-session.credential_failover  { fromRef, toRef, reason }
+session.credential_failover  { fromRef, toRef, intent, reason }
 session.credential_missing   { intent, reason }
 ```
 
@@ -143,20 +156,23 @@ action that delivers raw material straight to core.
 
 ## What Is Not Implemented
 
-- No credential store, no encryption, no import flow.
-- No resolution, injection, or failover logic.
+- No encryption or persistent credential storage.
+- No import flow.
+- No raw credential resolution or worker injection.
 - No live requests, no real cookie handling, no live adapter.
-- No credential timeline payload schemas yet.
+- No GUI binding editor or import UI.
 
 ## First Safe Work Package
+
+Completed:
 
 1. A fixture-only credential store + selector contract that holds synthetic /
    placeholder profiles (no real cookies) and proves: per-streamer binding,
    capability-match → failover, and the missing-credential degrade path.
-2. Manifest gating (`requiresCredentials`) plus a core task gate that refuses a
-   gated task without a usable bound profile.
-3. Redacted `CredentialRef` plumbing and the reserved timeline fact shapes as
-   schemas.
+2. A core offline fixture capture task gate that refuses a gated task without a
+   usable bound profile before adapter startup.
+3. Redacted `CredentialRef` plumbing in types and the session credential fact
+   payload schemas.
 
 Only after that, and only with explicit per-adapter approval, may real cookie
 injection and a live request path be designed.
