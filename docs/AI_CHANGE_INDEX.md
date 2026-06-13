@@ -2012,3 +2012,68 @@ unimplemented ideas as completed work.
 - Next: deferred until a specific live adapter is approved — real encrypted
   backend, real cookie import, real spawn + stdin injection, live requests, GUI
   binding UI, and emitting `session.credential_*` facts during capture.
+
+## 2026-06-14: Report-only archive recovery plan
+
+- Conversation: A02, parallel lane (see `docs/AGENT_WORK_SPLIT.md`). With the
+  credential live-prep blocked on live approval, added a core, fixture-safe slice
+  in the archive lane.
+- Landed: `buildArchiveRecoveryPlan` — a pure, report-only plan that groups the
+  recovery inspector's findings into ordered, safety-tagged proposed actions and
+  executes nothing.
+- Files:
+  - `packages/archive/src/recoveryPlan.ts` (new), `packages/archive/src/index.ts`
+  - `tdd-tests/packages/archive/recovery-plan/recoveryPlan.test.ts` (new)
+  - `docs/plan/plan_archive_recovery_plan.md` (new), `docs/APP_CODE_MAP.md`,
+    `docs/AI_HANDOFF.md`, `docs/AI_CHANGE_INDEX.md`,
+    `docs/conversation-A02-foundation-docs-completion.md`
+- Decisions:
+  - The plan is report-only: each step carries a safety level (`report-only` /
+    `safe-rebuild` / `destructive-confirm`) and `executable: false`. A future,
+    separately approved executor would consume it; nothing is deleted, rewritten,
+    quarantined, or rebuilt here.
+- Verification:
+  - TDD RED→GREEN (3 tests). `pnpm typecheck`, `pnpm build` passed; `pnpm test`
+    177 tests (was 174), with the known Node `node:sqlite` ExperimentalWarning;
+    `git diff --check` clean.
+- Next: a safe-rebuild executor design (gated) or the replay / IPC contract.
+
+## 2026-06-14: Media tool output parser fixtures
+
+- Conversation: A01 / Codex parallel media-tools lane from
+  `docs/AGENT_WORK_SPLIT.md`.
+- Landed: fixture-tested parsers for synthetic ffprobe JSON output and FFmpeg
+  progress output. No real media tools are executed.
+- Files:
+  - `packages/media-tools/src/outputParsers.ts`
+  - `packages/media-tools/src/index.ts`
+  - `packages/media-tools/fixtures/ffprobe.synthetic.json`
+  - `packages/media-tools/fixtures/ffmpeg-progress.synthetic.txt`
+  - `tdd-tests/packages/media-tools/output-parsing/mediaToolOutputParsers.test.ts`
+  - `docs/plan/plan_media_tool_output_parsers.md`
+  - `docs/MEDIA_TOOLS_BOUNDARY.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+- Decisions:
+  - Parsers live inside `packages/media-tools`; no shared core/types/schemas
+    contracts changed.
+  - Parser errors use stable codes and fixed messages, never raw output echoes.
+  - Fixtures are synthetic and contain no real media paths, signed URLs,
+    credentials, cookies, headers, or tokens.
+- Verification:
+  - TDD RED: parser tests failed because `parseFfprobeJsonOutput` and
+    `parseFfmpegProgressOutput` were not exported.
+  - GREEN: targeted parser and media command tests passed 2 files and 8 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 33 files and 181 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed with
+    1000 scanned events, 8 batches, and 0 issues.
+  - `git diff --check` passed.
+  - trailing whitespace scan found no matches.
+  - JSON/package parse scan parsed 30 JSON files.
+- Next: candidate media-tools lane work: package-local parsed-output mapping to
+  future diagnostic facts, still without executing tools.

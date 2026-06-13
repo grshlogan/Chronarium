@@ -569,3 +569,51 @@ Deferred until the user approves a specific live adapter: real encrypted at-rest
 backend, real cookie import, real child-process spawn + stdin injection, live
 requests, GUI binding UI, and emitting `session.credential_*` facts during
 capture.
+
+---
+
+## Phase 8: Archive Recovery Plan (report-only) — parallel lane
+
+### Topic And Scope
+
+Same A02 conversation, now running in parallel with Codex (see
+`docs/AGENT_WORK_SPLIT.md`). My lane is `packages/{core,types,schemas,archive}`;
+Codex's is media-tools / desktop / adapters. With the credential live-prep
+blocked on live approval, I took a core, fixture-safe, unblocked slice in my
+lane: a report-only **recovery plan**.
+
+### Status
+
+Completed and verified.
+
+### What Landed
+
+- `packages/archive/src/recoveryPlan.ts`: `buildArchiveRecoveryPlan(report)` — a
+  pure function that groups `ArchiveRecoveryReport` findings into ordered,
+  safety-tagged proposed steps. Executes nothing (`executable: false`).
+- Types `RecoveryPlanSafetyLevel` / `RecoveryPlanStep` / `ArchiveRecoveryPlan`,
+  re-exported from `packages/archive`.
+- Tests: `tdd-tests/packages/archive/recovery-plan/recoveryPlan.test.ts`.
+
+### Decisions
+
+- Report-only: the plan proposes conservative actions with safety levels
+  (`report-only` / `safe-rebuild` / `destructive-confirm`); a future, separately
+  approved executor would consume it. No deletion / rewrite / quarantine / index
+  rebuild happens here — the destructive boundary stays intact.
+
+### Verification
+
+- TDD RED→GREEN (3 tests). `pnpm typecheck`, `pnpm build` passed; `pnpm test`
+  177 tests (was 174); `git diff --check` clean.
+
+### Coordination Note
+
+Baseline `7348d24` was committed and pushed to `origin/main` (via proxy) before
+parallel work began, so Codex starts from a clean tree. This recovery-plan slice
+is uncommitted pending the user's go.
+
+### Next Safe Step
+
+Either extend the recovery plan toward a safe-rebuild executor design (still
+gated), or pivot to the replay / IPC contract — both in Claude's lane.

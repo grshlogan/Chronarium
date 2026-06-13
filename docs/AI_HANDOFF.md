@@ -79,6 +79,11 @@ Current state:
 - `packages/archive` has the first report-only archive recovery inspector. It
   detects common interrupted-write states and suggested manual actions, but it
   does not repair, delete, move, rewrite, or quarantine archive files.
+- `packages/archive` also has `buildArchiveRecoveryPlan`: a pure, report-only
+  plan that groups recovery findings into ordered proposed steps, each tagged
+  with a safety level (`report-only` / `safe-rebuild` / `destructive-confirm`)
+  and `executable: false`. It executes nothing; a future approved executor would
+  consume it.
 - `packages/core` has the first GUI-facing service facade. It exposes health,
   archive validate/read/reindex/list, maintenance inspection, and recovery
   inspection through one core entry point for a future GUI. It is not yet wired
@@ -159,7 +164,10 @@ Current state:
   first one is
   `tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`.
 - `packages/media-tools` has typed FFmpeg/ffprobe command builders that return
-  argv/redactedArgv descriptions. It does not execute real binaries.
+  argv/redactedArgv descriptions. It also has fixture-tested output parsers for
+  synthetic ffprobe JSON and FFmpeg progress output. Parser errors return stable
+  sanitized codes/messages without echoing raw output. It does not execute real
+  binaries.
 - `docs/MAINTENANCE_OPS_DESIGN.md` records the draft maintenance / ops
   inspection model and external project references.
 - `docs/CB_RECORDING_REFERENCES.md` records public GitHub project references
@@ -920,3 +928,20 @@ Credential vault + injection + default election (A02) checks:
   tests (was 30 / 166), with the known Node `node:sqlite` ExperimentalWarning.
 - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` `issueCount: 0`.
 - `git diff --check` + trailing-whitespace scan clean.
+
+Media tool output parser fixtures checks:
+
+- TDD RED: `tdd-tests/packages/media-tools/output-parsing` failed because
+  `parseFfprobeJsonOutput` and `parseFfmpegProgressOutput` were not exported.
+- GREEN: added `packages/media-tools/src/outputParsers.ts` plus synthetic
+  ffprobe JSON and FFmpeg progress fixtures.
+- Targeted parser + media command tests passed 2 files and 8 tests.
+- `pnpm typecheck` passed.
+- `pnpm test` passed 33 files and 181 tests, with the known Node
+  `node:sqlite` ExperimentalWarning.
+- `pnpm build` passed.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed with 1000
+  scanned events, 8 batches, and 0 issues.
+- `git diff --check` passed.
+- trailing whitespace scan found no matches.
+- JSON/package parse scan parsed 30 JSON files.

@@ -993,6 +993,7 @@ packages/
       payloadValidation.ts
       reader.ts
       recovery.ts
+      recoveryPlan.ts
       segmentValidation.ts
       streamingValidator.ts
       timelineReader.ts
@@ -1444,16 +1445,21 @@ Owns:
 
 - typed external media tool command builders;
 - argv and redacted argv construction;
+- synthetic/redacted media tool output parsers;
 - command-boundary tests;
 - future media tool output parser fixtures.
 
 Current status:
 
 - Exists with typed FFmpeg remux and ffprobe JSON command builders.
+- Exists with fixture-tested `parseFfprobeJsonOutput` and
+  `parseFfmpegProgressOutput` parsers for synthetic ffprobe JSON and FFmpeg
+  progress output.
 - Returns command descriptions only; it does not execute real binaries.
 - Rejects empty FFmpeg input lists, output paths outside the working directory,
   and newline-bearing modeled paths.
 - Uses argv arrays, not shell strings.
+- Parser failures return stable sanitized errors and do not echo raw output.
 
 ### `packages/player`
 

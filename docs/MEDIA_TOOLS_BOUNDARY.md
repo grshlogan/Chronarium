@@ -1,12 +1,13 @@
 # Media Tools Boundary
 
-Status: design contract plus first command-builder skeleton. A
-`packages/media-tools` package now exists with typed FFmpeg/ffprobe command
-builders that return argv/redactedArgv descriptions. Chronarium still does not
-execute FFmpeg, ffprobe, or downloader tools, and no downloader integration is
-implemented. These rules were promoted from section "4. Tool Integration Needs
-Typed Command Builders" of docs/CB_RECORDING_REFERENCES.md into a standalone
-boundary contract.
+Status: design contract plus first command-builder and output-parser skeleton.
+A `packages/media-tools` package now exists with typed FFmpeg/ffprobe command
+builders that return argv/redactedArgv descriptions, plus fixture-tested parsers
+for synthetic ffprobe JSON and FFmpeg progress output. Chronarium still does
+not execute FFmpeg, ffprobe, or downloader tools, and no downloader integration
+is implemented. These rules were promoted from section "4. Tool Integration
+Needs Typed Command Builders" of docs/CB_RECORDING_REFERENCES.md into a
+standalone boundary contract.
 
 ## Purpose
 
@@ -93,7 +94,11 @@ packages/media-tools/
     nM3u8DlReCommand.ts
     ffmpegCommand.ts
     ffprobeCommand.ts
+    outputParsers.ts
     mediaToolEvents.ts
+  fixtures/
+    ffprobe.synthetic.json
+    ffmpeg-progress.synthetic.txt
   tests/
     nM3u8DlReCommand.test.ts
     ffmpegCommand.test.ts
@@ -103,12 +108,29 @@ Boundary intent:
 
 - one command builder module per tool, exposing typed inputs and returning
   argv arrays plus expected-output descriptions;
+- `outputParsers.ts` parses synthetic or redacted tool output into structured
+  metadata and returns stable sanitized errors for malformed input;
 - `mediaToolEvents.ts` defines the typed event and result shapes that
   chronarium-core records as facts and diagnostics;
 - `tests/` holds argv unit tests and output-parser fixture tests;
 - the package builds commands and parses outputs; it does not own scheduling,
   concurrency, archive writes, or user policy. Those belong to
   chronarium-core.
+
+Implemented parser boundary:
+
+- `parseFfprobeJsonOutput(text)` parses synthetic `ffprobe -print_format json`
+  output into `format.durationMs`, `format.sizeBytes`, `format.bitRate`, and
+  stream metadata such as `index`, `codecType`, `codecName`, duration,
+  dimensions, sample rate, and channels.
+- `parseFfmpegProgressOutput(text)` parses synthetic `ffmpeg -progress`
+  key/value lines such as `frame`, `fps`, `bitrate`, `total_size`, `out_time`,
+  `speed`, and `progress`.
+- Parser failures return stable error codes and fixed messages. They must not
+  throw raw parser exceptions or echo raw tool output, because future tool logs
+  may contain paths, signed URLs, headers, or other sensitive data.
+- The committed fixtures are synthetic only. They are parser contract examples,
+  not evidence from real media or real tool execution.
 
 ## Command Builder Rules
 

@@ -1013,6 +1013,34 @@ Checks already run during this continuation:
 - Final `git diff --check`: passed.
 - Final trailing whitespace scan: found no matches.
 - Final JSON/package config parse scan: parsed 29 JSON files.
+- Added `docs/plan/plan_media_tool_output_parsers.md` for the Codex
+  media-tools lane described in `docs/AGENT_WORK_SPLIT.md`. This lane is
+  limited to `packages/media-tools`, matching `tdd-tests`, and Codex-owned docs;
+  A02-owned `packages/core`, `packages/types`, `packages/schemas`, and
+  `packages/archive` were treated as out of scope.
+- TDD RED for media tool output parsers:
+  `pnpm exec vitest run tdd-tests/packages/media-tools/output-parsing/mediaToolOutputParsers.test.ts`
+  first failed because `parseFfprobeJsonOutput` / `parseFfmpegProgressOutput`
+  were not exported.
+- GREEN for ffprobe output parsing: added `packages/media-tools/src/outputParsers.ts`
+  and a synthetic `ffprobe.synthetic.json` fixture; `parseFfprobeJsonOutput`
+  now parses synthetic ffprobe JSON into typed format and stream metadata and
+  returns stable sanitized errors for malformed input.
+- RED/GREEN for FFmpeg progress parsing: added a synthetic
+  `ffmpeg-progress.synthetic.txt` fixture; `parseFfmpegProgressOutput` now
+  parses key/value progress lines including `out_time`, `frame`, `fps`,
+  `bitrate`, `total_size`, `speed`, and `progress`.
+- Targeted media-tools parser and command tests passed 2 files and 8 tests.
+- `pnpm typecheck`: passed after the media-tools parser lane.
+- `pnpm test`: passed 33 files and 181 tests after the media-tools parser lane.
+- `pnpm build`: passed after the media-tools parser lane.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed with
+  1000 scanned events, 8 batches, and 0 issues after the media-tools parser
+  lane.
+- `git diff --check`: passed after the media-tools parser lane.
+- trailing whitespace scan: found no matches after the media-tools parser lane.
+- JSON/package config parse scan: parsed 30 JSON files after the media-tools
+  parser lane.
 
 ## Next Safe Step
 

@@ -1,0 +1,7 @@
+frame=360
+fps=29.97
+bitrate=1327.0kbits/s
+total_size=2048000
+out_time=00:00:12.345000
+speed=1.02x
+progress=continue
