@@ -7,6 +7,9 @@ adapter. Passing these checks does not mean the adapter can record a live site.
 It only means the adapter package is safe to wire into Chronarium's local core
 contract without leaking sensitive data or bypassing archive/timeline rules.
 
+For the project-level go/no-go checklist, see
+`docs/REAL_SITE_ADAPTER_BRINGUP.md`.
+
 ## Definition
 
 A site adapter is ready for live-site design only after it has an offline

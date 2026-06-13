@@ -221,6 +221,12 @@ failed reports, while valid stdout and exit code 0 produce a completed
 lifecycle report. It still does not start child processes or connect to real
 sites.
 
+The current adapter readiness audit added `docs/REAL_SITE_ADAPTER_BRINGUP.md`.
+It records that Chronarium is ready to begin real-site adapter design and
+fixture-first bring-up, but not ready to run live capture. The checklist defines
+allowed work, prohibited work, current evidence, the first safe work package,
+and the promotion requirements before any adapter manifest can add `live`.
+
 The current A01 GUI pass added the first Web-first React/Vite recording
 dashboard shell under `apps/desktop`. It follows the streamer-maintenance
 layout direction: maintained streamers on the left, selected streamer recording
@@ -428,6 +434,8 @@ Current long-run adapter readiness continuation adds:
 - `docs/plan/plan_adapter_worker_message_stream.md`
 - `docs/plan/plan_adapter_worker_command_builder.md`
 - `docs/plan/plan_adapter_worker_supervisor_harness.md`
+- `docs/REAL_SITE_ADAPTER_BRINGUP.md`
+- `docs/plan/plan_real_site_adapter_bringup_checklist.md`
 - `tsconfig.json`
 - `vitest.config.ts`
 

@@ -1621,3 +1621,38 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan parsed 26 JSON files.
 - Next: use fixture workers first if adding a real process launcher/supervisor;
   still do not connect to real sites.
+
+## 2026-06-13: Real-site adapter bring-up checklist
+
+- Conversation: after the adapter readiness, worker command, JSONL parser, and
+  no-spawn supervisor foundations landed, A01 audited whether Chronarium had a
+  clear starting point for real-site adapter work.
+- Landed: added a go/no-go checklist that defines what real-site adapter work is
+  allowed now and what remains prohibited.
+- Files:
+  - `README.md`
+  - `docs/ADAPTER_SITE_READINESS.md`
+  - `docs/REAL_SITE_ADAPTER_BRINGUP.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_real_site_adapter_bringup_checklist.md`
+- Decisions:
+  - Chronarium is ready to begin real-site adapter design and fixture-first
+    bring-up.
+  - Chronarium is not ready to run live capture jobs.
+  - The allowed next phase is synthetic or approved redacted evidence,
+    fixture-only parser/builders, readiness/catalog/task-gate/worker harness
+    tests, and a site-specific live plan.
+  - Live network access, credentials, cookies, headers, tokens, signed URLs,
+    real media downloads, real adapter worker execution against a live site,
+    and upload/deletion automation remain prohibited without explicit user
+    approval.
+- Verification:
+  - Documentation-only pass.
+  - `git diff --check` passed.
+  - trailing whitespace scan passed.
+  - JSON/package config parse scan parsed 26 JSON files.
+- Next: choose a target site and start its fixture-first bring-up plan, or add a
+  real process launcher using fixture workers only.

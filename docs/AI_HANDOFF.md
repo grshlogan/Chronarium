@@ -236,6 +236,10 @@ Current state:
   worker command descriptor boundary.
 - `docs/plan/plan_adapter_worker_supervisor_harness.md` records the no-spawn
   adapter worker supervisor harness.
+- `docs/REAL_SITE_ADAPTER_BRINGUP.md` records the go/no-go checklist for
+  starting real-site adapter work while staying fixture-first.
+- `docs/plan/plan_real_site_adapter_bringup_checklist.md` records the checklist
+  documentation pass.
 - `docs/ADAPTER_SITE_READINESS.md` records the practical checklist for new
   adapter packages: manifest, synthetic/redacted fixtures, parser/builders,
   protocol fixture runner, readiness gate, catalog registration, and core task
@@ -397,9 +401,10 @@ The project should optimize for AI-assisted long-term maintenance:
 ## Suggested Next Steps
 
 1. For the next site adapter behavior, follow
-   `docs/ADAPTER_SITE_READINESS.md`: add synthetic or approved redacted
-   fixtures for playlist parsing, room state, chat/event extraction,
-   reconnect/gap handling, and error handling before any live-site request.
+   `docs/REAL_SITE_ADAPTER_BRINGUP.md`: begin fixture-first bring-up with
+   synthetic or approved redacted fixtures for playlist parsing, room state,
+   chat/event extraction, reconnect/gap handling, and error handling before any
+   live-site request.
 2. Continue the adapter worker boundary with a real process launcher/supervisor
    shell only against fixture workers first, still without connecting to real
    sites.

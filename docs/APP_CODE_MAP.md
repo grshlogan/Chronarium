@@ -42,6 +42,7 @@ docs/
   REPLAY_MODEL_V1.md
   ADAPTER_PROTOCOL.md
   ADAPTER_SITE_READINESS.md
+  REAL_SITE_ADAPTER_BRINGUP.md
   GUI_CORE_PROTOCOL.md
   DIAGNOSTIC_CODES_V1.md
   MEDIA_TOOLS_BOUNDARY.md
@@ -86,6 +87,7 @@ docs/
     plan_adapter_worker_message_stream.md
     plan_adapter_worker_command_builder.md
     plan_adapter_worker_supervisor_harness.md
+    plan_real_site_adapter_bringup_checklist.md
     plan_web_dashboard_offline_behavior.md
     plan_web_dashboard_monitoring_semantics.md
     plan_web_dashboard_streamer_selection.md
@@ -292,6 +294,19 @@ Responsibility:
 Boundary:
 
 - Does not claim live site capture is implemented.
+
+### `docs/REAL_SITE_ADAPTER_BRINGUP.md`
+
+Responsibility:
+
+- Go/no-go checklist for starting real-site adapter work.
+- Separates allowed fixture-first bring-up from prohibited live capture work.
+- Maps current code evidence to adapter readiness requirements.
+
+Boundary:
+
+- Does not claim live capture, real media download, credential handling, or
+  live worker execution exists.
 
 ### `docs/GUI_CORE_PROTOCOL.md`
 
@@ -628,6 +643,14 @@ Responsibility:
   supervisor harness.
 - Records how modeled command/stdout/stderr/exit data becomes a lifecycle
   report without launching a real process.
+
+### `docs/plan/plan_real_site_adapter_bringup_checklist.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the real-site adapter bring-up
+  checklist.
+- Records that this pass is documentation-only and does not access real sites.
 
 ### `docs/plan/plan_web_dashboard_offline_behavior.md`
 

@@ -194,6 +194,7 @@ small module boundaries.
 - [docs/REPLAY_MODEL_V1.md](./docs/REPLAY_MODEL_V1.md)：回放语义契约草案——回放输入、回放时钟、seek 和状态重建规则。
 - [docs/ADAPTER_PROTOCOL.md](./docs/ADAPTER_PROTOCOL.md)：core 与 adapter worker 的消息协议草案。
 - [docs/ADAPTER_SITE_READINESS.md](./docs/ADAPTER_SITE_READINESS.md)：站点 adapter 接入前的离线 scaffold、manifest、fixture、readiness 和 core gate 清单。
+- [docs/REAL_SITE_ADAPTER_BRINGUP.md](./docs/REAL_SITE_ADAPTER_BRINGUP.md)：真实站点 adapter 开工门槛、允许事项、禁止事项和证据矩阵。
 - [docs/GUI_CORE_PROTOCOL.md](./docs/GUI_CORE_PROTOCOL.md)：GUI 与 core 之间的消息协议草案。
 - [docs/DIAGNOSTIC_CODES_V1.md](./docs/DIAGNOSTIC_CODES_V1.md)：诊断与校验错误码注册表和命名规则。
 - [docs/MEDIA_TOOLS_BOUNDARY.md](./docs/MEDIA_TOOLS_BOUNDARY.md)：外部媒体工具的类型化命令边界契约草案。
@@ -215,6 +216,7 @@ small module boundaries.
 - [docs/plan/plan_adapter_worker_message_stream.md](./docs/plan/plan_adapter_worker_message_stream.md)：未来 adapter child-process stdout JSONL 消息流解析边界计划。
 - [docs/plan/plan_adapter_worker_command_builder.md](./docs/plan/plan_adapter_worker_command_builder.md)：未来 adapter child-process typed spawn command descriptor 计划。
 - [docs/plan/plan_adapter_worker_supervisor_harness.md](./docs/plan/plan_adapter_worker_supervisor_harness.md)：no-spawn adapter worker stdout/stderr/exit/lifecycle 监督 harness 计划。
+- [docs/plan/plan_real_site_adapter_bringup_checklist.md](./docs/plan/plan_real_site_adapter_bringup_checklist.md)：真实站点 adapter fixture-first 开工清单计划。
 - [docs/plan/plan_web_first_recording_dashboard.md](./docs/plan/plan_web_first_recording_dashboard.md)：第一版 Web-first 录制工作台计划和验证记录。
 - [docs/plan/plan_web_dashboard_offline_behavior.md](./docs/plan/plan_web_dashboard_offline_behavior.md)：Web 录制工作台离线 demo 行为计划。
 - [docs/plan/plan_web_dashboard_monitoring_semantics.md](./docs/plan/plan_web_dashboard_monitoring_semantics.md)：Web 录制工作台监控/自检语义修正计划。
@@ -253,8 +255,8 @@ Chronarium 目标 GitHub 仓库：
 下一步适合先做这些基础工作：
 
 1. 给真实站点 adapter 写 live 设计前，先按
-   [docs/ADAPTER_SITE_READINESS.md](./docs/ADAPTER_SITE_READINESS.md) 补更多
-   synthetic/redacted fixtures：playlist 解析、room state、chat/event、
+   [docs/REAL_SITE_ADAPTER_BRINGUP.md](./docs/REAL_SITE_ADAPTER_BRINGUP.md)
+   进入 fixture-first bring-up：playlist 解析、room state、chat/event、
    reconnect/gap、错误处理，仍不连真实站点。
 2. 继续 adapter worker 边界：下一步可以设计真实 process launcher/supervisor
    外壳，但仍先用 fixture worker，不接真实站点。
