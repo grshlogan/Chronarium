@@ -1,5 +1,6 @@
 export * from "./adapters/index.js";
 export * from "./archiveIndexService.js";
+export * from "./credentials/index.js";
 export * from "./guiService.js";
 export * from "./maintenance/index.js";
 export * from "./offlineFixtureCapturePipeline.js";

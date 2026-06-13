@@ -164,8 +164,8 @@ Rules:
 - media seek locates covering segments per track using segment anchors and
   durations; tracks with no covering segment at `T` are in a gap state;
 - session state at `T` is a fold of state-bearing events (for example
-  `room.state` and `paid_room.*`) in `sequence` order up to `T`, where the
-  last write wins for each state key;
+  `room.state.changed` and `paid_room.*`) in `sequence` order up to `T`, where
+  the last write wins for each state key;
 - the baseline state path is a full timeline scan from the session epoch. It
   is always correct and must always remain available;
 - derived state snapshots or SQLite acceleration are optional optimizations.
@@ -178,11 +178,11 @@ Rules:
 Replay groups timeline facts into presentation classes, because different
 shapes of evidence render differently:
 
-- point events: facts at one instant, such as `chat.message`. Rendered at a
-  single position, typically in a scrolling or stacked lane.
+- point events: facts at one instant, such as `chat.message.observed`.
+  Rendered at a single position, typically in a scrolling or stacked lane.
 - state events: facts that set a value which holds until superseded, such as
-  `room.state`. Rendered as the current value at the playhead, derived from
-  the seek-model fold.
+  `room.state.changed`. Rendered as the current value at the playhead, derived
+  from the seek-model fold.
 - span facts: facts that describe a duration, such as `media.gap.*` and
   network spans from the `network.*` family. Rendered as ranges on the
   timeline and as overlays during playback.

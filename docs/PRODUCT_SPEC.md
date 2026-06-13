@@ -135,27 +135,39 @@ The maintainer should be able to answer:
 
 ## Current Implementation Status
 
-As of 2026-06-12, the project has a minimal executable validation chain:
+As of 2026-06-13, the project has a minimal executable validation chain:
 synthetic fixture data can be runtime-validated and written into a local
-`.chron` package skeleton. The first archive reader/validator can read
-`manifest.json`, `timeline.jsonl`, and synthetic media-track metadata, then
-report basic timeline and track consistency issues. The first SQLite indexer
-can derive query rows from synthetic archives for archive metadata, timeline
-events, and validation issues. The first core archive/index service can call
-archive validation, archive reading, reindex, and index queries. A minimal core
-runtime lifecycle shell can start, stop, report health, and expose that service
-while running. The first report-only archive recovery inspector can identify
-common interrupted-write states without repair, and the first core GUI-facing
-service facade exposes health, archive/index, maintenance, and recovery
-inspection calls for a future GUI. Core also has a fixture-only task scheduler,
-adapter lifecycle host, typed media command builders, and an offline
-capture-like pipeline. `apps/desktop` now contains a static Web-first
-React/Vite recording dashboard shell using synthetic data only. The dashboard
-now models streamer monitoring as the primary operation, with pause/resume/check
-controls and an offline self-test diagnostic action instead of a manual start
-recording action. Electron shell, preload/IPC, live GUI-core binding, real media
-segment writing/probing, archive repair/migration, replay player, and real
-adapters remain unimplemented.
+`.chron` package skeleton. The archive package can write, read, and validate
+synthetic manifests, timeline JSONL, media-track metadata, and synthetic segment
+bytes. Validation now includes basic referenced-file checks for
+`media.segment.*` facts with `relativePath`, and the package exposes bounded
+timeline readers so new consumers do not have to depend only on full
+`timelineEvents` arrays.
+
+The first SQLite indexer can derive query rows from synthetic archives for
+archive metadata, timeline events, and validation issues, and now consumes the
+timeline batch reader. The first core archive/index service can call archive
+validation, archive reading, reindex, and index queries. A minimal core runtime
+lifecycle shell can start, stop, report health, expose that service, and
+optionally hold an adapter manifest catalog. Core also has a fixture-only task
+scheduler, adapter lifecycle host, offline capture-like pipeline, adapter
+catalog preflight gate, adapter worker JSONL parser, typed worker command
+descriptor builder, and no-spawn worker supervisor harness. These worker pieces
+do not launch real child processes.
+
+`packages/adapters/chaturbate` contains fixture-only split audio/video
+synthetic fixtures and diagnostics. `packages/adapters/stripchat` contains the
+first non-Chaturbate fixture-only combined A/V scaffold. `packages/media-tools`
+contains typed FFmpeg/ffprobe command builders only; it does not execute media
+tools.
+
+`apps/desktop` contains a static Web-first React/Vite recording dashboard shell
+using synthetic data only. The dashboard models streamer monitoring as the
+primary operation, with pause/resume/check controls and an offline self-test
+diagnostic action instead of a manual start recording action. Electron shell,
+preload/IPC, live GUI-core binding, live task execution, real adapter child
+process launching, real media capture/probing, archive repair/migration, replay
+player, and real site adapters remain unimplemented.
 
 ## Open Product Decisions
 

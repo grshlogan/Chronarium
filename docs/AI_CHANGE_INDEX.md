@@ -1656,3 +1656,263 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan parsed 26 JSON files.
 - Next: choose a target site and start its fixture-first bring-up plan, or add a
   real process launcher using fixture workers only.
+
+## 2026-06-13: Documentation and code state sync
+
+- Conversation: user asked A01 to review the current documentation and code
+  state, then keep docs aligned with implemented facts.
+- Landed: documentation-only corrections for stale current-state wording.
+- Files:
+  - `README.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/ADAPTER_PROTOCOL.md`
+  - `docs/ADAPTER_SITE_READINESS.md`
+  - `docs/DEVELOPMENT_SETUP.md`
+  - `docs/DIAGNOSTIC_CODES_V1.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_documentation_code_state_sync.md`
+- Decisions:
+  - The Web-first renderer exists, but Electron shell, preload/IPC, and live
+    GUI-core binding still do not.
+  - Implemented `segment.*` archive validation codes are no longer described as
+    only reserved drafts.
+  - Current worker-boundary code is limited to JSONL parsing, typed command
+    descriptors, and a no-spawn supervisor harness; real child-process
+    launching remains pending.
+  - The code map's root TDD tree should list the current worker, timeline,
+    indexer, and large-timeline slices.
+- Verification:
+  - Documentation-only pass.
+  - `git diff --check` passed.
+  - trailing whitespace scan passed.
+  - JSON/package config parse scan parsed 27 JSON files.
+- Next: continue with fixture-first adapter bring-up or add hash/duration and
+  processed-output fact schemas without live site access.
+
+## 2026-06-13: Shared adapter kit for fixture safety and parsing
+
+- Conversation: A02 foundation review (Phase 2) found the fixture-safety and
+  fixture-parsing helpers were copy-pasted and drifting across site adapters;
+  the user approved Round 1 to extract them into one shared package.
+- Landed: new `@chronarium/adapter-kit` package and convergence of the
+  Chaturbate and Stripchat adapters onto it (behavior-preserving refactor).
+- Files:
+  - `packages/adapters/kit/package.json`
+  - `packages/adapters/kit/tsconfig.json`
+  - `packages/adapters/kit/src/fixtureSafety.ts`
+  - `packages/adapters/kit/src/fixtureParse.ts`
+  - `packages/adapters/kit/src/index.ts`
+  - `packages/adapters/chaturbate/src/splitTrackFixture.ts`
+  - `packages/adapters/chaturbate/package.json`
+  - `packages/adapters/chaturbate/tsconfig.json`
+  - `packages/adapters/stripchat/src/combinedFixture.ts`
+  - `packages/adapters/stripchat/package.json`
+  - `packages/adapters/stripchat/tsconfig.json`
+  - `tdd-tests/packages/adapters/kit/adapterKitFixtureGuards.test.ts`
+  - `tsconfig.base.json`, `tsconfig.json`, `vitest.config.ts`
+  - `docs/plan/plan_adapter_kit_shared_fixture_helpers.md`
+  - `docs/APP_CODE_MAP.md`, `docs/AI_HANDOFF.md`, `docs/AI_CHANGE_INDEX.md`,
+    `README.md`
+  - `docs/conversation-A02-foundation-docs-completion.md`
+- Decisions:
+  - The shared guards `assertSyntheticFixtureReference` and
+    `assertNoSensitiveFixtureStrings`, plus the `expect*` parsing primitives,
+    live in one tested package so the per-adapter secret/URL safety checks have
+    a single source of truth.
+  - `assertSyntheticFixtureReference` takes the site prefix as an explicit
+    argument, preserving each adapter's existing error messages exactly.
+  - The duplicated fact-builders (`createSyntheticSource`,
+    `createFixtureTimelineEvent`) are intentionally left in each adapter for now;
+    they are reshaped when per-family timeline payload schemas land.
+- Verification:
+  - TDD RED: `tdd-tests/packages/adapters/kit` failed with
+    `Cannot find package '@chronarium/adapter-kit'`; GREEN after creating the
+    package and wiring aliases.
+  - `pnpm install`, `pnpm typecheck`, `pnpm build` passed.
+  - `pnpm test` passed 27 files and 117 tests (was 26 files / 108 tests), with
+    the known Node `node:sqlite` ExperimentalWarning.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed.
+  - `git diff --check` clean after normalizing two EOF newlines; trailing
+    whitespace scan clean.
+- Next: Round 2 — add per-family timeline payload schemas (audit P0-1/P0-2) and
+  reconcile the `media.segment` fact shape, still fixture-first.
+
+## 2026-06-13: Timeline payload schemas for media facts + gap reconcile
+
+- Conversation: A02 Round 2 from the foundation audit. Added per-family timeline
+  payload schemas for the media observation facts and reconciled the two payload
+  divergences (P0-1, P0-2).
+- Landed: lenient payload schemas + dispatcher, archive payload validation, and a
+  unified structured `media.gap.detected` shape.
+- Files:
+  - `packages/schemas/src/timelinePayloadSchemas.ts` (new),
+    `packages/schemas/src/index.ts`
+  - `packages/types/src/timeline.ts`
+  - `packages/archive/src/payloadValidation.ts` (new),
+    `packages/archive/src/validator.ts`,
+    `packages/archive/src/streamingValidator.ts`
+  - `packages/adapters/chaturbate/src/splitTrackFixture.ts`
+  - `tdd-tests/packages/schemas/timeline-payloads/timelinePayloadSchemas.test.ts`
+    (new),
+    `tdd-tests/packages/archive/payload-validation/payloadValidation.test.ts`
+    (new)
+  - `packages/adapters/chaturbate/tests/diagnosticFixtures.test.ts`,
+    `packages/core/tests/offlineFixtureCapturePipeline.test.ts`,
+    `packages/core/tests/maintenanceInspector.test.ts`
+  - `docs/TIMELINE_SCHEMA_V1.md`, `docs/DIAGNOSTIC_CODES_V1.md`,
+    `docs/APP_CODE_MAP.md`, `docs/AI_HANDOFF.md`, `docs/AI_CHANGE_INDEX.md`,
+    `README.md`, `docs/plan/plan_timeline_payload_schemas_round2.md` (new),
+    `docs/conversation-A02-foundation-docs-completion.md`
+- Decisions:
+  - Payload schemas are lenient (validate required + known fields; allow extra
+    keys) since the timeline payload is an open `JsonObject`.
+  - `payload.schema_invalid` is reported by both the snapshot and streaming
+    validators via a shared `validateTimelinePayloads`; the reader and writer
+    stay envelope-only.
+  - Canonical `media.gap.detected` requires structured geometry at top level and
+    allows diagnostic annotations as optional extras. Stripchat already
+    conformed; Chaturbate's gap moved out of its diagnostic-wrapped shape.
+  - `media.segment.observed` (observation) is distinct from the stored,
+    `relativePath`-bearing segment fact; `mediaSegmentFactV1Schema` is unchanged.
+  - `diagnostic.*` / `room.*` / `chat.*` / `network.*` payload schemas are later
+    rounds.
+- Verification:
+  - TDD RED→GREEN for the schema, validator, and gap-reshape slices.
+  - `pnpm typecheck`, `pnpm build` passed; `pnpm test` passed 29 files and 133
+    tests (was 27 / 117), with the known Node `node:sqlite` ExperimentalWarning.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` `issueCount: 0`.
+  - `git diff --check` + trailing-whitespace scan clean.
+- Next: Round 3 — payload schemas for `diagnostic.*`, then room/chat and
+  network/reconnect fact families, still fixture-first.
+
+## 2026-06-13: Credentials and sessions design draft
+
+- Conversation: A02. The user raised that ticket / private / spy shows need
+  authenticated sessions and wants per-streamer selection of a cookie or cookie
+  combination. Agreed a two-layer model with capability-match-then-failover
+  selection.
+- Landed: a documentation-only design draft. No credential code.
+- Files:
+  - `docs/CREDENTIALS_AND_SESSIONS.md` (new)
+  - `README.md`, `docs/APP_CODE_MAP.md`, `docs/AI_HANDOFF.md`,
+    `docs/AI_CHANGE_INDEX.md`,
+    `docs/conversation-A02-foundation-docs-completion.md`
+- Decisions:
+  - A `CredentialProfile` is one account's full cookie jar; a streamer binds one
+    or more profiles with a selection policy. Cross-account cookie merging into a
+    single request is rejected as a model.
+  - Default selection is capability-match (intent -> entitlement) then failover;
+    missing credentials degrade to public-only or skip, never block monitoring.
+  - Raw cookies are runtime inputs only: never in fixtures, timeline, archive,
+    index, docs, logs, argv, or Git. Only a redacted `CredentialRef` crosses
+    boundaries. The store is core-only and at-rest encrypted in the git-ignored
+    runtime dir.
+  - Integration reuses `manifest.security.requiresCredentials`, the catalog's
+    `emitsSensitiveSourceFields` rejection, the readiness gate's secret scan, and
+    the live-promotion gate in `docs/REAL_SITE_ADAPTER_BRINGUP.md`.
+- Verification: documentation-only pass. `git diff --check` + trailing-whitespace
+  scan clean.
+- Next: when approved, build a fixture-only credential store + selector contract
+  with synthetic placeholder profiles (no real cookies, no live requests).
+
+## 2026-06-13: Fixture-only credential store and selector
+
+- Conversation: A02. Implemented the first safe work package from
+  `docs/CREDENTIALS_AND_SESSIONS.md` — an in-memory, fixture-only credential
+  store and a per-streamer selector. No real cookies, no encryption, no live
+  requests.
+- Landed: credential model types, the store, and the
+  capability-match-failover selector.
+- Files:
+  - `packages/types/src/credentials.ts` (new), `packages/types/src/index.ts`
+  - `packages/core/src/credentials/credentialStore.ts` (new),
+    `packages/core/src/credentials/credentialSelector.ts` (new),
+    `packages/core/src/credentials/index.ts` (new),
+    `packages/core/src/index.ts`
+  - `tdd-tests/packages/core/credentials/credentialSelector.test.ts` (new)
+  - `docs/plan/plan_credential_store_selector_fixture.md` (new),
+    `docs/APP_CODE_MAP.md`, `docs/AI_HANDOFF.md`, `docs/AI_CHANGE_INDEX.md`,
+    `README.md`, `docs/conversation-A02-foundation-docs-completion.md`
+- Decisions:
+  - The store holds only profile metadata + an opaque `storageHandle`; it
+    rejects any profile carrying raw-secret-looking strings, so the fixture model
+    is provably free of cookies/tokens/URLs.
+  - The selector returns only a redacted `CredentialRef`. `public` returns
+    `not-required`; no binding or no eligible profile returns `missing` (the
+    caller degrades, monitoring is never blocked). Unhealthy profiles are
+    excluded, which is how failover happens.
+  - Deferred: core task gate, reserved `session.credential_*` timeline schemas,
+    encryption/storage/import/injection, real cookies, the live path, and the
+    `round-robin`/`manual` policies.
+- Verification:
+  - TDD RED→GREEN for the selector; 9 credential tests.
+  - `pnpm typecheck`, `pnpm build` passed; `pnpm test` passed 30 files and 142
+    tests (was 29 / 133), with the known Node `node:sqlite` ExperimentalWarning.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` `issueCount: 0`.
+  - `git diff --check` + trailing-whitespace scan clean.
+- Next: core task gate that refuses a gated capture without a usable bound
+  profile, then the reserved credential timeline fact schemas — still
+  fixture-first.
+
+## 2026-06-13: Timeline payload schemas Round 3-5
+
+- Conversation: A01 resumed the adapter-readiness foundation after A02's
+  handoff and completed the remaining diagnostic, room/chat, and
+  network/reconnect payload-schema rounds. Cookie/live work was left for later
+  explicit instruction.
+- Landed: diagnostic payload schemas, room/chat payload schemas, network
+  disconnect/reconnect payload schemas, Stripchat synthetic room/chat/network
+  fixture facts, and readiness fact-usage checks for `room.state` /
+  `chat.events`.
+- Files:
+  - `packages/types/src/timeline.ts`
+  - `packages/schemas/src/timelinePayloadSchemas.ts`
+  - `packages/core/src/maintenance/archiveInspector.ts`
+  - `packages/testkit/src/adapterReadiness.ts`
+  - `packages/adapters/chaturbate/src/fixtureAdapter.ts`
+  - `packages/adapters/stripchat/fixtures/combined-av.synthetic.json`
+  - `packages/adapters/stripchat/src/combinedFixture.ts`
+  - `packages/adapters/stripchat/src/fixtureAdapter.ts`
+  - `tdd-tests/packages/schemas/timeline-payloads/timelinePayloadSchemas.test.ts`
+  - `tdd-tests/packages/testkit/adapter-readiness/adapterReadiness.test.ts`
+  - `tdd-tests/packages/adapters/stripchat/stripchatCombinedFixture.test.ts`
+  - `tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts`
+  - `README.md`
+  - `docs/TIMELINE_SCHEMA_V1.md`
+  - `docs/ADAPTER_PROTOCOL.md`
+  - `docs/ADAPTER_SITE_READINESS.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_timeline_payload_schemas_round3_4_5.md`
+- Decisions:
+  - Canonical room/chat event type names are `room.state.changed` and
+    `chat.message.observed`.
+  - Initial reconnect event type names are `network.disconnected` and
+    `network.reconnected`.
+  - Stripchat is now the first fixture template that exercises room/chat,
+    network reconnect, and media gap facts together.
+  - Readiness requires declared or requested `room.state` / `chat.events`
+    capabilities to have at least one matching fact in the fixture stream.
+  - Chaturbate no longer declares `room.state` until it has a matching room
+    fixture.
+- Verification:
+  - TDD RED/GREEN recorded in
+    `docs/plan/plan_timeline_payload_schemas_round3_4_5.md`.
+  - Targeted Round 3/4/5 tests passed 4 files and 38 tests.
+  - `pnpm test` passed 30 files and 158 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm typecheck` passed.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed with
+    1000 scanned events, 8 batches, and 0 issues.
+  - `git diff --check` passed.
+  - trailing whitespace scan found no matches.
+  - JSON/package parse scan parsed 29 JSON files.
+- Next: the next requested line is credential/Cookie B-line work, but only
+  after user instruction. Otherwise continue fixture-first adapter bring-up or
+  adapter worker process-supervisor foundations without live-site access.

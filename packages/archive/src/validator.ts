@@ -16,6 +16,7 @@ import {
   resolveArchivePath
 } from "./layout.js";
 import { validateTimelineMediaSegments } from "./segmentValidation.js";
+import { validateTimelinePayloads } from "./payloadValidation.js";
 
 export type ArchiveValidationSeverity = "error" | "warning";
 
@@ -45,7 +46,8 @@ export type ArchiveValidationIssueCode =
   | "timeline.sequence_gap"
   | "timeline.session_mismatch"
   | "timeline.event_count_mismatch"
-  | "timeline.last_sequence_mismatch";
+  | "timeline.last_sequence_mismatch"
+  | "payload.schema_invalid";
 
 export interface ArchiveValidationIssue {
   readonly severity: ArchiveValidationSeverity;
@@ -133,6 +135,11 @@ export async function validateFileArchive(
       manifestResult.manifest,
       timelineResult.events
     )
+  );
+  issues.push(
+    ...validateTimelinePayloads({
+      timelineEvents: timelineResult.events
+    })
   );
   issues.push(
     ...(await validateTimelineMediaSegments({

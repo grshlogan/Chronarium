@@ -48,6 +48,7 @@ docs/
   MEDIA_TOOLS_BOUNDARY.md
   MEDIA_LIFECYCLE_AND_RETENTION.md
   SECURITY_PRIVACY.md
+  CREDENTIALS_AND_SESSIONS.md
   MAINTENANCE_OPS_DESIGN.md
   CB_RECORDING_REFERENCES.md
   DEVELOPMENT_SETUP.md
@@ -87,7 +88,12 @@ docs/
     plan_adapter_worker_message_stream.md
     plan_adapter_worker_command_builder.md
     plan_adapter_worker_supervisor_harness.md
+    plan_adapter_kit_shared_fixture_helpers.md
+    plan_timeline_payload_schemas_round2.md
+    plan_timeline_payload_schemas_round3_4_5.md
+    plan_credential_store_selector_fixture.md
     plan_real_site_adapter_bringup_checklist.md
+    plan_documentation_code_state_sync.md
     plan_web_dashboard_offline_behavior.md
     plan_web_dashboard_monitoring_semantics.md
     plan_web_dashboard_streamer_selection.md
@@ -119,15 +125,25 @@ packages/
   media-tools/
   adapters/
     chaturbate/
+    kit/
     stripchat/
   testkit/
 tdd-tests/
   README.md
   packages/
     adapters/
+      kit/
+        adapterKitFixtureGuards.test.ts
       stripchat/
         stripchatCombinedFixture.test.ts
+    archive/
+      payload-validation/
+        payloadValidation.test.ts
+      timeline-reader/
+        timelineReader.test.ts
     core/
+      credentials/
+        credentialSelector.test.ts
       adapter-catalog/
         adapterCatalog.test.ts
       adapter-gate/
@@ -136,9 +152,19 @@ tdd-tests/
         adapterMessageStream.test.ts
       adapter-worker-command/
         adapterWorkerCommand.test.ts
+      adapter-worker-supervisor/
+        adapterWorkerSupervisor.test.ts
+    indexer/
+      timeline-batches/
+        indexerTimelineBatches.test.ts
+    schemas/
+      timeline-payloads/
+        timelinePayloadSchemas.test.ts
     testkit/
       adapter-readiness/
         adapterReadiness.test.ts
+      large-timeline/
+        largeSyntheticTimeline.test.ts
   apps/
     desktop/
       recording-dashboard/
@@ -318,8 +344,9 @@ Responsibility:
 
 Boundary:
 
-- Draft protocol contract. No GUI, Electron shell, preload bridge, or IPC
-  implementation exists.
+- Draft protocol contract. A static Web-first renderer exists under
+  `apps/desktop`, but no Electron shell, preload bridge, IPC implementation,
+  or live GUI-core binding exists.
 
 ### `docs/DIAGNOSTIC_CODES_V1.md`
 
@@ -331,8 +358,9 @@ Responsibility:
 
 Boundary:
 
-- The implemented registry mirrors `packages/archive/src/validator.ts`; all
-  reserved areas are drafts without emitting code.
+- The implemented registry mirrors `packages/archive/src/validator.ts`;
+  `segment.*` basic referenced-file checks are implemented, while other
+  reserved areas remain drafts until first emitting code lands.
 
 ### `docs/MEDIA_TOOLS_BOUNDARY.md`
 
@@ -371,6 +399,19 @@ Responsibility:
 - Fixture policy.
 - Redaction labels.
 - Process, filesystem, external tool, and logging safety rules.
+
+### `docs/CREDENTIALS_AND_SESSIONS.md`
+
+Responsibility:
+
+- Design contract for authenticated recording (ticket / private / spy shows).
+- Credential profile + per-streamer binding + capability-match-failover model.
+- Redaction, storage, threat model, and adapter/manifest integration rules.
+
+Boundary:
+
+- Design draft only. No credential store, encryption, import, injection,
+  failover, real cookie handling, or live request path exists.
 
 ### `docs/MAINTENANCE_OPS_DESIGN.md`
 
@@ -644,6 +685,46 @@ Responsibility:
 - Records how modeled command/stdout/stderr/exit data becomes a lifecycle
   report without launching a real process.
 
+### `docs/plan/plan_adapter_kit_shared_fixture_helpers.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for extracting the shared
+  `@chronarium/adapter-kit` fixture-safety and fixture-parsing helpers.
+- Records that the work is a behavior-preserving refactor that converges the
+  Chaturbate and Stripchat adapters onto the kit and defers the fact-builders to
+  the timeline payload schema round.
+
+### `docs/plan/plan_timeline_payload_schemas_round2.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for media observation timeline payload
+  schemas and the `payload.schema_invalid` archive validation path.
+- Records that `media.gap.detected` is a structured media fact and that the
+  stored segment-file schema remains separate.
+
+### `docs/plan/plan_timeline_payload_schemas_round3_4_5.md`
+
+Responsibility:
+
+- Plan, scope, TDD notes, and verification record for adding diagnostic,
+  room/chat, and network/reconnect timeline payload schemas.
+- Records the Stripchat synthetic room/chat/network/gap fixture expansion and
+  readiness fact-usage gate for `room.state` / `chat.events`.
+- Excludes live site access, real credentials, Cookie handling, upload, and
+  deletion behavior.
+
+### `docs/plan/plan_credential_store_selector_fixture.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the fixture-only credential store and
+  per-streamer selector.
+- Records that the slice handles synthetic metadata and redacted
+  `CredentialRef` values only, with no cookies, encryption, import, injection,
+  or live request path.
+
 ### `docs/plan/plan_real_site_adapter_bringup_checklist.md`
 
 Responsibility:
@@ -651,6 +732,15 @@ Responsibility:
 - Plan, scope, and verification notes for the real-site adapter bring-up
   checklist.
 - Records that this pass is documentation-only and does not access real sites.
+
+### `docs/plan/plan_documentation_code_state_sync.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for documentation-only passes that align
+  current-state docs with implemented code facts.
+- Records that this pass does not change source behavior, run live sites, or
+  edit non-A01 conversation context documents.
 
 ### `docs/plan/plan_web_dashboard_offline_behavior.md`
 
@@ -791,6 +881,7 @@ packages/
     src/
       adapter.ts
       archive.ts
+      credentials.ts
       index.ts
       media.ts
       primitives.ts
@@ -808,6 +899,7 @@ packages/
       schemaDefinition.ts
       sessionSchemas.ts
       timelineSchemas.ts
+      timelinePayloadSchemas.ts
   core/
     package.json
     tsconfig.json
@@ -823,6 +915,10 @@ packages/
       guiService.ts
       index.ts
       offlineFixtureCapturePipeline.ts
+      credentials/
+        credentialSelector.ts
+        credentialStore.ts
+        index.ts
       maintenance/
         archiveInspector.ts
         index.ts
@@ -869,12 +965,20 @@ packages/
         fixtureAdapter.ts
         index.ts
         manifest.ts
+  kit/
+    package.json
+    tsconfig.json
+    src/
+      fixtureParse.ts
+      fixtureSafety.ts
+      index.ts
   archive/
     package.json
     tsconfig.json
     src/
       index.ts
       layout.ts
+      payloadValidation.ts
       reader.ts
       recovery.ts
       segmentValidation.ts
@@ -919,12 +1023,18 @@ tdd-tests/
   README.md
   packages/
     adapters/
+      kit/
+        adapterKitFixtureGuards.test.ts
       stripchat/
         stripchatCombinedFixture.test.ts
     archive/
+      payload-validation/
+        payloadValidation.test.ts
       timeline-reader/
         timelineReader.test.ts
     core/
+      credentials/
+        credentialSelector.test.ts
       adapter-catalog/
         adapterCatalog.test.ts
       adapter-gate/
@@ -932,6 +1042,9 @@ tdd-tests/
     indexer/
       timeline-batches/
         indexerTimelineBatches.test.ts
+    schemas/
+      timeline-payloads/
+        timelinePayloadSchemas.test.ts
     testkit/
       adapter-readiness/
         adapterReadiness.test.ts
@@ -957,8 +1070,6 @@ apps/
 packages/
   core/
     src/
-      tasks/
-      adapters/
       archive/
       timeline/
       index/
@@ -966,7 +1077,7 @@ packages/
       exports/
   archive/
     tests/
-      media segment archive IO tests
+      media segment hash/duration validation tests
       recovery/migration tests
   player/
     src/
@@ -1055,6 +1166,9 @@ Current status:
 
 - Exists with initial TypeScript types for primitives, sessions, media,
   timeline events, archive manifests, adapter messages, and adapter manifests.
+- Also defines the credential model types (`RecordingIntent`,
+  `CredentialProfile`, `StreamerCredentialBinding`, `CredentialRef`,
+  `CredentialSelectionResult`).
 
 ### `packages/schemas`
 
@@ -1069,6 +1183,13 @@ Current status:
 - Performs first-pass Zod runtime validation for sessions, media tracks,
   timeline events, archive manifests, adapter protocol messages, and adapter
   manifests.
+- Also validates the first per-family timeline payloads and exposes
+  `validateTimelineEventPayloadV1` for archive validation. Registered families
+  currently include media observations, `diagnostic.note`,
+  `diagnostic.duration_mismatch`, `diagnostic.media_tool_output`,
+  `room.state.changed`, `chat.message.observed`, `network.disconnected`, and
+  `network.reconnected`. These are lenient (required + known fields validated,
+  extra keys allowed).
 
 ### `packages/core`
 
@@ -1128,6 +1249,11 @@ Current status:
   messages or writing archives.
 - Adapter errors and missing `adapter.finished` map to failed tasks and skip
   archive indexing.
+- The fixture-only credential store (`createCredentialStore`) and per-streamer
+  selector (`selectCredentialForCapture`) resolve which redacted credential
+  profile a gated capture would use (capability-match-failover), reject
+  raw-secret-looking profile material, and never hold or return cookies. No
+  encryption, import, injection, real cookies, or live path exists.
 - Does not run live capture jobs, start adapter child processes, export media,
   run ops loops, execute media tools, or capture real media segments yet.
 
@@ -1169,13 +1295,48 @@ Current status:
   manifest declares `runtimeModes: ["fixture"]`, no network access, no
   credential requirement, and no sensitive source field emission.
 - It includes a committed offline combined A/V fixture that becomes one
-  Chronarium media track.
+  Chronarium media track and now includes synthetic room, chat, network
+  disconnect/reconnect, and gap facts.
 - It can parse that fixture into media track metadata and timeline facts, then
   emit those facts through an adapter protocol fixture runner.
-- It emits `media.gap.detected` for non-contiguous combined media segments and
-  rejects overlapping or backwards segments.
+- It emits `room.state.changed`, `chat.message.observed`,
+  `network.disconnected`, `network.reconnected`, and `media.gap.detected` for
+  a synthetic reconnect-after-gap scenario, and rejects overlapping or
+  backwards segments.
 - It does not perform network requests, downloads, account handling, cookies, or
   session handling.
+- Both adapters now obtain their fixture-safety guards
+  (`assertSyntheticFixtureReference`, `assertNoSensitiveFixtureStrings`) and
+  fixture-parsing primitives from `@chronarium/adapter-kit` instead of local
+  copies. Only site-specific parsing and fact-building stay in the adapter.
+
+### `packages/adapters/kit`
+
+Owns:
+
+- shared fixture-safety guards for synthetic references and sensitive strings;
+- shared fixture-parsing primitives (`expect*`, `optionalStringProperty`);
+- a single source of truth for the per-adapter secret/URL safety checks.
+
+Must not own:
+
+- site-specific topology, room, chat, or fact-building logic;
+- timeline payload schemas (those live in `packages/schemas`);
+- network, credential, or media-tool behavior.
+
+Current status:
+
+- Exists as `@chronarium/adapter-kit` with `fixtureSafety.ts` and
+  `fixtureParse.ts`.
+- `assertSyntheticFixtureReference(reference, path, expectedPrefix)` enforces the
+  synthetic prefix, rejects query strings/fragments, and rejects secret-looking
+  fragments.
+- `assertNoSensitiveFixtureStrings` recursively rejects raw network URLs and
+  secret-looking string fragments.
+- The `expect*` primitives validate untyped fixture JSON with stable error
+  messages.
+- Consumed by `packages/adapters/chaturbate` and `packages/adapters/stripchat`.
+- Depends only on `@chronarium/types`. It does no IO, network, or media work.
 
 ### `packages/archive`
 
@@ -1223,6 +1384,9 @@ Current status:
 - Full snapshot archive validation still exists for small fixture workflows.
   Replay, GUI, and maintenance consumers have not yet been migrated to the new
   timeline batch reader.
+- Reports `payload.schema_invalid` for timeline facts whose type has a
+  registered per-family payload schema, from both the snapshot and streaming
+  validators via `validateTimelinePayloads` (`payloadValidation.ts`).
 - Real media probing, hash validation, duration validation, archive repair, and
   migration are still pending.
 
@@ -1293,7 +1457,9 @@ Current status:
 - Includes `verifyAdapterFixtureReadiness`, a reusable offline gate that checks
   adapter protocol parsing, ready/finished ordering, requested capabilities,
   adapter/session matching, terminal finished behavior, and secret-looking or
-  network-looking message content.
+  network-looking message content. It also requires declared or requested
+  `room.state` / `chat.events` capabilities to be represented by
+  `room.state.changed` / `chat.message.observed` facts in the fixture stream.
 - Includes `createLargeSyntheticTimelineBuilder`, which can generate
   deterministic large synthetic timeline events, stream JSONL chunks, and write
   a synthetic `.chron` fixture without constructing one giant event array.
@@ -1403,12 +1569,18 @@ Current root-level TDD slices:
 tdd-tests/
   packages/
     adapters/
+      kit/
+        adapterKitFixtureGuards.test.ts
       stripchat/
         stripchatCombinedFixture.test.ts
     archive/
+      payload-validation/
+        payloadValidation.test.ts
       timeline-reader/
         timelineReader.test.ts
     core/
+      credentials/
+        credentialSelector.test.ts
       adapter-catalog/
         adapterCatalog.test.ts
       adapter-gate/
@@ -1422,6 +1594,9 @@ tdd-tests/
     indexer/
       timeline-batches/
         indexerTimelineBatches.test.ts
+    schemas/
+      timeline-payloads/
+        timelinePayloadSchemas.test.ts
     testkit/
       adapter-readiness/
         adapterReadiness.test.ts

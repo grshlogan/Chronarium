@@ -9,6 +9,44 @@
     "playlistReference": "fixture://stripchat/combined-av/master.m3u8",
     "redactionStatus": "synthetic"
   },
+  "roomStates": [
+    {
+      "state": "online",
+      "monotonicMs": 0,
+      "viewerCount": 42,
+      "showMode": "public",
+      "topic": "Synthetic fixture room state",
+      "syntheticOnly": true
+    }
+  ],
+  "chatMessages": [
+    {
+      "messageId": "synthetic-chat-0001",
+      "authorRef": "synthetic-author-hash-0001",
+      "body": "Synthetic hello from a redacted fixture user.",
+      "redactionStatus": "synthetic",
+      "monotonicMs": 1000,
+      "role": "viewer",
+      "syntheticOnly": true
+    }
+  ],
+  "networkEvents": [
+    {
+      "type": "network.disconnected",
+      "reason": "synthetic playlist polling interruption",
+      "monotonicMs": 2000,
+      "affectedTrackIds": ["combined-main"],
+      "syntheticOnly": true
+    },
+    {
+      "type": "network.reconnected",
+      "disconnectedEventId": "combined-av.synthetic:event:4",
+      "outageDurationMs": 3000,
+      "monotonicMs": 5000,
+      "affectedTrackIds": ["combined-main"],
+      "syntheticOnly": true
+    }
+  ],
   "track": {
     "id": "combined-main",
     "kind": "video",
@@ -29,7 +67,7 @@
       {
         "id": "combined-segment-0002",
         "sourceSequence": 2,
-        "mediaStartMs": 2000,
+        "mediaStartMs": 5000,
         "durationMs": 2000
       }
     ]

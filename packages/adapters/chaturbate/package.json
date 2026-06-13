@@ -16,6 +16,7 @@
     "typecheck": "tsc -b tsconfig.json --pretty false"
   },
   "dependencies": {
+    "@chronarium/adapter-kit": "workspace:*",
     "@chronarium/types": "workspace:*"
   }
 }

@@ -4,6 +4,18 @@ import type {
   RedactionStatus,
   TimelineEventEnvelope
 } from "@chronarium/types";
+import {
+  assertSyntheticFixtureReference,
+  expectArray,
+  expectNonNegativeInteger,
+  expectNumber,
+  expectOptionalArray,
+  expectOptionalNumber,
+  expectPositiveInteger,
+  expectRecord,
+  expectString,
+  optionalStringProperty
+} from "@chronarium/adapter-kit";
 import { STRIPCHAT_ADAPTER_ID } from "./fixtureAdapter.js";
 
 export const STRIPCHAT_SITE_ID = "stripchat";
@@ -16,6 +28,9 @@ export interface StripchatCombinedFixture {
   readonly capturedAt: string;
   readonly monotonicStartMs: number;
   readonly topology: StripchatFixtureTopology;
+  readonly roomStates: readonly StripchatFixtureRoomState[];
+  readonly chatMessages: readonly StripchatFixtureChatMessage[];
+  readonly networkEvents: readonly StripchatFixtureNetworkEvent[];
   readonly track: StripchatFixtureTrack;
 }
 
@@ -45,6 +60,46 @@ export interface StripchatFixtureSegment {
   readonly durationMs: number;
 }
 
+export interface StripchatFixtureRoomState {
+  readonly state: string;
+  readonly monotonicMs: number;
+  readonly viewerCount?: number;
+  readonly showMode?: string;
+  readonly topic?: string;
+  readonly syntheticOnly: true;
+}
+
+export interface StripchatFixtureChatMessage {
+  readonly messageId: string;
+  readonly authorRef: string;
+  readonly body: string;
+  readonly redactionStatus: "synthetic" | "redacted";
+  readonly monotonicMs: number;
+  readonly role?: string;
+  readonly syntheticOnly: true;
+}
+
+export type StripchatFixtureNetworkEvent =
+  | StripchatFixtureNetworkDisconnected
+  | StripchatFixtureNetworkReconnected;
+
+export interface StripchatFixtureNetworkDisconnected {
+  readonly type: "network.disconnected";
+  readonly reason: string;
+  readonly monotonicMs: number;
+  readonly affectedTrackIds?: readonly string[];
+  readonly syntheticOnly: true;
+}
+
+export interface StripchatFixtureNetworkReconnected {
+  readonly type: "network.reconnected";
+  readonly disconnectedEventId: string;
+  readonly outageDurationMs?: number;
+  readonly monotonicMs: number;
+  readonly affectedTrackIds?: readonly string[];
+  readonly syntheticOnly: true;
+}
+
 export function parseStripchatCombinedFixture(
   value: unknown
 ): StripchatCombinedFixture {
@@ -65,6 +120,17 @@ export function parseStripchatCombinedFixture(
       0
     ),
     topology: parseTopology(fixture.topology),
+    roomStates: expectOptionalArray(fixture.roomStates, "roomStates").map(
+      (roomState, index) => parseRoomState(roomState, `roomStates[${index}]`)
+    ),
+    chatMessages: expectOptionalArray(fixture.chatMessages, "chatMessages").map(
+      (chatMessage, index) =>
+        parseChatMessage(chatMessage, `chatMessages[${index}]`)
+    ),
+    networkEvents: expectOptionalArray(fixture.networkEvents, "networkEvents").map(
+      (networkEvent, index) =>
+        parseNetworkEvent(networkEvent, `networkEvents[${index}]`)
+    ),
     track: parseTrack(fixture.track, "track")
   };
 }
@@ -111,6 +177,79 @@ export function createStripchatCombinedTimelineEvents(
     })
   );
   sequence += 1;
+
+  for (const roomState of fixture.roomStates) {
+    events.push(
+      createFixtureTimelineEvent({
+        fixture,
+        sequence,
+        type: "room.state.changed",
+        monotonicMs: fixture.monotonicStartMs + roomState.monotonicMs,
+        payload: {
+          state: roomState.state,
+          syntheticOnly: roomState.syntheticOnly,
+          ...(roomState.viewerCount === undefined
+            ? {}
+            : { viewerCount: roomState.viewerCount }),
+          ...(roomState.showMode ? { showMode: roomState.showMode } : {}),
+          ...(roomState.topic ? { topic: roomState.topic } : {})
+        }
+      })
+    );
+    sequence += 1;
+  }
+
+  for (const chatMessage of fixture.chatMessages) {
+    events.push(
+      createFixtureTimelineEvent({
+        fixture,
+        sequence,
+        type: "chat.message.observed",
+        monotonicMs: fixture.monotonicStartMs + chatMessage.monotonicMs,
+        payload: {
+          messageId: chatMessage.messageId,
+          authorRef: chatMessage.authorRef,
+          body: chatMessage.body,
+          redactionStatus: chatMessage.redactionStatus,
+          syntheticOnly: chatMessage.syntheticOnly,
+          ...(chatMessage.role ? { role: chatMessage.role } : {})
+        }
+      })
+    );
+    sequence += 1;
+  }
+
+  for (const networkEvent of fixture.networkEvents) {
+    events.push(
+      createFixtureTimelineEvent({
+        fixture,
+        sequence,
+        type: networkEvent.type,
+        monotonicMs: fixture.monotonicStartMs + networkEvent.monotonicMs,
+        sourceIdHash: fixture.track.sourceIdHash,
+        payload:
+          networkEvent.type === "network.disconnected"
+            ? {
+                reason: networkEvent.reason,
+                syntheticOnly: networkEvent.syntheticOnly,
+                ...(networkEvent.affectedTrackIds
+                  ? { affectedTrackIds: [...networkEvent.affectedTrackIds] }
+                  : {})
+              }
+            : {
+                disconnectedEventId: networkEvent.disconnectedEventId,
+                syntheticOnly: networkEvent.syntheticOnly,
+                ...(networkEvent.outageDurationMs === undefined
+                  ? {}
+                  : { outageDurationMs: networkEvent.outageDurationMs }),
+                ...(networkEvent.affectedTrackIds
+                  ? { affectedTrackIds: [...networkEvent.affectedTrackIds] }
+                  : {})
+              }
+      })
+    );
+    sequence += 1;
+  }
 
   events.push(
     createFixtureTimelineEvent({
@@ -188,6 +327,61 @@ export function createStripchatCombinedTimelineEvents(
   return events;
 }
 
+function parseNetworkEvent(
+  value: unknown,
+  path: string
+): StripchatFixtureNetworkEvent {
+  const networkEvent = expectRecord(value, path);
+  const type = expectString(networkEvent.type, `${path}.type`);
+  const syntheticOnly = networkEvent.syntheticOnly;
+  if (syntheticOnly !== true) {
+    throw new Error(`${path}.syntheticOnly must be true.`);
+  }
+
+  const affectedTrackIds = expectOptionalArray(
+    networkEvent.affectedTrackIds,
+    `${path}.affectedTrackIds`
+  ).map((trackId, index) =>
+    expectString(trackId, `${path}.affectedTrackIds[${index}]`)
+  );
+
+  if (type === "network.disconnected") {
+    return {
+      type,
+      reason: expectString(networkEvent.reason, `${path}.reason`),
+      monotonicMs: expectNonNegativeInteger(
+        networkEvent.monotonicMs,
+        `${path}.monotonicMs`
+      ),
+      ...(affectedTrackIds.length > 0 ? { affectedTrackIds } : {}),
+      syntheticOnly
+    };
+  }
+
+  if (type === "network.reconnected") {
+    return {
+      type,
+      disconnectedEventId: expectString(
+        networkEvent.disconnectedEventId,
+        `${path}.disconnectedEventId`
+      ),
+      monotonicMs: expectNonNegativeInteger(
+        networkEvent.monotonicMs,
+        `${path}.monotonicMs`
+      ),
+      ...optionalNumberProperty(
+        "outageDurationMs",
+        networkEvent.outageDurationMs,
+        `${path}.outageDurationMs`
+      ),
+      ...(affectedTrackIds.length > 0 ? { affectedTrackIds } : {}),
+      syntheticOnly
+    };
+  }
+
+  throw new Error(`${path}.type must be network.disconnected or network.reconnected.`);
+}
+
 function parseTopology(value: unknown): StripchatFixtureTopology {
   const topology = expectRecord(value, "topology");
   const protocol = expectString(topology.protocol, "topology.protocol");
@@ -201,7 +395,8 @@ function parseTopology(value: unknown): StripchatFixtureTopology {
   );
   assertSyntheticFixtureReference(
     playlistReference,
-    "topology.playlistReference"
+    "topology.playlistReference",
+    STRIPCHAT_SYNTHETIC_REFERENCE_PREFIX
   );
 
   const redactionStatus = expectString(
@@ -216,6 +411,64 @@ function parseTopology(value: unknown): StripchatFixtureTopology {
     protocol,
     playlistReference,
     redactionStatus
+  };
+}
+
+function parseRoomState(
+  value: unknown,
+  path: string
+): StripchatFixtureRoomState {
+  const roomState = expectRecord(value, path);
+  const syntheticOnly = roomState.syntheticOnly;
+  if (syntheticOnly !== true) {
+    throw new Error(`${path}.syntheticOnly must be true.`);
+  }
+
+  return {
+    state: expectString(roomState.state, `${path}.state`),
+    monotonicMs: expectNonNegativeInteger(
+      roomState.monotonicMs,
+      `${path}.monotonicMs`
+    ),
+    ...optionalNumberProperty(
+      "viewerCount",
+      roomState.viewerCount,
+      `${path}.viewerCount`
+    ),
+    ...optionalStringProperty("showMode", roomState.showMode, `${path}.showMode`),
+    ...optionalStringProperty("topic", roomState.topic, `${path}.topic`),
+    syntheticOnly
+  };
+}
+
+function parseChatMessage(
+  value: unknown,
+  path: string
+): StripchatFixtureChatMessage {
+  const chatMessage = expectRecord(value, path);
+  const redactionStatus = expectString(
+    chatMessage.redactionStatus,
+    `${path}.redactionStatus`
+  );
+  if (redactionStatus !== "synthetic" && redactionStatus !== "redacted") {
+    throw new Error(`${path}.redactionStatus must be synthetic or redacted.`);
+  }
+  const syntheticOnly = chatMessage.syntheticOnly;
+  if (syntheticOnly !== true) {
+    throw new Error(`${path}.syntheticOnly must be true.`);
+  }
+
+  return {
+    messageId: expectString(chatMessage.messageId, `${path}.messageId`),
+    authorRef: expectString(chatMessage.authorRef, `${path}.authorRef`),
+    body: expectString(chatMessage.body, `${path}.body`),
+    redactionStatus,
+    monotonicMs: expectNonNegativeInteger(
+      chatMessage.monotonicMs,
+      `${path}.monotonicMs`
+    ),
+    ...optionalStringProperty("role", chatMessage.role, `${path}.role`),
+    syntheticOnly
   };
 }
 
@@ -237,7 +490,8 @@ function parseTrack(value: unknown, path: string): StripchatFixtureTrack {
   );
   assertSyntheticFixtureReference(
     playlistReference,
-    `${path}.playlistReference`
+    `${path}.playlistReference`,
+    STRIPCHAT_SYNTHETIC_REFERENCE_PREFIX
   );
 
   const segments = expectArray(track.segments, `${path}.segments`).map(
@@ -277,6 +531,20 @@ function parseSegment(value: unknown, path: string): StripchatFixtureSegment {
     ),
     durationMs: expectPositiveInteger(segment.durationMs, `${path}.durationMs`)
   };
+}
+
+function optionalNumberProperty<TName extends string>(
+  name: TName,
+  value: unknown,
+  path: string
+): Partial<Record<TName, number>> {
+  if (value === undefined) {
+    return {};
+  }
+
+  return {
+    [name]: expectNonNegativeInteger(value, path)
+  } as Partial<Record<TName, number>>;
 }
 
 function assertSegmentsAreOrdered(
@@ -330,104 +598,4 @@ function createSyntheticSource(sourceIdHash?: string): {
     ...(sourceIdHash ? { sourceIdHash } : {}),
     redactionStatus: "synthetic"
   };
-}
-
-function assertSyntheticFixtureReference(reference: string, path: string): void {
-  const lowerReference = reference.toLowerCase();
-  const forbiddenFragments = [
-    "cookie",
-    "token",
-    "session",
-    "signature",
-    "authorization",
-    "bearer"
-  ];
-
-  if (!reference.startsWith(STRIPCHAT_SYNTHETIC_REFERENCE_PREFIX)) {
-    throw new Error(`${path} must use a synthetic fixture://stripchat/ reference.`);
-  }
-
-  if (reference.includes("?") || reference.includes("#")) {
-    throw new Error(`${path} must not contain query strings or fragments.`);
-  }
-
-  if (forbiddenFragments.some((fragment) => lowerReference.includes(fragment))) {
-    throw new Error(`${path} contains a forbidden sensitive fragment.`);
-  }
-}
-
-function expectRecord(value: unknown, path: string): Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new Error(`${path} must be an object.`);
-  }
-
-  return value as Record<string, unknown>;
-}
-
-function expectArray(value: unknown, path: string): readonly unknown[] {
-  if (!Array.isArray(value)) {
-    throw new Error(`${path} must be an array.`);
-  }
-
-  return value;
-}
-
-function expectString(value: unknown, path: string): string {
-  if (typeof value !== "string" || value.length === 0) {
-    throw new Error(`${path} must be a non-empty string.`);
-  }
-
-  return value;
-}
-
-function optionalStringProperty<K extends string>(
-  key: K,
-  value: unknown,
-  path: string
-): Partial<Record<K, string>> {
-  if (value === undefined) {
-    return {};
-  }
-
-  return {
-    [key]: expectString(value, path)
-  } as Partial<Record<K, string>>;
-}
-
-function expectNumber(value: unknown, path: string): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new Error(`${path} must be a finite number.`);
-  }
-
-  return value;
-}
-
-function expectOptionalNumber(
-  value: unknown,
-  path: string,
-  fallback: number
-): number {
-  if (value === undefined) {
-    return fallback;
-  }
-
-  return expectNumber(value, path);
-}
-
-function expectNonNegativeInteger(value: unknown, path: string): number {
-  const numberValue = expectNumber(value, path);
-  if (!Number.isInteger(numberValue) || numberValue < 0) {
-    throw new Error(`${path} must be a non-negative integer.`);
-  }
-
-  return numberValue;
-}
-
-function expectPositiveInteger(value: unknown, path: string): number {
-  const numberValue = expectNumber(value, path);
-  if (!Number.isInteger(numberValue) || numberValue <= 0) {
-    throw new Error(`${path} must be a positive integer.`);
-  }
-
-  return numberValue;
 }

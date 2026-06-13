@@ -2,6 +2,11 @@ import type {
   ArchiveValidationIssue,
   ArchiveValidationReport
 } from "@chronarium/archive";
+import {
+  parseDiagnosticDurationMismatchPayloadV1,
+  parseDiagnosticMediaToolOutputPayloadV1,
+  parseMediaGapDetectedPayloadV1
+} from "@chronarium/schemas";
 import type { JsonObject, JsonValue, TimelineEventEnvelope } from "@chronarium/types";
 import type { CoreArchiveIndexService } from "../archiveIndexService.js";
 import type {
@@ -71,6 +76,9 @@ function createTimelineDiagnosticFindings(
   return validation.timelineEvents.flatMap((event) => {
     switch (event.type) {
       case "media.gap.detected":
+        if (!tryParsePayload(parseMediaGapDetectedPayloadV1, event.payload)) {
+          return [];
+        }
         return [
           createTimelineFinding({
             event,
@@ -82,6 +90,14 @@ function createTimelineDiagnosticFindings(
           })
         ];
       case "diagnostic.duration_mismatch":
+        if (
+          !tryParsePayload(
+            parseDiagnosticDurationMismatchPayloadV1,
+            event.payload
+          )
+        ) {
+          return [];
+        }
         return [
           createTimelineFinding({
             event,
@@ -94,6 +110,14 @@ function createTimelineDiagnosticFindings(
           })
         ];
       case "diagnostic.media_tool_output":
+        if (
+          !tryParsePayload(
+            parseDiagnosticMediaToolOutputPayloadV1,
+            event.payload
+          )
+        ) {
+          return [];
+        }
         return [
           createTimelineFinding({
             event,
@@ -108,6 +132,17 @@ function createTimelineDiagnosticFindings(
         return [];
     }
   });
+}
+
+function tryParsePayload<TPayload>(
+  parsePayload: (value: unknown) => TPayload,
+  payload: unknown
+): TPayload | undefined {
+  try {
+    return parsePayload(payload);
+  } catch {
+    return undefined;
+  }
 }
 
 function createTimelineFinding(input: {

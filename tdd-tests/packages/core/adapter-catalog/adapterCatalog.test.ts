@@ -16,7 +16,6 @@ describe("adapter catalog", () => {
         capabilities: [
           "fixture.timeline",
           "media.discovery",
-          "room.state",
           "diagnostics"
         ],
         fixtureReadiness: expect.objectContaining({

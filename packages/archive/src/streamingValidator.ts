@@ -8,6 +8,7 @@ import {
   resolveArchivePath
 } from "./layout.js";
 import { validateTimelineMediaSegments } from "./segmentValidation.js";
+import { validateTimelinePayloads } from "./payloadValidation.js";
 import { readTimelineEventBatches } from "./timelineReader.js";
 import type { ArchiveValidationIssue } from "./validator.js";
 
@@ -285,6 +286,11 @@ async function scanTimeline(
         mediaTracks,
         timelineEvents: batch.events
       }))
+    );
+    issues.push(
+      ...validateTimelinePayloads({
+        timelineEvents: batch.events
+      })
     );
 
     batch.events.forEach((event) => {

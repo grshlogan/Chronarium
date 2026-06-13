@@ -4,9 +4,9 @@ Status: registry document. The Implemented Registry section reflects the
 `ArchiveValidationIssueCode` union that exists in
 `packages/archive/src/validator.ts` today and is stored by the SQLite indexer.
 The Timeline Diagnostic Payload Code Registry section reflects codes that
-appear inside committed synthetic timeline diagnostic fixture payloads. All
-Reserved sections are drafts: no production emitting code exists for them, and
-their candidate names may change until first implementation.
+appear inside committed synthetic timeline diagnostic fixture payloads. Reserved
+sections are drafts unless an area is explicitly marked as implemented or
+partially implemented below.
 
 ## Purpose
 
@@ -18,8 +18,8 @@ conditions. They are not log strings. They are stored data:
 - the indexer persists issues into the `archive_validation_issues` table in
   `packages/indexer/src/schema.ts`, whose `code` column is indexed for
   grouping and lookup;
-- the planned GUI (see `docs/GUI_CORE_PROTOCOL.md`) will show codes to users
-  and group them;
+- the future GUI/core binding (see `docs/GUI_CORE_PROTOCOL.md`) will show
+  codes to users and group them;
 - the planned maintenance layer (see `docs/MAINTENANCE_OPS_DESIGN.md`) will
   classify stored issues into maintenance findings by code.
 
@@ -107,9 +107,11 @@ Deprecation is the only allowed end state. There is no removal.
 ## Implemented Registry
 
 These twenty-six codes are exactly the members of `ArchiveValidationIssueCode`
-in `packages/archive/src/validator.ts`. Two validator entry points emit
-them: `validateFileArchive` (reads a Replay Package from disk) and
-`validateArchiveSnapshot` (checks already-parsed in-memory data).
+in `packages/archive/src/validator.ts`. Current validator entry points include
+`validateFileArchive` (reads a Replay Package from disk),
+`validateArchiveSnapshot` (checks already-parsed in-memory data), and
+`validateFileArchiveStreaming` (streams package validation without returning the
+full timeline array).
 
 ### archive.*
 
@@ -192,13 +194,23 @@ them: `validateFileArchive` (reads a Replay Package from disk) and
   does not match the last event's sequence. Emitted by
   `validateFileArchive` and `validateArchiveSnapshot`.
 
-## Reserved Areas
+### payload.*
 
-The following areas are RESERVED for archive validation or future durable
-diagnostic outputs. No production emitting code exists for any of them.
-Candidate names listed here are drafts unless they are also listed in the
-Timeline Diagnostic Payload Code Registry below; only the area tokens
-themselves are reserved.
+- `payload.schema_invalid`: a timeline event whose `type` has a registered
+  per-family payload schema failed that schema (missing required field or wrong
+  type). Emitted by `validateFileArchive` and `validateFileArchiveStreaming`
+  through `validateTimelinePayloads`. Event types without a registered payload
+  schema pass through unvalidated. Implemented for the media observation
+  families `media.track.topology_observed`, `media.track.discovered`,
+  `media.segment.observed`, and `media.gap.detected`.
+
+## Reserved And Partially Implemented Areas
+
+The following areas are reserved for archive validation or future durable
+diagnostic outputs. Areas or codes listed in the Implemented Registry above are
+already emitted by current code. Candidate names that are not implemented remain
+drafts unless they are also listed in the Timeline Diagnostic Payload Code
+Registry below.
 
 - `segment.*`: now implemented for basic referenced-file existence, path, and
   byte-length checks. Future segment checks may add hash mismatches, duration

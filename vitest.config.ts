@@ -17,6 +17,9 @@ export default defineConfig({
       "@chronarium/core": sourceAlias("./packages/core/src/index.ts"),
       "@chronarium/indexer": sourceAlias("./packages/indexer/src/index.ts"),
       "@chronarium/desktop": sourceAlias("./apps/desktop/src/index.ts"),
+      "@chronarium/adapter-kit": sourceAlias(
+        "./packages/adapters/kit/src/index.ts"
+      ),
       "@chronarium/adapter-chaturbate": sourceAlias(
         "./packages/adapters/chaturbate/src/index.ts"
       ),

@@ -7,6 +7,7 @@
     { "path": "packages/core" },
     { "path": "packages/indexer" },
     { "path": "packages/media-tools" },
+    { "path": "packages/adapters/kit" },
     { "path": "packages/adapters/chaturbate" },
     { "path": "packages/adapters/stripchat" },
     { "path": "packages/testkit" },

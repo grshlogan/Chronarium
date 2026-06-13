@@ -152,6 +152,24 @@ AI 可以快速接手局部问题
   core runtime lifecycle、core maintenance inspector、offline fixture capture
   pipeline、Chaturbate 离线 split-track fixture、fixture archive/indexer flow
   synthetic diagnostic fixture、adapter readiness gate 和 adapter catalog。
+- 已抽出共享 `@chronarium/adapter-kit`（`packages/adapters/kit`），把站点
+  adapter 之前各自复制的 fixture 安全校验（`assertSyntheticFixtureReference`、
+  `assertNoSensitiveFixtureStrings`）和 fixture 解析原语（`expect*`）收进单一
+  可测模块。Chaturbate 与 Stripchat adapter 已改用它，行为保持不变；重复的
+  fact-builder 仍留在各 adapter，等 timeline payload schema 落地再合并。
+- 已为首批 timeline 事实族补上 per-family payload schema 与
+  `validateTimelineEventPayloadV1` 分发器，覆盖媒体观测事实、诊断事实、
+  `room.state.changed`、`chat.message.observed`、`network.disconnected` 和
+  `network.reconnected`。这些 schema 保持宽松：校验必填+已知字段，允许额外键。
+  `packages/archive` 现在会在快照与流式校验两条路径上报 `payload.schema_invalid`。
+  `media.gap.detected` 统一为结构化媒体事实（顶层几何字段必填，诊断注解可选）；
+  Stripchat fixture 已扩展为 room/chat/network/reconnect + gap 的合成模板。
+- 已实现第一版 fixture-only 凭据库（`createCredentialStore`）与按主播选择器
+  （`selectCredentialForCapture`），凭据模型类型在 `packages/types`。档案只存脱敏
+  元数据 + 不透明 `storageHandle`,store 会拒绝带原始密文痕迹的档案;选择器实现
+  能力匹配→容灾,只返回脱敏 `CredentialRef`,`public` 返回 `not-required`,无可用
+  绑定档案时返回 `missing`(调用方降级,绝不阻塞监控)。尚无加密/导入/注入/真实
+  Cookie/直连;core 任务门槛与 `session.credential_*` 事实 schema 是后续切片。
 - 尚未实现 Electron 桌面壳、preload/IPC、真实 task 执行、真实 adapter
   child process、真实站点 adapter、外部媒体工具执行、真实媒体分片写入、
   archive repair/migration 或 replay player。
@@ -200,6 +218,7 @@ small module boundaries.
 - [docs/MEDIA_TOOLS_BOUNDARY.md](./docs/MEDIA_TOOLS_BOUNDARY.md)：外部媒体工具的类型化命令边界契约草案。
 - [docs/MEDIA_LIFECYCLE_AND_RETENTION.md](./docs/MEDIA_LIFECYCLE_AND_RETENTION.md)：raw 媒体、压缩输出、上传、校验和本地删除门槛的生命周期设计契约。
 - [docs/SECURITY_PRIVACY.md](./docs/SECURITY_PRIVACY.md)：安全、隐私、fixture 和敏感数据规则。
+- [docs/CREDENTIALS_AND_SESSIONS.md](./docs/CREDENTIALS_AND_SESSIONS.md)：认证录制(ticket/private/spy)的凭据模型、按主播绑定、选择策略、脱敏与存储的设计契约草案。
 - [docs/MAINTENANCE_OPS_DESIGN.md](./docs/MAINTENANCE_OPS_DESIGN.md)：maintenance / ops 巡检系统设计草案和项目引用。
 - [docs/CB_RECORDING_REFERENCES.md](./docs/CB_RECORDING_REFERENCES.md)：CB 分离音视频录播参考项目和 Chronarium 设计取舍。
 - [docs/DEVELOPMENT_SETUP.md](./docs/DEVELOPMENT_SETUP.md)：当前开发环境、依赖、脚本和安全检查说明。
@@ -217,11 +236,16 @@ small module boundaries.
 - [docs/plan/plan_adapter_worker_command_builder.md](./docs/plan/plan_adapter_worker_command_builder.md)：未来 adapter child-process typed spawn command descriptor 计划。
 - [docs/plan/plan_adapter_worker_supervisor_harness.md](./docs/plan/plan_adapter_worker_supervisor_harness.md)：no-spawn adapter worker stdout/stderr/exit/lifecycle 监督 harness 计划。
 - [docs/plan/plan_real_site_adapter_bringup_checklist.md](./docs/plan/plan_real_site_adapter_bringup_checklist.md)：真实站点 adapter fixture-first 开工清单计划。
+- [docs/plan/plan_documentation_code_state_sync.md](./docs/plan/plan_documentation_code_state_sync.md)：文档与当前代码状态同步计划。
 - [docs/plan/plan_web_first_recording_dashboard.md](./docs/plan/plan_web_first_recording_dashboard.md)：第一版 Web-first 录制工作台计划和验证记录。
 - [docs/plan/plan_web_dashboard_offline_behavior.md](./docs/plan/plan_web_dashboard_offline_behavior.md)：Web 录制工作台离线 demo 行为计划。
 - [docs/plan/plan_web_dashboard_monitoring_semantics.md](./docs/plan/plan_web_dashboard_monitoring_semantics.md)：Web 录制工作台监控/自检语义修正计划。
 - [docs/plan/plan_web_dashboard_streamer_selection.md](./docs/plan/plan_web_dashboard_streamer_selection.md)：Web 录制工作台主播选择行为计划。
 - [docs/plan/plan_web_dashboard_streamer_context.md](./docs/plan/plan_web_dashboard_streamer_context.md)：Web 录制工作台按主播上下文联动计划。
+- [docs/plan/plan_adapter_kit_shared_fixture_helpers.md](./docs/plan/plan_adapter_kit_shared_fixture_helpers.md)：抽出共享 `@chronarium/adapter-kit` fixture 安全/解析助手的重构计划。
+- [docs/plan/plan_timeline_payload_schemas_round2.md](./docs/plan/plan_timeline_payload_schemas_round2.md)：媒体事实族 timeline payload schema 与 gap 形状统一的计划。
+- [docs/plan/plan_timeline_payload_schemas_round3_4_5.md](./docs/plan/plan_timeline_payload_schemas_round3_4_5.md)：diagnostic、room/chat、network/reconnect payload schema 与 fixture 地基收尾计划。
+- [docs/plan/plan_credential_store_selector_fixture.md](./docs/plan/plan_credential_store_selector_fixture.md)：fixture-only 凭据库与按主播选择器（能力匹配→容灾）的计划。
 
 ## 设计边界
 

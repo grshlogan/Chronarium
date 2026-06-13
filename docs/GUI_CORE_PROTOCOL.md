@@ -106,13 +106,13 @@ A synthetic request example:
   "messageId": "msg-0001",
   "type": "index.timeline.query",
   "sentAt": "2026-06-12T00:00:00.000Z",
-  "payload": {
-    "filter": {
-      "archiveId": "arch-synthetic-0001",
-      "type": "chat.message"
-    },
-    "limit": 200
-  }
+    "payload": {
+      "filter": {
+        "archiveId": "arch-synthetic-0001",
+        "type": "chat.message.observed"
+      },
+      "limit": 200
+    }
 }
 ```
 

@@ -101,6 +101,11 @@ Current state:
   that combines a worker command descriptor, stdout JSONL, stderr lines, exit
   code, and lifecycle request into a structured worker report. It maps invalid
   stdout and non-zero exits to failed reports without starting a real process.
+- Documentation has been re-synced with this current code state. Notable
+  corrections: the GUI/core protocol docs now say the Web-first renderer exists
+  but is not bound to Electron/preload/IPC/core, the diagnostic code registry no
+  longer treats implemented `segment.*` checks as purely reserved, and the code
+  map's TDD tree includes the current worker/timeline/indexer slices.
 - `packages/core` has an adapter catalog that registers adapter manifests,
   lists adapters, looks up by adapter id, rejects duplicate adapter ids, and
   rejects manifests that declare sensitive source field emission.
@@ -198,6 +203,50 @@ Current state:
   `media.gap.detected` facts.
 - The Stripchat fixture stream passes `verifyAdapterFixtureReadiness`, and its
   fixture-only manifest can be registered through the core adapter catalog.
+- `@chronarium/adapter-kit` (`packages/adapters/kit`) now holds the shared
+  fixture-safety guards (`assertSyntheticFixtureReference`,
+  `assertNoSensitiveFixtureStrings`) and fixture-parsing primitives (`expect*`,
+  `optionalStringProperty`). The Chaturbate and Stripchat adapters consume it
+  instead of local copies, so the per-adapter secret/URL safety checks have one
+  source of truth. This was a behavior-preserving refactor (A02 Round 1); the
+  duplicated fact-builders stay per-adapter until timeline payload schemas land.
+- `@chronarium/schemas` now has per-family timeline payload schemas for the
+  first media, diagnostic, room/chat, and network/reconnect facts:
+  `media.track.topology_observed`, `media.track.discovered`,
+  `media.segment.observed`, `media.gap.detected`, `diagnostic.note`,
+  `diagnostic.duration_mismatch`, `diagnostic.media_tool_output`,
+  `room.state.changed`, `chat.message.observed`, `network.disconnected`, and
+  `network.reconnected`. They are lenient (validate required + known fields;
+  allow extra keys). `packages/archive` reports `payload.schema_invalid` for
+  registered families from both `validateFileArchive` and
+  `validateFileArchiveStreaming` via `validateTimelinePayloads`; the reader and
+  writer stay envelope-only. `media.segment.observed` (observation) stays
+  distinct from the stored, `relativePath`-bearing segment fact.
+- The Stripchat fixture now emits synthetic `room.state.changed`,
+  `chat.message.observed`, `network.disconnected`, `network.reconnected`, and
+  `media.gap.detected` facts, making it the first room/chat/network/gap
+  bring-up template. Its readiness stream requests and proves `room.state` and
+  `chat.events`; the readiness gate now rejects streams that declare or request
+  those capabilities without matching facts. The Chaturbate fixture no longer
+  declares `room.state` until it has a room-state fixture.
+- `docs/CREDENTIALS_AND_SESSIONS.md` records the design draft for authenticated
+  recording (ticket / private / spy shows): a `CredentialProfile` is one
+  account's full cookie jar, a streamer binds one or more profiles with a
+  capability-match-then-failover selection policy, raw cookies stay runtime-only
+  (never in fixtures / timeline / archive / index / docs / logs / argv / Git;
+  only a redacted `CredentialRef` crosses boundaries), and the store is
+  core-only and at-rest encrypted. Real credential storage, import, injection,
+  cookies, and live requests do not exist yet.
+- `packages/core` now has the first fixture-only credential store
+  (`createCredentialStore`) and per-streamer selector
+  (`selectCredentialForCapture`), with credential model types in
+  `packages/types`. The store holds only profile metadata + an opaque
+  `storageHandle` and rejects raw-secret-looking strings; the selector implements
+  capability-match-failover, returns only a redacted `CredentialRef`, treats
+  `public` as `not-required`, and returns `missing` (caller degrades) when no
+  usable bound profile is entitled. No encryption, import, injection, real
+  cookies, or live path exists; the core task gate and reserved
+  `session.credential_*` timeline schemas are the next slices.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
 - `packages/testkit` has `verifyAdapterFixtureReadiness`, a reusable offline
@@ -400,42 +449,52 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. For the next site adapter behavior, follow
+1. Wait for explicit user direction before continuing the credential/Cookie
+   line. The approved next B-line slices are core task gating for gated intents
+   and reserved `session.credential_*` timeline fact schemas; encrypted storage,
+   import/injection, real cookies, and live request paths remain prohibited
+   until a specific live adapter is approved.
+2. For the next site adapter behavior, follow
    `docs/REAL_SITE_ADAPTER_BRINGUP.md`: begin fixture-first bring-up with
    synthetic or approved redacted fixtures for playlist parsing, room state,
    chat/event extraction, reconnect/gap handling, and error handling before any
    live-site request.
-2. Continue the adapter worker boundary with a real process launcher/supervisor
+3. Continue the adapter worker boundary with a real process launcher/supervisor
    shell only against fixture workers first, still without connecting to real
    sites.
-3. Add media segment hash and duration validation fixtures, still without
+4. Add media segment hash and duration validation fixtures, still without
    executing media tools.
-4. Add schema drafts and fixtures for processed-output facts, derivation facts,
+5. Add schema drafts and fixtures for processed-output facts, derivation facts,
    playable-validation facts, and retention/upload decision facts, while keeping
    upload and deletion optional policy areas rather than mandatory release
    behavior.
-5. Add schema drafts for editable processing plans: source sessions, included
+6. Add schema drafts for editable processing plans: source sessions, included
    ranges, excluded fragments, exclusion reasons, output timeline mapping, and
    resulting processed output ids.
-6. Continue WebUI behavior with add-link form validation and clearer
+7. Continue WebUI behavior with add-link form validation and clearer
    pause/resume/check state feedback, still synthetic-only.
-7. Replace the browser-only offline self-test action with a real GUI-facing
+8. Replace the browser-only offline self-test action with a real GUI-facing
    DTO/preload boundary, then connect it to `CoreGuiService` without letting the
    renderer call archive/indexer internals directly.
-8. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
+9. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
    real tools.
-9. Build the Electron shell and preload/IPC boundary around the existing
+10. Build the Electron shell and preload/IPC boundary around the existing
    Web-first renderer only after the GUI/core DTO boundary is stable.
-10. Let the Web renderer use the offline fixture capture pipeline to show
+11. Let the Web renderer use the offline fixture capture pipeline to show
    archive list, timeline facts, validation, recovery, and maintenance status.
-11. Extend the maintenance inspector with index freshness comparison, keeping
+12. Extend the maintenance inspector with index freshness comparison, keeping
    writes as explicit safe-rebuild suggestions rather than automatic actions.
-12. Add real media segment IO only after segment reader/validator coverage,
+13. Add real media segment IO only after segment reader/validator coverage,
    media-track metadata validation, and media-tool fixture parsing remain
    stable.
-13. If real Chaturbate behavior needs validation, first prepare separately
+14. If real Chaturbate behavior needs validation, first prepare separately
    approved redacted evidence or synthetic reproductions derived from approved
    local samples.
+
+Documentation hygiene note: after code or boundary changes, re-check
+`docs/PRODUCT_SPEC.md`, `docs/ADAPTER_PROTOCOL.md`,
+`docs/DIAGNOSTIC_CODES_V1.md`, `docs/APP_CODE_MAP.md`, this handoff, and the
+A01 context for stale "not implemented" or "planned only" wording.
 
 ## Verification Status
 
@@ -751,3 +810,62 @@ Stripchat offline combined fixture and adapter task gate checks:
 - `git diff --check`: produced no output.
 - Trailing whitespace scan produced no output.
 - JSON/package config parse scan parsed 26 JSON files.
+
+Documentation/code-state sync checks:
+
+- Documentation-only pass; no code behavior changed.
+- `git diff --check`: passed.
+- Trailing whitespace scan passed.
+- JSON/package config parse scan parsed 27 JSON files.
+
+Shared adapter kit (A02 Round 1) checks:
+
+- TDD RED: `pnpm exec vitest run tdd-tests/packages/adapters/kit` failed with
+  `Cannot find package '@chronarium/adapter-kit'`.
+- GREEN: passed after adding the package and wiring; expanded to 9 kit tests.
+- `pnpm install`, `pnpm typecheck`, and `pnpm build` passed.
+- `pnpm test` passed 27 files and 117 tests (was 26 files / 108 tests), with the
+  known Node `node:sqlite` ExperimentalWarning. All existing adapter regression
+  tests stayed green, confirming the move is behavior-preserving.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed.
+- `git diff --check` clean after normalizing two EOF newlines; trailing
+  whitespace scan clean.
+
+Timeline payload schemas (A02 Round 2) checks:
+
+- TDD RED: `tdd-tests/packages/schemas/timeline-payloads` failed
+  (`parseMediaTrackDiscoveredPayloadV1` absent), then GREEN (13 tests).
+- TDD RED: `tdd-tests/packages/archive/payload-validation` produced no
+  `payload.schema_invalid`, then GREEN after wiring `validateTimelinePayloads`.
+- TDD RED: the Chaturbate diagnostic-archive test rejected the diagnostic-wrapped
+  gap, then GREEN after the structured-gap reshape.
+- `pnpm typecheck`, `pnpm build` passed; `pnpm test` passed 29 files and 133
+  tests (was 27 / 117), with the known Node `node:sqlite` ExperimentalWarning.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128` `issueCount: 0`.
+- `git diff --check` + trailing-whitespace scan clean.
+
+Fixture-only credential store and selector (A02) checks:
+
+- TDD RED: `tdd-tests/packages/core/credentials` failed
+  (`createCredentialStore` absent), then GREEN (9 tests: tracer, failover,
+  streamer-scope specificity, priority policy, public not-required, two missing
+  cases, two store-safety cases).
+- `pnpm typecheck`, `pnpm build` passed; `pnpm test` passed 30 files and 142
+  tests (was 29 / 133), with the known Node `node:sqlite` ExperimentalWarning.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128` `issueCount: 0`.
+- `git diff --check` + trailing-whitespace scan clean.
+
+Timeline payload schemas Round 3-5 checks:
+
+- TDD RED/GREEN recorded in
+  `docs/plan/plan_timeline_payload_schemas_round3_4_5.md`.
+- Targeted Round 3/4/5 tests passed 4 files and 38 tests.
+- `pnpm test` passed 30 files and 158 tests, with the known Node
+  `node:sqlite` ExperimentalWarning.
+- `pnpm typecheck` passed.
+- `pnpm build` passed.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed with 1000
+  scanned events, 8 batches, and 0 issues.
+- `git diff --check` passed.
+- trailing whitespace scan found no matches.
+- JSON/package parse scan parsed 29 JSON files.

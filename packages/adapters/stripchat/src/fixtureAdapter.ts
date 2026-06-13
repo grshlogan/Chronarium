@@ -11,6 +11,7 @@ export const STRIPCHAT_FIXTURE_CAPABILITIES = [
   "fixture.timeline",
   "media.discovery",
   "room.state",
+  "chat.events",
   "diagnostics"
 ] as const satisfies readonly AdapterCapability[];
 

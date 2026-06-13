@@ -246,17 +246,18 @@ async function writeChaturbateDiagnosticArchive(
       type: "media.gap.detected",
       sequence: 1,
       payload: {
+        trackId: "video-main",
+        previousSegmentId: "video-segment-0001",
+        nextSegmentId: "video-segment-0003",
+        gapStartMs: 4000,
+        gapEndMs: 7000,
+        durationMs: 3000,
         level: "warning",
         code: "media_gap.detected",
         evidenceLevel: "synthetic-contract",
         message:
           "Synthetic fixture observed a missing video segment interval.",
         affectedTrackIds: ["video-main"],
-        evidence: {
-          gapStartMs: 4000,
-          gapDurationMs: 3000,
-          syntheticOnly: true
-        },
         syntheticOnly: true
       }
     })

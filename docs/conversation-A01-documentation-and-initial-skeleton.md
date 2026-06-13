@@ -917,6 +917,67 @@ Checks already run during this continuation:
 - trailing whitespace scan: passed after no-spawn adapter worker supervisor.
 - JSON/package config parse scan: parsed 26 JSON files after no-spawn adapter
   worker supervisor.
+- Added `docs/plan/plan_documentation_code_state_sync.md` for a docs-only pass
+  that reviewed current code exports, package state, and stale implementation
+  wording.
+- Synced `docs/PRODUCT_SPEC.md`, `docs/ADAPTER_PROTOCOL.md`,
+  `docs/ADAPTER_SITE_READINESS.md`, `docs/DEVELOPMENT_SETUP.md`,
+  `docs/DIAGNOSTIC_CODES_V1.md`, `docs/APP_CODE_MAP.md`, `README.md`, and
+  `docs/AI_HANDOFF.md` with current code facts.
+- The sync clarified that the Web-first renderer exists but still has no
+  Electron shell, preload/IPC, or live GUI-core binding.
+- The sync clarified that `segment.*` validation codes are implemented for
+  basic referenced-file checks, while other reserved diagnostic areas remain
+  drafts.
+- The sync clarified that adapter worker support is currently JSONL parsing,
+  typed command descriptors, and a no-spawn supervisor harness only; real
+  child-process launching remains pending.
+- The `docs/APP_CODE_MAP.md` root TDD tree now lists the current archive
+  timeline-reader, core worker-supervisor, indexer batch-reader, and large
+  timeline test slices.
+- `git diff --check`: passed after the documentation/code-state sync.
+- trailing whitespace scan: passed after the documentation/code-state sync.
+- JSON/package config parse scan: parsed 27 JSON files after the
+  documentation/code-state sync.
+- Added `docs/plan/plan_timeline_payload_schemas_round3_4_5.md` for A01's
+  adapter-readiness foundation closeout, covering diagnostic, room/chat, and
+  network/reconnect payload schemas.
+- Round 3 RED:
+  `pnpm exec vitest run tdd-tests/packages/schemas/timeline-payloads/timelinePayloadSchemas.test.ts`
+  failed because diagnostic payload parse functions and dispatcher entries did
+  not exist.
+- Round 3 GREEN: added `diagnostic.note`,
+  `diagnostic.duration_mismatch`, and `diagnostic.media_tool_output` payload
+  schemas, then the targeted schema test passed.
+- Round 3 regression: Chaturbate diagnostic fixture archive validation and core
+  maintenance inspector tests passed with no `payload.schema_invalid` issues.
+- Round 4 RED:
+  `pnpm exec vitest run tdd-tests/packages/testkit/adapter-readiness/adapterReadiness.test.ts`
+  failed because declared/requested `room.state` and `chat.events`
+  capabilities did not require matching facts.
+- Round 4 GREEN: readiness now requires `room.state.changed` and
+  `chat.message.observed` facts; Stripchat emits synthetic room/chat facts, and
+  Chaturbate no longer declares `room.state` until it has a room fixture.
+- Round 5 RED:
+  `pnpm exec vitest run tdd-tests/packages/schemas/timeline-payloads/timelinePayloadSchemas.test.ts`
+  failed because network reconnect payload parse functions and dispatcher
+  entries did not exist.
+- Round 5 GREEN: added `network.disconnected` and `network.reconnected`
+  payload schemas, and expanded the Stripchat synthetic fixture with
+  disconnect/reconnect facts before a modeled media gap.
+- Targeted Round 3/4/5 slice passed:
+  `pnpm exec vitest run tdd-tests/packages/adapters/stripchat/stripchatCombinedFixture.test.ts tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts tdd-tests/packages/testkit/adapter-readiness/adapterReadiness.test.ts tdd-tests/packages/schemas/timeline-payloads/timelinePayloadSchemas.test.ts`
+  passed 4 files and 38 tests.
+- Early `pnpm typecheck`: passed after Round 3/4/5 implementation.
+- Final `pnpm test`: passed 30 files and 158 tests after aligning the adapter
+  catalog test with the current Chaturbate manifest.
+- Final `pnpm typecheck`: passed.
+- Final `pnpm build`: passed.
+- Final `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed
+  with 1000 scanned events, 8 batches, and 0 issues.
+- Final `git diff --check`: passed.
+- Final trailing whitespace scan: found no matches.
+- Final JSON/package config parse scan: parsed 29 JSON files.
 
 ## Next Safe Step
 

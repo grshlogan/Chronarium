@@ -93,6 +93,7 @@ describe("offline fixture capture pipeline", () => {
               eventId: "event-offline-capture-001",
               payload: {
                 trackId: "track-offline-video-001",
+                kind: "video",
                 syntheticOnly: true
               }
             })

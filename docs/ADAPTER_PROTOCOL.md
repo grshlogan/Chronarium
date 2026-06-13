@@ -1,7 +1,8 @@
 # Adapter Protocol
 
-Status: draft protocol contract. The first Chaturbate package is fixture-only
-and must not connect to live rooms.
+Status: draft protocol contract with implemented fixture-only boundaries. The
+current Chaturbate and Stripchat adapter packages are fixture-only and must not
+connect to live rooms.
 
 ## Purpose
 
@@ -10,9 +11,10 @@ writing, and generic core state. A site adapter discovers facts and emits
 structured messages to `chronarium-core`.
 
 The protocol is message-based so adapters can run in child processes or workers.
-The first implemented process-boundary helper is a JSON Lines reader for future
-adapter stdout; it validates adapter-to-core messages before core lifecycle
-code consumes them.
+The implemented process-boundary helpers are still safe/offline: a JSON Lines
+reader for future adapter stdout, a typed command descriptor builder, and a
+no-spawn worker supervisor harness. They validate and model the boundary before
+core lifecycle code consumes messages, but they do not launch real workers.
 
 Every adapter package should also expose an adapter manifest. The manifest is
 not a runtime message; it is the registration metadata core uses before a
@@ -161,6 +163,11 @@ diagnostics
 Capabilities describe what the adapter can emit. They do not grant filesystem,
 network, credential, or shell access by themselves.
 
+Fixture readiness also requires evidence for early room/chat capabilities:
+`room.state` must be represented by at least one `room.state.changed` timeline
+fact, and `chat.events` must be represented by at least one
+`chat.message.observed` timeline fact.
+
 ## Adapter Manifest
 
 An adapter manifest declares a package's safe registration shape:
@@ -261,7 +268,8 @@ The builder:
 - does not accept arbitrary shell strings;
 - does not check file existence or spawn child processes.
 
-The actual launcher/supervisor is still pending.
+The real process launcher is still pending. The no-spawn supervisor harness
+below is the current testable model for that future launcher.
 
 ## No-Spawn Worker Supervisor Harness
 

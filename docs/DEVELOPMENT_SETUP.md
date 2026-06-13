@@ -48,6 +48,11 @@ It has:
   issues and known timeline diagnostic facts into `MaintenanceReport` findings;
 - an adapter manifest/schema boundary, a core adapter catalog, and a reusable
   testkit adapter fixture readiness gate;
+- fixture-only Chaturbate and Stripchat adapter packages that model split A/V
+  and combined A/V topologies without network access;
+- adapter worker boundary helpers for future child processes: JSONL stdout
+  parsing, typed command descriptor construction, and a no-spawn supervisor
+  harness;
 - a Web-first React/Vite recording dashboard under `apps/desktop`, using static
   synthetic data plus a browser-safe offline fixture capture demo action only,
   defaulting to `127.0.0.1:5187`;
@@ -68,7 +73,7 @@ It does not yet have:
 - real media probing, hash validation, or duration validation;
 - archive repair or migration behavior;
 - maintenance background loop, AI operations, or automatic repair;
-- real site adapters;
+- real site adapters or live adapter worker execution;
 - replay player.
 
 ## Tooling
@@ -119,6 +124,10 @@ Adapter readiness targeted checks:
 ```powershell
 pnpm exec vitest run tdd-tests/packages/testkit/adapter-readiness/adapterReadiness.test.ts
 pnpm exec vitest run tdd-tests/packages/core/adapter-catalog/adapterCatalog.test.ts
+pnpm exec vitest run tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts
+pnpm exec vitest run tdd-tests/packages/core/adapter-message-stream/adapterMessageStream.test.ts
+pnpm exec vitest run tdd-tests/packages/core/adapter-worker-command/adapterWorkerCommand.test.ts
+pnpm exec vitest run tdd-tests/packages/core/adapter-worker-supervisor/adapterWorkerSupervisor.test.ts
 ```
 
 Passing these tests means an adapter fixture is safe for Chronarium's offline

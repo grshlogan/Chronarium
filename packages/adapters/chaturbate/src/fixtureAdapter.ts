@@ -10,7 +10,6 @@ export const CHATURBATE_ADAPTER_ID = "chaturbate";
 export const CHATURBATE_FIXTURE_CAPABILITIES = [
   "fixture.timeline",
   "media.discovery",
-  "room.state",
   "diagnostics"
 ] as const satisfies readonly AdapterCapability[];
 

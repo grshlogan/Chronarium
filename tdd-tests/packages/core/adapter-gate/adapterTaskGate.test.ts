@@ -144,13 +144,13 @@ describe("core adapter task gate", () => {
         status: "completed",
         lifecycle: {
           status: "finished",
-          messageCount: 6
+          messageCount: 11
         },
         indexSummary: {
           archiveId: "archive-stripchat-gated-001",
           sessionId: fixture.sessionId,
           validationOk: true,
-          timelineEventCount: 4
+          timelineEventCount: 9
         }
       });
       expect(
@@ -159,8 +159,13 @@ describe("core adapter task gate", () => {
         }).map((event) => event.type)
       ).toEqual([
         "media.track.topology_observed",
+        "room.state.changed",
+        "chat.message.observed",
+        "network.disconnected",
+        "network.reconnected",
         "media.track.discovered",
         "media.segment.observed",
+        "media.gap.detected",
         "media.segment.observed"
       ]);
     } finally {

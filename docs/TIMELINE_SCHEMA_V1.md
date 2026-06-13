@@ -1,8 +1,13 @@
 # Timeline Schema V1
 
-Status: draft schema contract. First-pass Zod runtime validation exists for the
-event envelope, and fixture tests exercise the initial archive and Chaturbate
-adapter event shapes. Most payload-specific runtime schemas are still pending.
+Status: draft schema contract. Runtime Zod validation exists for the event
+envelope and for these initial payload families:
+`media.track.topology_observed`, `media.track.discovered`,
+`media.segment.observed`, `media.gap.detected`, `diagnostic.note`,
+`diagnostic.duration_mismatch`, `diagnostic.media_tool_output`,
+`room.state.changed`, `chat.message.observed`, `network.disconnected`, and
+`network.reconnected`. Archive validation reports `payload.schema_invalid` for
+registered payload families from both snapshot and streaming validation paths.
 
 ## Principle
 
@@ -175,6 +180,12 @@ Forbidden payload fields:
 
 Records that a media segment was discovered or represented by a fixture.
 
+This observation fact is distinct from the stored, `relativePath`-bearing segment
+fact validated by `mediaSegmentFactV1Schema` in `segmentValidation.ts`. The
+observation payload schema requires `trackId` and `segmentId`, validates known
+timing fields when present, and allows extra keys; it does not require
+`redactionStatus` or a stored file reference.
+
 Required payload fields:
 
 - `trackId`;
@@ -196,26 +207,40 @@ Forbidden payload fields:
 
 ### `media.gap.detected`
 
-Records an observed or modeled gap in media evidence.
+Records an observed or modeled gap in media evidence. A gap is a media fact, so
+its canonical payload carries the gap geometry at the top level. Diagnostic
+annotations are optional extras on the same fact; a separate `diagnostic.*` fact
+is not required for a gap.
 
-Current Chaturbate diagnostic fixture payload fields:
+Required payload fields (validated by the payload schema):
+
+- `trackId`;
+- `previousSegmentId`;
+- `nextSegmentId`;
+- `gapStartMs`;
+- `gapEndMs`;
+- `durationMs`.
+
+Optional annotation fields (allowed, not required):
 
 - `level`: `warning` or `error`;
 - `code`: currently `media_gap.detected`;
-- `evidenceLevel`: currently `synthetic-contract` for committed diagnostic
-  fixtures;
+- `evidenceLevel`: currently `synthetic-contract` for committed fixtures;
 - `message`: synthetic or redacted explanation;
 - `affectedTrackIds`: track ids affected by the gap;
-- `evidence`: JSON object with synthetic gap evidence, such as
-  `previousSegmentId`, `nextSegmentId`, expected and observed source sequence,
-  `gapStartMs`, and `gapDurationMs`;
+- source-sequence hints such as `expectedNextSourceSequence` /
+  `observedNextSourceSequence`;
 - `syntheticOnly`: `true` for committed fixtures.
+
+Both the Chaturbate split-track diagnostic fixture and the Stripchat combined
+fixture emit this top-level structured shape. The Chaturbate fixture also keeps
+the diagnostic annotations so the maintenance inspector can surface gap findings.
 
 Evidence note:
 
-- The committed Chaturbate diagnostic fixtures are synthetic contract tests.
-  They prove that Chronarium can store and query the fact shape; they do not
-  prove current live-site Chaturbate behavior.
+- The committed gap fixtures are synthetic contract tests. They prove that
+  Chronarium can store and query the fact shape; they do not prove current
+  live-site behavior.
 
 Forbidden payload fields:
 
@@ -223,7 +248,7 @@ Forbidden payload fields:
 - raw request headers;
 - cookies or bearer tokens.
 
-### `room.state`
+### `room.state.changed`
 
 Records a room-state observation.
 
@@ -231,7 +256,15 @@ Required payload fields:
 
 - `state`.
 
-### `chat.message`
+Current Stripchat offline fixture payload fields:
+
+- `state`: synthetic room state such as `online`;
+- optional `viewerCount`;
+- optional `showMode`;
+- optional `topic`;
+- `syntheticOnly`: `true`.
+
+### `chat.message.observed`
 
 Records a chat message when supported and allowed.
 
@@ -243,6 +276,15 @@ Required payload fields:
 - `redactionStatus`.
 
 Chat fixtures must be synthetic or heavily redacted.
+
+Current Stripchat offline fixture payload fields:
+
+- `messageId`: synthetic message id;
+- `authorRef`: synthetic or redacted author reference, never a raw username;
+- `body`: synthetic or redacted message body;
+- `redactionStatus`: currently `synthetic` for committed fixtures;
+- optional `role`;
+- `syntheticOnly`: `true`.
 
 ### `diagnostic.note`
 
@@ -307,6 +349,37 @@ Forbidden payload fields:
 - raw signed URLs;
 - raw request headers;
 - cookies or bearer tokens.
+
+### `network.disconnected`
+
+Records an observed or modeled network interruption that can explain later
+media gaps, adapter retries, or reconnect behavior.
+
+Required payload fields:
+
+- `reason`: synthetic or redacted explanation.
+
+Current Stripchat offline fixture payload fields:
+
+- `reason`: synthetic interruption reason;
+- optional `affectedTrackIds`;
+- `syntheticOnly`: `true`.
+
+### `network.reconnected`
+
+Records that the adapter or modeled source recovered after a network
+interruption.
+
+Required payload fields:
+
+- `disconnectedEventId`: event id of the related `network.disconnected` fact.
+
+Current Stripchat offline fixture payload fields:
+
+- `disconnectedEventId`;
+- optional `outageDurationMs`;
+- optional `affectedTrackIds`;
+- `syntheticOnly`: `true`.
 
 ## Ordering Rules
 

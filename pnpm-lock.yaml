@@ -40,12 +40,24 @@ importers:
 
   packages/adapters/chaturbate:
     dependencies:
+      '@chronarium/adapter-kit':
+        specifier: workspace:*
+        version: link:../kit
+      '@chronarium/types':
+        specifier: workspace:*
+        version: link:../../types
+
+  packages/adapters/kit:
+    dependencies:
       '@chronarium/types':
         specifier: workspace:*
         version: link:../../types
 
   packages/adapters/stripchat:
     dependencies:
+      '@chronarium/adapter-kit':
+        specifier: workspace:*
+        version: link:../kit
       '@chronarium/types':
         specifier: workspace:*
         version: link:../../types

@@ -37,7 +37,6 @@ describe("adapter fixture readiness gate", () => {
     expect(readiness.capabilities).toEqual([
       "fixture.timeline",
       "media.discovery",
-      "room.state",
       "diagnostics"
     ]);
   });
@@ -92,6 +91,44 @@ describe("adapter fixture readiness gate", () => {
     expect(readiness.issues).toContainEqual(
       expect.objectContaining({
         code: "adapter_readiness.secret_reference"
+      })
+    );
+  });
+
+  it("rejects declared room.state capability when no room facts are emitted", async () => {
+    const readiness = await verifyAdapterFixtureReadiness({
+      request: {
+        adapterId: "synthetic-site",
+        sessionId: "session-synthetic-001",
+        capabilitiesRequested: ["room.state"]
+      },
+      messages: messagesWithCapabilitiesButNoFacts(["fixture.timeline", "room.state"])
+    });
+
+    expect(readiness.ok).toBe(false);
+    expect(readiness.issues).toContainEqual(
+      expect.objectContaining({
+        code: "adapter_readiness.capability_fact_missing",
+        path: "room.state"
+      })
+    );
+  });
+
+  it("rejects declared chat.events capability when no chat facts are emitted", async () => {
+    const readiness = await verifyAdapterFixtureReadiness({
+      request: {
+        adapterId: "synthetic-site",
+        sessionId: "session-synthetic-001",
+        capabilitiesRequested: ["chat.events"]
+      },
+      messages: messagesWithCapabilitiesButNoFacts(["fixture.timeline", "chat.events"])
+    });
+
+    expect(readiness.ok).toBe(false);
+    expect(readiness.issues).toContainEqual(
+      expect.objectContaining({
+        code: "adapter_readiness.capability_fact_missing",
+        path: "chat.events"
       })
     );
   });
@@ -221,6 +258,34 @@ async function* messagesWithSecretLookingDiagnosticField(): AsyncGenerator<Adapt
     sessionId: "session-synthetic-001",
     type: "adapter.finished",
     sentAt: "2026-01-01T00:00:02.000Z",
+    reason: "completed",
+    summary: {
+      emittedEvents: 0
+    }
+  };
+}
+
+async function* messagesWithCapabilitiesButNoFacts(
+  capabilities: readonly ("fixture.timeline" | "room.state" | "chat.events")[]
+): AsyncGenerator<AdapterToCoreMessage> {
+  yield {
+    protocolVersion: ADAPTER_PROTOCOL_VERSION,
+    messageId: "synthetic:ready",
+    adapterId: "synthetic-site",
+    sessionId: "session-synthetic-001",
+    type: "adapter.ready",
+    sentAt: "2026-01-01T00:00:00.000Z",
+    mode: "fixture",
+    capabilities
+  };
+
+  yield {
+    protocolVersion: ADAPTER_PROTOCOL_VERSION,
+    messageId: "synthetic:finished",
+    adapterId: "synthetic-site",
+    sessionId: "session-synthetic-001",
+    type: "adapter.finished",
+    sentAt: "2026-01-01T00:00:01.000Z",
     reason: "completed",
     summary: {
       emittedEvents: 0

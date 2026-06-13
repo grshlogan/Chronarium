@@ -50,16 +50,54 @@ describe("Stripchat offline combined A/V fixture", () => {
     ]);
     expect(timelineEvents.map((event) => event.type)).toEqual([
       "media.track.topology_observed",
+      "room.state.changed",
+      "chat.message.observed",
+      "network.disconnected",
+      "network.reconnected",
       "media.track.discovered",
       "media.segment.observed",
+      "media.gap.detected",
       "media.segment.observed"
     ]);
+    expect(timelineEvents[1]).toMatchObject({
+      type: "room.state.changed",
+      payload: {
+        state: "online",
+        viewerCount: 42,
+        syntheticOnly: true
+      }
+    });
+    expect(timelineEvents[2]).toMatchObject({
+      type: "chat.message.observed",
+      payload: {
+        messageId: "synthetic-chat-0001",
+        redactionStatus: "synthetic",
+        syntheticOnly: true
+      }
+    });
+    expect(timelineEvents[3]).toMatchObject({
+      type: "network.disconnected",
+      payload: {
+        reason: "synthetic playlist polling interruption",
+        affectedTrackIds: ["combined-main"],
+        syntheticOnly: true
+      }
+    });
+    expect(timelineEvents[4]).toMatchObject({
+      type: "network.reconnected",
+      payload: {
+        disconnectedEventId: "combined-av.synthetic:event:4",
+        outageDurationMs: 3000,
+        affectedTrackIds: ["combined-main"],
+        syntheticOnly: true
+      }
+    });
     expect(readiness).toMatchObject({
       ok: true,
       adapterId: "stripchat",
       sessionId: fixture.sessionId,
-      messageCount: 6,
-      timelineEventCount: 4
+      messageCount: 11,
+      timelineEventCount: 9
     });
   });
 
@@ -118,12 +156,16 @@ describe("Stripchat offline combined A/V fixture", () => {
 
     expect(timelineEvents.map((event) => event.type)).toEqual([
       "media.track.topology_observed",
+      "room.state.changed",
+      "chat.message.observed",
+      "network.disconnected",
+      "network.reconnected",
       "media.track.discovered",
       "media.segment.observed",
       "media.gap.detected",
       "media.segment.observed"
     ]);
-    expect(timelineEvents[3]).toMatchObject({
+    expect(timelineEvents[7]).toMatchObject({
       type: "media.gap.detected",
       monotonicMs: 2000,
       payload: {

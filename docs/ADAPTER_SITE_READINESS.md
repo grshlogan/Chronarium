@@ -21,6 +21,7 @@ package scaffold with:
   facts;
 - a fixture runner that emits adapter protocol messages;
 - `verifyAdapterFixtureReadiness` coverage from `packages/testkit`;
+- fact-usage coverage for declared room/chat capabilities;
 - core adapter catalog registration coverage;
 - core task gate coverage proving only registered/capable adapters can run;
 - docs that state the fixture evidence level and live-site non-goals.
@@ -113,6 +114,11 @@ pipeline fails before adapter startup when:
 This gate is intentionally preflight-only. It should reject invalid task setup
 before consuming adapter messages or writing archives.
 
+The readiness gate also checks capability evidence for the first room/chat
+families: a stream that declares or requests `room.state` must emit at least one
+`room.state.changed` fact, and a stream that declares or requests `chat.events`
+must emit at least one `chat.message.observed` fact.
+
 ## Current Examples
 
 `packages/adapters/chaturbate` is the split audio/video example:
@@ -128,6 +134,9 @@ before consuming adapter messages or writing archives.
 - fixture-only manifest;
 - SC-like combined HLS A/V fixture;
 - one raw media track with combined media observations;
+- synthetic `room.state.changed` and `chat.message.observed` facts;
+- synthetic `network.disconnected` / `network.reconnected` facts that precede a
+  modeled media gap;
 - media gap fact generation for non-contiguous segments;
 - overlap/backwards segment rejection.
 
@@ -138,11 +147,11 @@ Chronarium is not yet running real site adapters.
 Still pending before live capture:
 
 - child-process adapter launcher;
-- typed live adapter command lifecycle;
+- real live adapter command lifecycle and execution;
 - credential and secret storage policy;
 - site-specific redacted evidence process;
 - downloader/media segment capture loop;
-- FFmpeg/ffprobe execution boundary;
+- FFmpeg/ffprobe execution boundary beyond the current typed command builders;
 - hash/duration/playability validation for real media;
 - GUI-core IPC and task control for real monitoring.
 

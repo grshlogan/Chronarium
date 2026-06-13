@@ -91,6 +91,16 @@ describe("Chaturbate diagnostic fixtures", () => {
       "media_tool.duration_mismatch",
       "media_tool.output_stalled"
     ]);
+    expect(events.at(-3)?.payload).toMatchObject({
+      trackId: "video-main",
+      previousSegmentId: "video-segment-0002",
+      nextSegmentId: "video-segment-0004",
+      gapStartMs: 4000,
+      gapEndMs: 7000,
+      durationMs: 3000,
+      code: "media_gap.detected",
+      level: "warning"
+    });
     expect(collectStrings(events).some(isForbiddenFixtureString)).toBe(false);
 
     for (const event of events) {
@@ -175,6 +185,12 @@ describe("Chaturbate diagnostic fixtures", () => {
       });
       expect(gapEvents).toHaveLength(1);
       expect(JSON.parse(gapEvents[0]?.payloadJson ?? "{}")).toMatchObject({
+        trackId: "video-main",
+        previousSegmentId: "video-segment-0002",
+        nextSegmentId: "video-segment-0004",
+        gapStartMs: 4000,
+        gapEndMs: 7000,
+        durationMs: 3000,
         code: "media_gap.detected",
         evidenceLevel: "synthetic-contract",
         level: "warning"

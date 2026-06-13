@@ -45,7 +45,9 @@ export async function verifyAdapterFixtureReadiness(
     messageCount: 0,
     timelineEventCount: 0,
     sawReady: false,
-    sawFinished: false
+    sawFinished: false,
+    sawRoomStateFact: false,
+    sawChatEventFact: false
   };
 
   let index = 0;
@@ -76,6 +78,8 @@ export async function verifyAdapterFixtureReadiness(
     });
   }
 
+  addCapabilityFactUsageIssues(input.request, state);
+
   return {
     ok: state.issues.length === 0,
     adapterId: state.adapterId,
@@ -97,6 +101,8 @@ interface MutableAdapterFixtureReadinessState {
   timelineEventCount: number;
   sawReady: boolean;
   sawFinished: boolean;
+  sawRoomStateFact: boolean;
+  sawChatEventFact: boolean;
   finishedReason?: string;
 }
 
@@ -188,6 +194,7 @@ function applyMessage(
       break;
     case "fact.timeline":
       state.timelineEventCount += 1;
+      recordTimelineCapabilityUsage(state, message.event.type);
       if (message.event.sessionId !== request.sessionId) {
         addIssue(state.issues, {
           code: "adapter_readiness.timeline_session_mismatch",
@@ -217,6 +224,53 @@ function applyMessage(
     case "diagnostic.event":
     case "health.pong":
       break;
+  }
+}
+
+function recordTimelineCapabilityUsage(
+  state: MutableAdapterFixtureReadinessState,
+  eventType: string
+): void {
+  if (eventType === "room.state.changed") {
+    state.sawRoomStateFact = true;
+  }
+
+  if (eventType === "chat.message.observed") {
+    state.sawChatEventFact = true;
+  }
+}
+
+function addCapabilityFactUsageIssues(
+  request: AdapterFixtureReadinessRequest,
+  state: MutableAdapterFixtureReadinessState
+): void {
+  const declaredOrRequestedCapabilities = new Set<AdapterCapability>([
+    ...state.capabilities,
+    ...request.capabilitiesRequested
+  ]);
+
+  if (
+    declaredOrRequestedCapabilities.has("room.state") &&
+    !state.sawRoomStateFact
+  ) {
+    addIssue(state.issues, {
+      code: "adapter_readiness.capability_fact_missing",
+      message:
+        "Adapter fixture declares room.state but emitted no room.state.changed timeline fact.",
+      path: "room.state"
+    });
+  }
+
+  if (
+    declaredOrRequestedCapabilities.has("chat.events") &&
+    !state.sawChatEventFact
+  ) {
+    addIssue(state.issues, {
+      code: "adapter_readiness.capability_fact_missing",
+      message:
+        "Adapter fixture declares chat.events but emitted no chat.message.observed timeline fact.",
+      path: "chat.events"
+    });
   }
 }
 

@@ -1,11 +1,24 @@
 import type {
   JsonObject,
-  JsonValue,
   MediaTrack,
   MediaTrackKind,
   RedactionStatus,
   TimelineEventEnvelope
 } from "@chronarium/types";
+import {
+  assertNoSensitiveFixtureStrings,
+  assertSyntheticFixtureReference,
+  expectArray,
+  expectJsonObject,
+  expectNonNegativeInteger,
+  expectNumber,
+  expectOptionalArray,
+  expectOptionalNumber,
+  expectPositiveInteger,
+  expectRecord,
+  expectString,
+  optionalStringProperty
+} from "@chronarium/adapter-kit";
 import { CHATURBATE_ADAPTER_ID } from "./fixtureAdapter.js";
 
 export const CHATURBATE_SITE_ID = "chaturbate";
@@ -223,15 +236,18 @@ export function createChaturbateSplitTrackTimelineEvents(
         sequence,
         type: diagnostic.type,
         monotonicMs: fixture.monotonicStartMs + diagnostic.monotonicMs,
-        payload: {
-          level: diagnostic.level,
-          code: diagnostic.code,
-          evidenceLevel: diagnostic.evidenceLevel,
-          message: diagnostic.message,
-          affectedTrackIds: diagnostic.affectedTrackIds,
-          evidence: diagnostic.evidence,
-          syntheticOnly: true
-        }
+        payload:
+          diagnostic.type === "media.gap.detected"
+            ? createGapPayload(diagnostic)
+            : {
+                level: diagnostic.level,
+                code: diagnostic.code,
+                evidenceLevel: diagnostic.evidenceLevel,
+                message: diagnostic.message,
+                affectedTrackIds: diagnostic.affectedTrackIds,
+                evidence: diagnostic.evidence,
+                syntheticOnly: true
+              }
       })
     );
     sequence += 1;
@@ -253,7 +269,8 @@ function parseTopology(value: unknown): ChaturbateFixtureTopology {
   );
   assertSyntheticFixtureReference(
     playlistReference,
-    "topology.playlistReference"
+    "topology.playlistReference",
+    CHATURBATE_SYNTHETIC_REFERENCE_PREFIX
   );
 
   const redactionStatus = expectString(
@@ -285,7 +302,8 @@ function parseTrack(value: unknown, path: string): ChaturbateFixtureTrack {
   );
   assertSyntheticFixtureReference(
     playlistReference,
-    `${path}.playlistReference`
+    `${path}.playlistReference`,
+    CHATURBATE_SYNTHETIC_REFERENCE_PREFIX
   );
 
   const segments = expectArray(track.segments, `${path}.segments`).map(
@@ -406,6 +424,37 @@ function createSyntheticSource(sourceIdHash?: string): {
   };
 }
 
+function createGapPayload(diagnostic: ChaturbateFixtureDiagnostic): JsonObject {
+  const evidence = diagnostic.evidence;
+  const gapStartMs = numberFromEvidence(evidence.gapStartMs);
+  const durationMs = numberFromEvidence(evidence.gapDurationMs);
+
+  return {
+    trackId: evidence.trackId ?? null,
+    previousSegmentId: evidence.previousSegmentId ?? null,
+    nextSegmentId: evidence.nextSegmentId ?? null,
+    gapStartMs,
+    gapEndMs: gapStartMs + durationMs,
+    durationMs,
+    ...(evidence.expectedNextSourceSequence === undefined
+      ? {}
+      : { expectedNextSourceSequence: evidence.expectedNextSourceSequence }),
+    ...(evidence.observedNextSourceSequence === undefined
+      ? {}
+      : { observedNextSourceSequence: evidence.observedNextSourceSequence }),
+    level: diagnostic.level,
+    code: diagnostic.code,
+    evidenceLevel: diagnostic.evidenceLevel,
+    message: diagnostic.message,
+    affectedTrackIds: [...diagnostic.affectedTrackIds],
+    syntheticOnly: true
+  };
+}
+
+function numberFromEvidence(value: unknown): number {
+  return typeof value === "number" ? value : 0;
+}
+
 function parseDiagnosticType(
   value: string
 ): ChaturbateFixtureDiagnosticType {
@@ -443,196 +492,4 @@ function parseDiagnosticLevel(
     default:
       throw new Error(`Unsupported fixture diagnostic level: ${value}`);
   }
-}
-
-function assertSyntheticFixtureReference(reference: string, path: string): void {
-  const lowerReference = reference.toLowerCase();
-  const forbiddenFragments = [
-    "cookie",
-    "token",
-    "session",
-    "signature",
-    "authorization",
-    "bearer"
-  ];
-
-  if (!reference.startsWith(CHATURBATE_SYNTHETIC_REFERENCE_PREFIX)) {
-    throw new Error(`${path} must use a synthetic fixture://chaturbate/ reference.`);
-  }
-
-  if (reference.includes("?") || reference.includes("#")) {
-    throw new Error(`${path} must not contain query strings or fragments.`);
-  }
-
-  if (forbiddenFragments.some((fragment) => lowerReference.includes(fragment))) {
-    throw new Error(`${path} contains a forbidden sensitive fragment.`);
-  }
-}
-
-function assertNoSensitiveFixtureStrings(value: unknown, path: string): void {
-  if (typeof value === "string") {
-    const lowerValue = value.toLowerCase();
-    const forbiddenFragments = [
-      "cookie",
-      "token",
-      "session=",
-      "signature",
-      "authorization",
-      "bearer",
-      "signed"
-    ];
-
-    if (
-      lowerValue.startsWith("http://") ||
-      lowerValue.startsWith("https://")
-    ) {
-      throw new Error(`${path} must not contain network URLs.`);
-    }
-
-    if (forbiddenFragments.some((fragment) => lowerValue.includes(fragment))) {
-      throw new Error(`${path} contains a forbidden sensitive fragment.`);
-    }
-
-    return;
-  }
-
-  if (Array.isArray(value)) {
-    value.forEach((item, index) =>
-      assertNoSensitiveFixtureStrings(item, `${path}[${index}]`)
-    );
-    return;
-  }
-
-  if (typeof value === "object" && value !== null) {
-    Object.entries(value).forEach(([key, item]) =>
-      assertNoSensitiveFixtureStrings(item, `${path}.${key}`)
-    );
-  }
-}
-
-function expectRecord(value: unknown, path: string): Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new Error(`${path} must be an object.`);
-  }
-
-  return value as Record<string, unknown>;
-}
-
-function expectArray(value: unknown, path: string): readonly unknown[] {
-  if (!Array.isArray(value)) {
-    throw new Error(`${path} must be an array.`);
-  }
-
-  return value;
-}
-
-function expectOptionalArray(
-  value: unknown,
-  path: string
-): readonly unknown[] {
-  if (value === undefined) {
-    return [];
-  }
-
-  return expectArray(value, path);
-}
-
-function expectString(value: unknown, path: string): string {
-  if (typeof value !== "string" || value.length === 0) {
-    throw new Error(`${path} must be a non-empty string.`);
-  }
-
-  return value;
-}
-
-function expectJsonObject(value: unknown, path: string): JsonObject {
-  const record = expectRecord(value, path);
-  const output: Record<string, JsonValue> = {};
-
-  Object.entries(record).forEach(([key, item]) => {
-    output[key] = expectJsonValue(item, `${path}.${key}`);
-  });
-
-  return output;
-}
-
-function expectJsonValue(value: unknown, path: string): JsonValue {
-  if (
-    value === null ||
-    typeof value === "string" ||
-    typeof value === "boolean"
-  ) {
-    return value;
-  }
-
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) {
-      throw new Error(`${path} must be a finite JSON number.`);
-    }
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item, index) =>
-      expectJsonValue(item, `${path}[${index}]`)
-    );
-  }
-
-  if (typeof value === "object" && value !== null) {
-    return expectJsonObject(value, path);
-  }
-
-  throw new Error(`${path} must be a JSON-compatible value.`);
-}
-
-function optionalStringProperty<K extends string>(
-  key: K,
-  value: unknown,
-  path: string
-): Partial<Record<K, string>> {
-  if (value === undefined) {
-    return {};
-  }
-
-  return {
-    [key]: expectString(value, path)
-  } as Partial<Record<K, string>>;
-}
-
-function expectNumber(value: unknown, path: string): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new Error(`${path} must be a finite number.`);
-  }
-
-  return value;
-}
-
-function expectOptionalNumber(
-  value: unknown,
-  path: string,
-  fallback: number
-): number {
-  if (value === undefined) {
-    return fallback;
-  }
-
-  return expectNumber(value, path);
-}
-
-function expectNonNegativeInteger(value: unknown, path: string): number {
-  const numberValue = expectNumber(value, path);
-  if (!Number.isInteger(numberValue) || numberValue < 0) {
-    throw new Error(`${path} must be a non-negative integer.`);
-  }
-
-  return numberValue;
-}
-
-function expectPositiveInteger(value: unknown, path: string): number {
-  const numberValue = expectNumber(value, path);
-  if (!Number.isInteger(numberValue) || numberValue <= 0) {
-    throw new Error(`${path} must be a positive integer.`);
-  }
-
-  return numberValue;
 }
