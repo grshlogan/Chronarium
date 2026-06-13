@@ -144,6 +144,7 @@ tdd-tests/
     core/
       credentials/
         credentialSelector.test.ts
+        credentialVaultInjection.test.ts
       adapter-catalog/
         adapterCatalog.test.ts
       adapter-gate/
@@ -925,8 +926,10 @@ packages/
       index.ts
       offlineFixtureCapturePipeline.ts
       credentials/
+        credentialInjection.ts
         credentialSelector.ts
         credentialStore.ts
+        credentialVault.ts
         index.ts
       maintenance/
         archiveInspector.ts
@@ -1044,6 +1047,7 @@ tdd-tests/
     core/
       credentials/
         credentialSelector.test.ts
+        credentialVaultInjection.test.ts
       adapter-catalog/
         adapterCatalog.test.ts
       adapter-gate/
@@ -1261,12 +1265,19 @@ Current status:
 - The fixture-only credential store (`createCredentialStore`) and per-streamer
   selector (`selectCredentialForCapture`) resolve which redacted credential
   profile a gated capture would use (capability-match-failover), reject
-  raw-secret-looking profile material, and never hold or return cookies.
+  raw-secret-looking profile material, and never hold or return cookies. Among
+  eligible profiles the default is the oldest-added (`addedAt`).
+- A fixture-only `CredentialVault` (`createInMemoryCredentialVault`) maps a
+  profile's `storageHandle` to a synthetic jar (no disk, crypto, or serialize),
+  and `createCredentialInjectionDescriptor` models a no-spawn one-time
+  stdin-handshake (jar runtime-only; only a redacted credentialRef + entryCount
+  is loggable).
 - `CoreTaskRequest` can carry an optional `recordingIntent` and redacted
-  `streamerRef`. The offline fixture capture pipeline uses the fixture-only
-  credential store to reject `ticket` / `private` / `spy` captures without a
-  usable bound profile before adapter messages are consumed.
-- No encryption, import, injection, real cookies, or live path exists.
+  `streamerRef`. The offline fixture capture pipeline resolves the credential and
+  **degrades a gated capture with no usable bound profile to public / no-cookie
+  capture** (exposed as `result.credential`); it no longer fails such tasks.
+- No real encrypted backend, real cookie import, real spawn/injection, real
+  cookies, or live path exists.
 - Does not run live capture jobs, start adapter child processes, export media,
   run ops loops, execute media tools, or capture real media segments yet.
 
@@ -1594,6 +1605,7 @@ tdd-tests/
     core/
       credentials/
         credentialSelector.test.ts
+        credentialVaultInjection.test.ts
       adapter-catalog/
         adapterCatalog.test.ts
       adapter-gate/

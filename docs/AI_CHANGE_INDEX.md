@@ -1970,3 +1970,45 @@ unimplemented ideas as completed work.
   - JSON/package parse scan parsed 29 JSON files.
 - Next: continue fixture-first adapter work or worker process-supervisor
   foundations; do not implement real cookies without explicit approval.
+
+## 2026-06-14: Credential vault + injection model + default election
+
+- Conversation: A02. Advanced the credential line to the live edge without
+  crossing it, and added the user's default-cookie election + no-cookie fallback
+  rules. All fixture-safe: synthetic jars, no real cookies, no encryption
+  backend, no spawn, no live requests.
+- Landed: a fixture-only credential vault, a no-spawn injection-descriptor model,
+  default-cookie election in the selector, and a gated-capture degrade.
+- Files:
+  - `packages/types/src/credentials.ts`
+  - `packages/core/src/credentials/credentialVault.ts` (new),
+    `credentialInjection.ts` (new), `credentialSelector.ts`, `index.ts`
+  - `packages/core/src/offlineFixtureCapturePipeline.ts`
+  - `tdd-tests/packages/core/credentials/credentialVaultInjection.test.ts` (new),
+    `credentialSelector.test.ts`,
+    `tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts`
+  - `docs/CREDENTIALS_AND_SESSIONS.md`,
+    `docs/plan/plan_credential_vault_injection_fixture.md` (new),
+    `docs/APP_CODE_MAP.md`, `docs/AI_HANDOFF.md`, `docs/AI_CHANGE_INDEX.md`,
+    `README.md`, `docs/conversation-A02-foundation-docs-completion.md`
+- Decisions:
+  - The vault is a backend-agnostic interface; the only backend now is in-memory
+    + synthetic. Real encrypted at-rest backend deferred (OS keystore default,
+    passphrase fallback recommended).
+  - Injection is a one-time stdin handshake modeled no-spawn; the jar is
+    runtime-only, never argv / logs / timeline / archive; only a redacted form
+    (credentialRef + entryCount) is loggable.
+  - Default cookie = oldest-added surviving eligible profile; single profile is
+    the default; deleting the default auto-elects the next-oldest.
+  - A gated capture with no usable credential **degrades to public/no-cookie**
+    (revising the earlier hard-refuse gate) and proceeds; the credential outcome
+    is exposed on the result. Public intent needs no credential.
+- Verification:
+  - TDD RED→GREEN for the vault/injection tracer.
+  - `pnpm typecheck`, `pnpm build` passed; `pnpm test` 31 files / 174 tests (was
+    30 / 166), with the known Node `node:sqlite` ExperimentalWarning.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` `issueCount: 0`.
+  - `git diff --check` + trailing-whitespace scan clean.
+- Next: deferred until a specific live adapter is approved — real encrypted
+  backend, real cookie import, real spawn + stdin injection, live requests, GUI
+  binding UI, and emitting `session.credential_*` facts during capture.

@@ -6,6 +6,7 @@ import type {
   AdapterErrorMessage,
   AdapterToCoreMessage,
   ArchiveManifest,
+  CredentialRef,
   MediaTrack,
   RecordingIntent
 } from "@chronarium/types";
@@ -30,6 +31,17 @@ import {
 
 export type OfflineFixtureCaptureStatus = "completed" | "failed";
 
+/**
+ * The credential resolution for a capture. A gated intent with no usable
+ * credential is not a failure: it degrades to public / no-cookie capture.
+ */
+export interface CaptureCredentialOutcome {
+  readonly status: "selected" | "not-required" | "degraded-public";
+  readonly intent: RecordingIntent;
+  readonly credentialRef?: CredentialRef;
+  readonly reason?: string;
+}
+
 export interface OfflineFixtureCaptureInput {
   readonly archiveRootPath: string;
   readonly task: CoreTaskRequest;
@@ -44,6 +56,7 @@ export interface OfflineFixtureCaptureResult {
   readonly task: CoreTaskSnapshot;
   readonly lifecycle?: AdapterLifecycleSnapshot;
   readonly indexSummary?: ArchiveIndexSummary;
+  readonly credential?: CaptureCredentialOutcome;
 }
 
 export interface OfflineFixtureCapturePipelineOptions {
@@ -72,7 +85,7 @@ export async function runOfflineFixtureCapture(
   const gateFailure = getAdapterTaskGateFailure(
     input.task,
     options.adapterCatalog
-  ) ?? getCredentialTaskGateFailure(input, options.credentialStore);
+  );
   if (gateFailure) {
     const failedTask = taskScheduler.failTask(runningTask.taskId, gateFailure);
 
@@ -82,6 +95,8 @@ export async function runOfflineFixtureCapture(
       task: failedTask
     };
   }
+
+  const credential = resolveCaptureCredential(input, options.credentialStore);
 
   const lifecycle = await lifecycleHost.runFixture({
     request: {
@@ -107,7 +122,8 @@ export async function runOfflineFixtureCapture(
       status: "failed",
       archiveRootPath: input.archiveRootPath,
       task: failedTask,
-      lifecycle
+      lifecycle,
+      credential
     };
   }
 
@@ -138,7 +154,8 @@ export async function runOfflineFixtureCapture(
     archiveRootPath: input.archiveRootPath,
     task: stoppedTask,
     lifecycle,
-    indexSummary
+    indexSummary,
+    credential
   };
 }
 
@@ -200,30 +217,22 @@ function getAdapterTaskGateFailure(
   return undefined;
 }
 
-function getCredentialTaskGateFailure(
+function resolveCaptureCredential(
   input: OfflineFixtureCaptureInput,
   credentialStore: CredentialStore | undefined
-): CoreTaskSnapshot["failure"] | undefined {
+): CaptureCredentialOutcome {
   const intent = input.task.recordingIntent ?? "public";
-  if (!isGatedIntent(intent)) {
-    return undefined;
+  if (intent === "public") {
+    return { status: "not-required", intent };
   }
 
   const streamerRef = input.task.streamerRef;
   if (!streamerRef) {
-    return {
-      code: "credential.streamer_ref_missing",
-      message: `Gated ${intent} capture requires a redacted streamerRef before adapter startup.`,
-      retryable: false
-    };
+    return { status: "degraded-public", intent, reason: "no-streamer-ref" };
   }
 
   if (!credentialStore) {
-    return {
-      code: "credential.missing",
-      message: `No credential store is configured for gated ${intent} capture on ${streamerRef}.`,
-      retryable: false
-    };
+    return { status: "degraded-public", intent, reason: "no-credential-store" };
   }
 
   const selection = selectCredentialForCapture({
@@ -233,19 +242,17 @@ function getCredentialTaskGateFailure(
     intent
   });
 
-  if (selection.status === "selected") {
-    return undefined;
+  if (selection.status === "selected" && selection.credentialRef) {
+    return {
+      status: "selected",
+      intent,
+      credentialRef: selection.credentialRef
+    };
   }
 
   return {
-    code: "credential.missing",
-    message:
-      selection.reason ??
-      `No usable credential profile is bound for gated ${intent} capture on ${streamerRef}.`,
-    retryable: false
+    status: "degraded-public",
+    intent,
+    reason: selection.reason ?? "no-usable-credential"
   };
-}
-
-function isGatedIntent(intent: RecordingIntent): boolean {
-  return intent !== "public";
 }

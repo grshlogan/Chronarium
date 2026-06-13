@@ -91,12 +91,20 @@ The approved default policy:
    entitlement.
 2. From the streamer's bound profiles, keep those whose entitlements satisfy the
    required entitlement and whose `health` is usable.
-3. Order the eligible set (capability match first, then health / priority).
+3. Order the eligible set: most specific scope first (streamer-scope before
+   site-scope), then the **default cookie** — the oldest-added surviving profile
+   (smallest `addedAt`) — then binding entry order. The `priority` policy instead
+   orders by explicit priority.
 4. Pick the first; on auth failure / rate-limit / ban, update that profile's
    `health` and fail over to the next eligible profile.
-5. If none are eligible, do not hard-fail and do not block monitoring: record a
-   `missing-credential` fact and either degrade to public-only capture or skip
-   the gated capture, per task configuration.
+5. If none are eligible, do not hard-fail and do not block monitoring: the gated
+   capture **degrades to public / no-cookie capture** and proceeds, recording the
+   degrade as the capture's credential outcome.
+
+Default cookie election: a site/scope with exactly one eligible profile uses it
+by default; the first-added profile is the default; when the default is deleted,
+the next-oldest surviving profile becomes the default automatically; and when no
+profile remains, capture falls back to no-cookie/public recording.
 
 Other policies (`priority`, `round-robin`, `manual`) are available for bindings
 that opt into them.
@@ -156,11 +164,17 @@ action that delivers raw material straight to core.
 
 ## What Is Not Implemented
 
-- No encryption or persistent credential storage.
-- No import flow.
-- No raw credential resolution or worker injection.
+- No real encrypted at-rest backend or persistent storage. The vault
+  (`createInMemoryCredentialVault`) is a fixture-only in-memory backend holding
+  synthetic jars; no disk IO, no crypto, no serialization.
+- No real cookie import; the import path accepts synthetic jars only.
+- No real worker injection. The stdin-handshake injection
+  (`createCredentialInjectionDescriptor`) is modeled no-spawn: it produces a
+  descriptor only; nothing is spawned and no jar is written to a process.
 - No live requests, no real cookie handling, no live adapter.
 - No GUI binding editor or import UI.
+- No emission of `session.credential_*` timeline facts during capture yet (the
+  payload schemas exist; emission belongs to the future capture layer).
 
 ## First Safe Work Package
 
@@ -168,19 +182,29 @@ Completed:
 
 1. A fixture-only credential store + selector contract that holds synthetic /
    placeholder profiles (no real cookies) and proves: per-streamer binding,
-   capability-match → failover, and the missing-credential degrade path.
-2. A core offline fixture capture task gate that refuses a gated task without a
-   usable bound profile before adapter startup.
+   capability-match → failover, default-cookie election (oldest-added), and the
+   no-credential degrade path.
+2. The core offline fixture capture pipeline resolves the capture credential and
+   **degrades a gated capture with no usable bound profile to no-cookie/public
+   capture** (exposing a `credential` outcome on the result), and selects the
+   bound credential otherwise. Public intent needs no credential.
 3. Redacted `CredentialRef` plumbing in types and the session credential fact
    payload schemas.
+4. A fixture-only `CredentialVault` (in-memory, synthetic jars) and a no-spawn
+   `CredentialInjectionDescriptor` model (one-time stdin handshake; jar
+   runtime-only; only a redacted form is loggable).
 
 Only after that, and only with explicit per-adapter approval, may real cookie
 injection and a live request path be designed.
 
 ## Open Questions
 
-- Encryption mechanism (OS keystore vs passphrase) and key custody.
+- Encryption mechanism (OS keystore vs passphrase) and key custody — deferred to
+  the real at-rest backend slice; recommended direction is OS keystore default
+  with a passphrase fallback.
 - `streamerRef` identity and redaction across sites.
-- Whether intent is a per-binding default, a per-task input, or both.
 - Whether a profile may span multiple sites or is strictly single-site.
-- The credential import / acquisition flow.
+- The real credential import / acquisition flow.
+
+Resolved: intent is a **per-task** input (`recordingIntent` on the capture
+task); the default cookie is the **oldest-added** surviving eligible profile.

@@ -244,19 +244,29 @@ Current state:
   `storageHandle` and rejects raw-secret-looking strings; the selector implements
   capability-match-failover, returns only a redacted `CredentialRef`, treats
   `public` as `not-required`, and returns `missing` (caller degrades) when no
-  usable bound profile is entitled.
-- `packages/core` now gates offline fixture captures with gated intents
-  (`ticket`, `private`, `spy`) before adapter startup. `CoreTaskRequest` can
-  carry `recordingIntent` and a redacted `streamerRef`; when a credential store
-  is configured, the pipeline calls `selectCredentialForCapture`, rejects
-  missing or unusable bindings with `credential.missing`, and does not consume
-  adapter messages or write an archive.
+  usable bound profile is entitled. Among eligible profiles the default is the
+  oldest-added (`addedAt`); the first added is the default until removed.
+- `packages/core` resolves a credential for offline fixture captures with gated
+  intents (`ticket`, `private`, `spy`). `CoreTaskRequest` can carry
+  `recordingIntent` and a redacted `streamerRef`. When no usable bound profile
+  exists, the capture **degrades to public / no-cookie recording and proceeds**
+  (it no longer fails the task); the outcome is exposed as `result.credential`
+  (`selected` | `not-required` | `degraded-public`). Public intent needs no
+  credential.
+- `packages/core` has a fixture-only `CredentialVault`
+  (`createInMemoryCredentialVault`, synthetic jars, no disk/crypto/serialize) and
+  a no-spawn `CredentialInjectionDescriptor` model
+  (`createCredentialInjectionDescriptor`): a `selected` selection yields a
+  one-time `stdin-handshake` descriptor carrying the jar (runtime-only) plus a
+  redacted form (credentialRef + entryCount); `public`/`missing` yield
+  `kind: "none"`. Nothing is spawned and no jar is logged or serialized.
 - `@chronarium/schemas` now registers redacted payload schemas for
   `session.intent_selected`, `session.credential_selected`,
   `session.credential_failover`, and `session.credential_missing`. These facts
   carry only intent and `CredentialRef` metadata, never cookies, headers,
   tokens, or signed URLs.
-- No encryption, import, injection, real cookies, or live credential path exists.
+- No real encrypted backend, real cookie import, real spawn/injection, real
+  cookies, or live credential path exists.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
 - `packages/testkit` has `verifyAdapterFixtureReadiness`, a reusable offline
@@ -899,3 +909,14 @@ Fixture credential task gate and session facts checks:
 - `git diff --check` passed.
 - trailing whitespace scan found no matches.
 - JSON/package parse scan parsed 29 JSON files.
+
+Credential vault + injection + default election (A02) checks:
+
+- TDD RED: `tdd-tests/packages/core/credentials/credentialVaultInjection.test.ts`
+  failed (`createInMemoryCredentialVault` absent), then GREEN (5 tests); selector
+  gained 3 default-election tests; the adapterTaskGate "no usable credential"
+  test was rewritten from fail → degrade.
+- `pnpm typecheck`, `pnpm build` passed; `pnpm test` passed 31 files and 174
+  tests (was 30 / 166), with the known Node `node:sqlite` ExperimentalWarning.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128` `issueCount: 0`.
+- `git diff --check` + trailing-whitespace scan clean.

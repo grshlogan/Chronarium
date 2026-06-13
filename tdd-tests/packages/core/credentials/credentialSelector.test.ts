@@ -210,3 +210,75 @@ describe("createCredentialStore safety", () => {
     ).toThrow(/unknown profile/);
   });
 });
+
+describe("default-cookie election by addedAt", () => {
+  it("uses the single eligible profile as the default", () => {
+    const store = createCredentialStore({
+      profiles: [profile({ id: "only", addedAt: "2026-06-10T00:00:00.000Z" })],
+      bindings: [binding({ entries: [{ profileId: "only", priority: 0 }] })]
+    });
+
+    const result = selectCredentialForCapture({
+      store,
+      streamerRef: STREAMER,
+      siteId: SITE,
+      intent: "ticket"
+    });
+
+    expect(result.credentialRef).toEqual({ profileId: "only" });
+  });
+
+  it("prefers the first-added (oldest) profile as the default", () => {
+    const store = createCredentialStore({
+      profiles: [
+        profile({ id: "profile-new", addedAt: "2026-06-12T00:00:00.000Z" }),
+        profile({ id: "profile-old", addedAt: "2026-06-10T00:00:00.000Z" })
+      ],
+      bindings: [
+        binding({
+          entries: [
+            { profileId: "profile-new", priority: 0 },
+            { profileId: "profile-old", priority: 0 }
+          ]
+        })
+      ]
+    });
+
+    const result = selectCredentialForCapture({
+      store,
+      streamerRef: STREAMER,
+      siteId: SITE,
+      intent: "ticket"
+    });
+
+    expect(result.credentialRef).toEqual({ profileId: "profile-old" });
+    expect(result.orderedProfileIds).toEqual(["profile-old", "profile-new"]);
+  });
+
+  it("elects the next-oldest survivor when the default is removed", () => {
+    // profile-old removed (deleted default) -> profile-mid is now the oldest.
+    const store = createCredentialStore({
+      profiles: [
+        profile({ id: "profile-new", addedAt: "2026-06-12T00:00:00.000Z" }),
+        profile({ id: "profile-mid", addedAt: "2026-06-11T00:00:00.000Z" })
+      ],
+      bindings: [
+        binding({
+          entries: [
+            { profileId: "profile-new", priority: 0 },
+            { profileId: "profile-mid", priority: 0 }
+          ]
+        })
+      ]
+    });
+
+    const result = selectCredentialForCapture({
+      store,
+      streamerRef: STREAMER,
+      siteId: SITE,
+      intent: "ticket"
+    });
+
+    expect(result.credentialRef).toEqual({ profileId: "profile-mid" });
+  });
+});

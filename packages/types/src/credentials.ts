@@ -6,6 +6,7 @@
  * are never represented here; a `CredentialProfile` holds an opaque
  * `storageHandle` to at-rest material, never the cookies themselves.
  */
+import type { IsoDateTimeString, RedactionStatus } from "./primitives.js";
 
 export type RecordingIntent = "public" | "ticket" | "private" | "spy";
 
@@ -39,6 +40,13 @@ export interface CredentialProfile {
   readonly storageHandle: string;
   readonly entitlements: readonly CredentialEntitlement[];
   readonly health: CredentialHealth;
+  /**
+   * When this profile was added. The default profile for a site/scope is the
+   * oldest surviving one (smallest `addedAt`); the first added is therefore the
+   * default until it is removed. Optional for back-compat; selection falls back
+   * to binding entry order when absent.
+   */
+  readonly addedAt?: IsoDateTimeString;
   readonly expiresAt?: string;
   readonly lastVerifiedAt?: string;
 }
@@ -71,3 +79,45 @@ export interface CredentialSelectionResult {
   readonly orderedProfileIds: readonly string[];
   readonly reason?: string;
 }
+
+/** One cookie/header entry inside a resolved jar. Runtime-only, never persisted. */
+export interface CredentialJarEntry {
+  readonly name: string;
+  readonly value: string;
+}
+
+/**
+ * A resolved credential jar. This is the only place raw cookie/header material
+ * exists, and it is runtime-only: it must never be serialized to disk, a
+ * timeline, an archive, the index, logs, or process argv. In fixture mode the
+ * entries are synthetic and `redactionStatus` is `"synthetic"`.
+ */
+export interface ResolvedCredentialJar {
+  readonly profileId: string;
+  readonly redactionStatus: RedactionStatus;
+  readonly entries: readonly CredentialJarEntry[];
+}
+
+/** Loggable, redacted view of an injection — no jar values. */
+export interface RedactedCredentialInjection {
+  readonly credentialRef: CredentialRef;
+  readonly entryCount: number;
+}
+
+/**
+ * Models how a resolved jar would be handed to a worker. The jar lives only in
+ * `handshake` (runtime-only); `redactedHandshake` is the only loggable form.
+ * `kind: "none"` covers public (no credential needed) and degraded captures.
+ */
+export type CredentialInjectionDescriptor =
+  | {
+      readonly kind: "inject";
+      readonly channel: "stdin-handshake";
+      readonly credentialRef: CredentialRef;
+      readonly handshake: { readonly jar: ResolvedCredentialJar };
+      readonly redactedHandshake: RedactedCredentialInjection;
+    }
+  | {
+      readonly kind: "none";
+      readonly reason: string;
+    };

@@ -177,8 +177,11 @@ describe("core adapter task gate", () => {
     }
   });
 
-  it("fails gated capture before adapter startup when no usable credential is bound", async () => {
+  it("degrades gated capture to no-cookie/public when no usable credential is bound", async () => {
     const { dataRoot, archiveRoot } = await createTemporaryRuntimePaths();
+    const fixture = parseStripchatCombinedFixture(
+      await readStripchatFixtureJson()
+    );
     const runtime = createCoreRuntime({
       dataRoot,
       archiveRoot,
@@ -193,12 +196,13 @@ describe("core adapter task gate", () => {
       runtime
     });
     const session = createSyntheticSession({
-      id: "session-missing-credential-001",
+      id: fixture.sessionId,
       site: {
         siteId: "stripchat",
         redactionStatus: "synthetic"
       }
     });
+    const timelineEvents = createStripchatCombinedTimelineEvents(fixture);
 
     await runtime.start();
 
@@ -206,37 +210,39 @@ describe("core adapter task gate", () => {
       const result = await gui.runOfflineFixtureCapture({
         archiveRootPath: path.join(
           archiveRoot,
-          "session-missing-credential-001.chron"
+          "session-degraded-credential-001.chron"
         ),
         task: {
-          taskId: "task-missing-credential-001",
+          taskId: "task-degraded-credential-001",
           kind: "capture",
-          sessionId: session.id,
+          sessionId: fixture.sessionId,
           adapterId: "stripchat",
           mode: "fixture",
-          capabilitiesRequested: ["fixture.timeline"],
+          capabilitiesRequested: ["fixture.timeline", "media.discovery"],
           recordingIntent: "ticket",
           streamerRef: "streamer:redacted-stripchat-001"
         },
         manifest: createSyntheticArchiveManifest({
-          archiveId: "archive-missing-credential-001",
+          archiveId: "archive-degraded-credential-001",
           session
         }),
-        adapterMessages: adapterMessagesThatMustNotStart()
+        mediaTracks: createStripchatCombinedMediaTracks(fixture),
+        adapterMessages: runStripchatFixture({
+          name: fixture.name,
+          sessionId: fixture.sessionId,
+          events: timelineEvents
+        })
       });
 
-      expect(result).toMatchObject({
-        status: "failed",
-        task: {
-          status: "failed",
-          failure: {
-            code: "credential.missing",
-            retryable: false
-          }
-        }
+      expect(result.status).toBe("completed");
+      expect(result.credential).toMatchObject({
+        status: "degraded-public",
+        intent: "ticket"
       });
-      expect(result.lifecycle).toBeUndefined();
-      expect(gui.listArchives({ sessionId: session.id })).toEqual([]);
+      expect(result.indexSummary).toMatchObject({
+        archiveId: "archive-degraded-credential-001",
+        validationOk: true
+      });
     } finally {
       await runtime.stop();
     }
@@ -308,6 +314,11 @@ describe("core adapter task gate", () => {
       });
 
       expect(result.status).toBe("completed");
+      expect(result.credential).toMatchObject({
+        status: "selected",
+        intent: "ticket",
+        credentialRef: { profileId: "profile-ticket-001" }
+      });
       expect(result.indexSummary).toMatchObject({
         archiveId: "archive-entitled-credential-001",
         validationOk: true

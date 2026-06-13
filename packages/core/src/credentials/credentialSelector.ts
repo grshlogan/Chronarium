@@ -15,6 +15,8 @@ interface CredentialCandidate {
   readonly order: number;
   /** 0 = streamer-scoped entitlement, 1 = site-scoped. */
   readonly specificity: number;
+  /** Add time as epoch ms; oldest (smallest) is the default. Missing => last. */
+  readonly addedAtKey: number;
 }
 
 /**
@@ -63,7 +65,8 @@ export function selectCredentialForCapture(input: {
       entitlement,
       priority: entry.priority,
       order: index,
-      specificity: entitlement.scope.startsWith("streamer:") ? 0 : 1
+      specificity: entitlement.scope.startsWith("streamer:") ? 0 : 1,
+      addedAtKey: addedAtKeyOf(profile)
     });
   });
 
@@ -78,9 +81,11 @@ export function selectCredentialForCapture(input: {
     if (binding.policy === "priority") {
       return a.priority - b.priority || a.order - b.order;
     }
+    // Default election: most specific scope first, then the oldest-added
+    // (smallest addedAt) as the default cookie, then binding entry order.
     return (
       a.specificity - b.specificity ||
-      a.priority - b.priority ||
+      a.addedAtKey - b.addedAtKey ||
       a.order - b.order
     );
   });
@@ -106,6 +111,14 @@ function matchEntitlement(
       (entitlement.scope === "site" ||
         entitlement.scope === `streamer:${streamerRef}`)
   );
+}
+
+function addedAtKeyOf(profile: CredentialProfile): number {
+  if (!profile.addedAt) {
+    return Number.POSITIVE_INFINITY;
+  }
+  const parsed = Date.parse(profile.addedAt);
+  return Number.isNaN(parsed) ? Number.POSITIVE_INFINITY : parsed;
 }
 
 function missing(

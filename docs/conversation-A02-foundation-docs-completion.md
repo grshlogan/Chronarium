@@ -497,3 +497,75 @@ docs: `docs/plan/plan_credential_store_selector_fixture.md` (new),
 Add a core task gate that refuses a gated capture when a streamer has no usable
 bound profile for the requested intent, then the reserved `session.credential_*`
 timeline fact schemas — still fixture-first, no real cookies.
+
+---
+
+## Phase 7: Credential Vault + Injection Model + Default Election
+
+### Topic And Scope
+
+Same A02 conversation. The user chose to advance the credential line to the live
+edge (fixture-safe), and added a default-cookie rule. This phase models how a
+resolved jar is held (`CredentialVault`) and handed to a worker
+(`CredentialInjectionDescriptor`), adds default-cookie election to the selector,
+and changes the gated no-credential path from refuse to no-cookie degrade. No
+real cookies, no encryption backend, no spawn, no live requests. Plan:
+`docs/plan/plan_credential_vault_injection_fixture.md`.
+
+### Status
+
+Completed and verified.
+
+### User Clarification Incorporated
+
+- The common recording case is `public` and needs no cookie; credentials are the
+  exception for ticket/private/spy.
+- Default cookie: a site with one cookie uses it; the first-added is the default;
+  if the default is deleted, the oldest surviving cookie becomes default; if none
+  remain, fall back to no-cookie/public recording. ("最近且最旧" read as oldest
+  surviving.) This revised the earlier B1 gate from refuse to degrade.
+
+### What Landed
+
+- `packages/types/src/credentials.ts`: `CredentialJarEntry`,
+  `ResolvedCredentialJar`, `CredentialInjectionDescriptor`, `addedAt` on
+  `CredentialProfile`.
+- `packages/core/src/credentials/credentialVault.ts`
+  (`createInMemoryCredentialVault`) and `credentialInjection.ts`
+  (`createCredentialInjectionDescriptor`), exported via `index.ts`.
+- `credentialSelector.ts`: default ordering by `addedAt` (oldest = default).
+- `offlineFixtureCapturePipeline.ts`: `resolveCaptureCredential`; gated capture
+  with no usable profile degrades to public/no-cookie and proceeds, exposed as
+  `result.credential`.
+
+### Decisions
+
+- Vault is backend-agnostic; in-memory synthetic backend only. Real encrypted
+  backend deferred (OS keystore default + passphrase fallback recommended).
+- Injection is a no-spawn one-time stdin handshake; jar runtime-only; only a
+  redacted form is loggable.
+- The pipeline records the credential outcome but does not inject (no vault/spawn
+  wired) and does not emit `session.credential_*` timeline facts yet (deferred to
+  the capture layer; schemas already exist).
+
+### Verification
+
+- TDD RED→GREEN for the vault/injection tracer (5 tests); selector election (3
+  tests); adapterTaskGate "no usable credential" rewritten fail → degrade.
+- `pnpm typecheck`, `pnpm build` passed; `pnpm test` 31 files / 174 tests (was
+  30 / 166); `pnpm benchmark:timeline` `issueCount: 0`.
+- `git diff --check` + trailing-whitespace scan clean.
+
+### Files Changed This Phase
+
+The files above, plus docs: `docs/CREDENTIALS_AND_SESSIONS.md`,
+`docs/plan/plan_credential_vault_injection_fixture.md` (new),
+`docs/APP_CODE_MAP.md`, `docs/AI_HANDOFF.md`, `docs/AI_CHANGE_INDEX.md`,
+`README.md`, and this document. A01 context untouched.
+
+### Next Safe Step
+
+Deferred until the user approves a specific live adapter: real encrypted at-rest
+backend, real cookie import, real child-process spawn + stdin injection, live
+requests, GUI binding UI, and emitting `session.credential_*` facts during
+capture.
