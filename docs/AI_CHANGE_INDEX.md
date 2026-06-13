@@ -1576,3 +1576,48 @@ unimplemented ideas as completed work.
 - Next: add a supervised stdout/stderr harness or process lifecycle test around
   the worker command descriptor and JSONL parser, still without connecting to
   real sites.
+
+## 2026-06-13: No-spawn adapter worker supervisor harness
+
+- Conversation: continued adapter worker readiness after the command descriptor
+  and JSONL parser existed.
+- Landed: added a no-spawn supervisor harness that connects modeled worker
+  command/stdout/stderr/exit data to the fixture lifecycle host.
+- Files:
+  - `README.md`
+  - `docs/ADAPTER_PROTOCOL.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_adapter_worker_supervisor_harness.md`
+  - `packages/core/src/adapters/adapterWorkerSupervisor.ts`
+  - `packages/core/src/adapters/index.ts`
+  - `tdd-tests/packages/core/adapter-worker-supervisor/adapterWorkerSupervisor.test.ts`
+- Decisions:
+  - `runModeledAdapterWorker` is a no-spawn harness, not a process launcher.
+  - The harness parses modeled stdout JSONL through
+    `readAdapterWorkerJsonlMessages`, then feeds validated messages into the
+    fixture lifecycle host.
+  - Valid stdout plus exit code 0 yields a completed worker report.
+  - Invalid stdout and non-zero exit codes yield failed reports.
+  - Raw stdout is not echoed in invalid-output failures.
+- Verification:
+  - TDD RED: targeted supervisor test failed because `runModeledAdapterWorker`
+    did not exist.
+  - GREEN: targeted test passed after adding the no-spawn harness and core
+    export.
+  - TDD RED/GREEN: invalid stdout JSON escaped as an exception, then became a
+    failed report.
+  - Non-zero exit coverage verifies `adapter_worker.exit_nonzero`.
+  - Targeted adapter worker supervisor tests passed 1 file and 3 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 26 files and 108 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed.
+  - `git diff --check` passed.
+  - trailing whitespace scan passed.
+  - JSON/package config parse scan parsed 26 JSON files.
+- Next: use fixture workers first if adding a real process launcher/supervisor;
+  still do not connect to real sites.

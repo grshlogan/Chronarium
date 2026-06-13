@@ -213,6 +213,14 @@ id, runtime mode, session id, capabilities, and optional fixture name as
 structured arguments, rejects relative paths, empty values, and newline-bearing
 values, and does not spawn processes.
 
+The current adapter worker boundary pass added `runModeledAdapterWorker` in
+`packages/core`. This no-spawn harness combines a worker command descriptor,
+modeled stdout JSONL, stderr lines, exit code, and lifecycle request into a
+structured worker report. It maps invalid stdout and non-zero exit codes into
+failed reports, while valid stdout and exit code 0 produce a completed
+lifecycle report. It still does not start child processes or connect to real
+sites.
+
 The current A01 GUI pass added the first Web-first React/Vite recording
 dashboard shell under `apps/desktop`. It follows the streamer-maintenance
 layout direction: maintained streamers on the left, selected streamer recording
@@ -410,13 +418,16 @@ Current long-run adapter readiness continuation adds:
 - `packages/core/src/offlineFixtureCapturePipeline.ts`
 - `packages/core/src/adapters/adapterMessageStream.ts`
 - `packages/core/src/adapters/adapterWorkerCommand.ts`
+- `packages/core/src/adapters/adapterWorkerSupervisor.ts`
 - `packages/core/src/adapters/index.ts`
 - `tdd-tests/packages/adapters/stripchat/stripchatCombinedFixture.test.ts`
 - `tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts`
 - `tdd-tests/packages/core/adapter-message-stream/adapterMessageStream.test.ts`
 - `tdd-tests/packages/core/adapter-worker-command/adapterWorkerCommand.test.ts`
+- `tdd-tests/packages/core/adapter-worker-supervisor/adapterWorkerSupervisor.test.ts`
 - `docs/plan/plan_adapter_worker_message_stream.md`
 - `docs/plan/plan_adapter_worker_command_builder.md`
+- `docs/plan/plan_adapter_worker_supervisor_harness.md`
 - `tsconfig.json`
 - `vitest.config.ts`
 
@@ -876,19 +887,40 @@ Checks already run during this continuation:
 - trailing whitespace scan: passed after adapter worker command builder.
 - JSON/package config parse scan: parsed 26 JSON files after adapter worker
   command builder.
+- TDD RED for no-spawn adapter worker supervisor:
+  `pnpm exec vitest run
+  tdd-tests/packages/core/adapter-worker-supervisor/adapterWorkerSupervisor.test.ts`
+  failed because `runModeledAdapterWorker` did not exist.
+- GREEN for no-spawn adapter worker supervisor: added the harness and exported
+  it through core adapters; targeted test passed.
+- TDD RED/GREEN for invalid stdout: invalid worker JSONL initially escaped as an
+  exception, then became a failed report with
+  `adapter_worker_stream.invalid_json` and no raw stdout echo.
+- Added non-zero exit coverage: exit code 7 produces
+  `adapter_worker.exit_nonzero` even when lifecycle messages finish.
+- Targeted adapter worker supervisor tests passed 1 file and 3 tests.
+- `pnpm typecheck`: passed after no-spawn adapter worker supervisor.
+- `pnpm test`: passed 26 files and 108 tests after no-spawn adapter worker
+  supervisor, with the known Node `node:sqlite` ExperimentalWarning.
+- `pnpm build`: passed after no-spawn adapter worker supervisor.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed after
+  no-spawn adapter worker supervisor.
+- `git diff --check`: passed after no-spawn adapter worker supervisor.
+- trailing whitespace scan: passed after no-spawn adapter worker supervisor.
+- JSON/package config parse scan: parsed 26 JSON files after no-spawn adapter
+  worker supervisor.
 
 ## Next Safe Step
 
 Use `docs/ADAPTER_SITE_READINESS.md` for the next adapter behavior: add more
 synthetic or approved redacted fixtures for playlist parsing, room state,
 chat/event extraction, reconnect/gap handling, and error handling before any
-live-site request. The next worker-boundary step is a supervised stdout/stderr
-harness or process lifecycle test around the JSONL parser and command
-descriptor, still without connecting to real sites. In parallel, add media
-segment hash/duration validation fixtures plus schema drafts for editable
-processing plans, processed-output, derivation, playable-validation,
-retention/upload decision, and deletion-record facts, still without executing
-real media tools or deleting files. GUI visual polish is intended for a
-separate allowed GUI thread, while A01 should keep working on lower-level
-archive/core foundations unless the user redirects. Keep A02 independent and do
-not create extra A01 pseudo-conversation files.
+live-site request. The next worker-boundary step can be a real process
+launcher/supervisor shell fed by fixture workers first, still without connecting
+to real sites. In parallel, add media segment hash/duration validation fixtures
+plus schema drafts for editable processing plans, processed-output,
+derivation, playable-validation, retention/upload decision, and deletion-record
+facts, still without executing real media tools or deleting files. GUI visual
+polish is intended for a separate allowed GUI thread, while A01 should keep
+working on lower-level archive/core foundations unless the user redirects. Keep
+A02 independent and do not create extra A01 pseudo-conversation files.

@@ -263,6 +263,27 @@ The builder:
 
 The actual launcher/supervisor is still pending.
 
+## No-Spawn Worker Supervisor Harness
+
+`packages/core` exposes `runModeledAdapterWorker` as a no-spawn harness for the
+future process supervisor.
+
+The harness accepts:
+
+- an adapter worker command descriptor;
+- a lifecycle request;
+- modeled stdout JSONL lines;
+- modeled stderr lines;
+- an exit code.
+
+It parses stdout through `readAdapterWorkerJsonlMessages`, runs the parsed
+messages through the fixture lifecycle host, summarizes stderr, and returns a
+structured report. Invalid stdout and non-zero exit codes become failed reports
+instead of unstructured exceptions.
+
+This harness is still not a real process launcher. It is the testable contract a
+future launcher should feed.
+
 ## Security Rules
 
 - GUI must never talk directly to site adapters.

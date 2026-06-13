@@ -85,6 +85,7 @@ docs/
     plan_stripchat_offline_combined_fixture.md
     plan_adapter_worker_message_stream.md
     plan_adapter_worker_command_builder.md
+    plan_adapter_worker_supervisor_harness.md
     plan_web_dashboard_offline_behavior.md
     plan_web_dashboard_monitoring_semantics.md
     plan_web_dashboard_streamer_selection.md
@@ -619,6 +620,15 @@ Responsibility:
 - Records that the builder returns argv arrays with `shell: false`, rejects
   unsafe path/argument shapes, and does not spawn child processes.
 
+### `docs/plan/plan_adapter_worker_supervisor_harness.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the no-spawn adapter worker
+  supervisor harness.
+- Records how modeled command/stdout/stderr/exit data becomes a lifecycle
+  report without launching a real process.
+
 ### `docs/plan/plan_web_dashboard_offline_behavior.md`
 
 Responsibility:
@@ -784,6 +794,7 @@ packages/
         adapterLifecycle.ts
         adapterMessageStream.ts
         adapterWorkerCommand.ts
+        adapterWorkerSupervisor.ts
         index.ts
       archiveIndexService.ts
       guiService.ts
@@ -1075,6 +1086,10 @@ Current status:
 - The adapter worker command builder can create a typed spawn-style descriptor
   with `shell: false`, structured argv fields, redacted argv, and basic
   path/argument safety checks. It does not spawn processes.
+- The no-spawn adapter worker supervisor harness can combine a command
+  descriptor, modeled stdout JSONL, stderr lines, exit code, and fixture
+  lifecycle request into a structured worker report. It does not spawn
+  processes.
 - The adapter catalog can register adapter manifests, list registered adapters,
   return a manifest by adapter id, reject duplicate adapter ids, and reject
   manifests that declare sensitive source field emission.
@@ -1379,6 +1394,8 @@ tdd-tests/
         adapterMessageStream.test.ts
       adapter-worker-command/
         adapterWorkerCommand.test.ts
+      adapter-worker-supervisor/
+        adapterWorkerSupervisor.test.ts
     indexer/
       timeline-batches/
         indexerTimelineBatches.test.ts

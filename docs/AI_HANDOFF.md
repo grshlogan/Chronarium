@@ -97,6 +97,10 @@ Current state:
   worker command descriptor builder. It returns `executablePath`, `argv`,
   `redactedArgv`, and `shell: false`, rejects relative paths, empty values, and
   newline-bearing arguments, and does not spawn processes.
+- `packages/core` has `runModeledAdapterWorker`, a no-spawn supervisor harness
+  that combines a worker command descriptor, stdout JSONL, stderr lines, exit
+  code, and lifecycle request into a structured worker report. It maps invalid
+  stdout and non-zero exits to failed reports without starting a real process.
 - `packages/core` has an adapter catalog that registers adapter manifests,
   lists adapters, looks up by adapter id, rejects duplicate adapter ids, and
   rejects manifests that declare sensitive source field emission.
@@ -230,6 +234,8 @@ Current state:
   JSONL stdout parsing boundary.
 - `docs/plan/plan_adapter_worker_command_builder.md` records the typed adapter
   worker command descriptor boundary.
+- `docs/plan/plan_adapter_worker_supervisor_harness.md` records the no-spawn
+  adapter worker supervisor harness.
 - `docs/ADAPTER_SITE_READINESS.md` records the practical checklist for new
   adapter packages: manifest, synthetic/redacted fixtures, parser/builders,
   protocol fixture runner, readiness gate, catalog registration, and core task
@@ -394,8 +400,9 @@ The project should optimize for AI-assisted long-term maintenance:
    `docs/ADAPTER_SITE_READINESS.md`: add synthetic or approved redacted
    fixtures for playlist parsing, room state, chat/event extraction,
    reconnect/gap handling, and error handling before any live-site request.
-2. Continue the adapter worker boundary with a supervised stdout/stderr harness
-   or process lifecycle tests, still without connecting to real sites.
+2. Continue the adapter worker boundary with a real process launcher/supervisor
+   shell only against fixture workers first, still without connecting to real
+   sites.
 3. Add media segment hash and duration validation fixtures, still without
    executing media tools.
 4. Add schema drafts and fixtures for processed-output facts, derivation facts,
@@ -689,6 +696,26 @@ Adapter worker command builder checks:
 - Targeted adapter worker command tests passed 1 file and 2 tests.
 - `pnpm typecheck`: passed.
 - `pnpm test`: passed 25 files and 105 tests, with the known Node
+  `node:sqlite` ExperimentalWarning.
+- `pnpm build`: passed.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan produced no output.
+- JSON/package config parse scan parsed 26 JSON files.
+
+Adapter worker supervisor harness checks:
+
+- TDD RED: targeted supervisor test failed because `runModeledAdapterWorker`
+  did not exist.
+- GREEN: targeted test passed after adding the no-spawn supervisor harness.
+- TDD RED/GREEN: invalid stdout JSON initially escaped as an exception, then
+  became a failed report with `adapter_worker_stream.invalid_json` and no raw
+  stdout echo.
+- Added non-zero exit coverage: exit code 7 produces
+  `adapter_worker.exit_nonzero` even when lifecycle messages finish.
+- Targeted adapter worker supervisor tests passed 1 file and 3 tests.
+- `pnpm typecheck`: passed.
+- `pnpm test`: passed 26 files and 108 tests, with the known Node
   `node:sqlite` ExperimentalWarning.
 - `pnpm build`: passed.
 - `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed.
