@@ -6,8 +6,13 @@ export {
   runOfflineSelfTestDemo
 } from "./recordingDashboard.js";
 export type {
+  AddStreamerForm,
+  MockCredentialProfile,
+  MonitoringFeedback,
   OfflineSelfTest,
   OfflineSelfTestStatus,
   RecordingDashboardAction,
-  RecordingDashboardState
+  RecordingDashboardState,
+  RecordingIntent,
+  StreamerCredentialBindingView
 } from "./recordingDashboard.js";

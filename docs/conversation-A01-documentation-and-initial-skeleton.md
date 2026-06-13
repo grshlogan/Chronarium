@@ -1041,6 +1041,28 @@ Checks already run during this continuation:
 - trailing whitespace scan: found no matches after the media-tools parser lane.
 - JSON/package config parse scan: parsed 30 JSON files after the media-tools
   parser lane.
+- Added `docs/plan/plan_web_dashboard_credential_binding.md` for the Codex
+  apps/desktop parallel lane. This lane is limited to `apps/desktop`, matching
+  `tdd-tests/apps/desktop`, A01 context, and shared docs appended with A01
+  notes. It does not touch `packages/**`, root `tsconfig*.json`, or
+  `vitest.config.ts`.
+- TDD RED for streamer-link validation:
+  `pnpm exec vitest run tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+  failed because `addStreamerForm` did not exist on dashboard state.
+- GREEN for streamer-link validation and add flow: the reducer now validates
+  supported synthetic Chaturbate/Stripchat streamer URLs, rejects malformed
+  links with safe form feedback, and adds/selects a synthetic maintained
+  streamer without contacting any site.
+- TDD RED/GREEN for monitoring feedback: pause/resume/check-now actions now
+  update `monitoringFeedback`, and the dashboard renders the latest action.
+- TDD RED/GREEN for browser-local credential binding: added synthetic
+  `RecordingIntent`, mock credential profiles, per-streamer bindings, default
+  Cookie election by oldest usable bound profile, profile bind/remove actions,
+  public no-cookie guidance, and gated no-usable-Cookie degrade messaging.
+- Extra RED/GREEN tightened entitlement matching so a profile is usable only
+  when it is healthy and supports the selected gated intent.
+- Targeted desktop recording-dashboard tests passed 15 tests.
+- `pnpm typecheck`: passed after the desktop credential binding lane.
 
 ## Next Safe Step
 

@@ -255,6 +255,7 @@ small module boundaries.
 - [docs/plan/plan_credential_store_selector_fixture.md](./docs/plan/plan_credential_store_selector_fixture.md)：fixture-only 凭据库与按主播选择器（能力匹配→容灾）的计划。
 - [docs/plan/plan_credential_vault_injection_fixture.md](./docs/plan/plan_credential_vault_injection_fixture.md)：fixture-only 凭据 vault、注入握手模型与默认 Cookie 选举的计划。
 - [docs/plan/plan_credential_task_gate_and_session_facts.md](./docs/plan/plan_credential_task_gate_and_session_facts.md)：凭据任务门槛与脱敏 session credential 事实 schema 的计划。
+- [docs/plan/plan_web_dashboard_credential_binding.md](./docs/plan/plan_web_dashboard_credential_binding.md)：Web 录制工作台添加主播链接校验、监控反馈和合成按主播凭据绑定面板计划。
 
 ## 设计边界
 
@@ -299,7 +300,8 @@ Chronarium 目标 GitHub 仓库：
 5. 为 processed output / raw segment hash、duration、derivation facts 先补
    schema 草案和离线 fixture，仍不执行真实压缩、上传或删除。
 6. 继续推进 Web-first 录制工作台的信息密度和行为入口：添加链接表单、
-   监控暂停/恢复/立即检查的状态反馈，以及 offline self-test 诊断结果。
+   监控暂停/恢复/立即检查的状态反馈、合成按主播凭据绑定面板，以及
+   offline self-test 诊断结果。
 7. 把 Web-first 录制工作台里的浏览器 self-test action 替换成 GUI-facing
    DTO/preload 边界，再接入 core facade 显示 health/status。
 8. 让 Web renderer 接入离线 capture-like pipeline，展示 archive 列表、

@@ -1,10 +1,13 @@
 # Replay Model V1
 
-Status: draft design contract. No replay player, replay reader integration, or
-GUI exists. The repository today has a fixture-safe `.chron` writer,
+Status: draft design contract. A first fixture-safe replay reader now exists in
+`packages/player` (`buildReplayTimeline` + `reconstructRoomStateAt`, pure
+functions over a timeline event array) covering milestone (a) and a slice of (b);
+no media playback, segment alignment, GUI, or archive-read integration exists
+yet. The repository today has a fixture-safe `.chron` writer,
 reader/validator, a rebuildable SQLite indexer, and a minimal core
-archive/index service, but none of them implement replay behavior. This
-document defines the target semantics that future replay work must satisfy.
+archive/index service. This document defines the target semantics that future
+replay work must satisfy.
 
 ## Purpose
 

@@ -5,6 +5,7 @@ import {
   getSelectedStreamerContext,
   reduceRecordingDashboard,
   runOfflineSelfTestDemo,
+  type MockCredentialProfile,
   type RecordingDashboardState
 } from "./recordingDashboard.js";
 
@@ -22,6 +23,20 @@ export function App(props: AppProps = {}): ReactElement {
   const currentSession = selectedContext.currentSession;
   const selectedMonitoringPaused =
     selectedStreamer.monitoringState === "paused";
+  const selectedCredentialBinding =
+    dashboard.credentialBindings[selectedStreamer.id] ??
+    createEmptyCredentialBinding();
+  const selectedCredentialProfileIds = new Set(
+    selectedCredentialBinding.boundProfileIds
+  );
+  const selectedCredentialProfiles = selectedCredentialBinding.boundProfileIds
+    .map((profileId) =>
+      dashboard.credentialProfiles.find((profile) => profile.id === profileId)
+    )
+    .filter((profile) => profile !== undefined);
+  const availableCredentialProfiles = dashboard.credentialProfiles.filter(
+    (profile) => !selectedCredentialProfileIds.has(profile.id)
+  );
 
   const dispatchDashboardAction = (
     action: Parameters<typeof reduceRecordingDashboard>[1]
@@ -68,9 +83,39 @@ export function App(props: AppProps = {}): ReactElement {
             +
           </button>
         </header>
-        <button className="add-link" type="button">
-          Add streamer link
-        </button>
+        <form
+          className="add-streamer-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            dispatchDashboardAction({
+              type: "streamerLink.submit"
+            });
+          }}
+        >
+          <input
+            aria-label="Streamer link"
+            placeholder="https://chaturbate.com/example"
+            type="url"
+            value={dashboard.addStreamerForm.value}
+            onChange={(event) => {
+              dispatchDashboardAction({
+                type: "streamerLink.inputChanged",
+                value: event.currentTarget.value
+              });
+            }}
+          />
+          <button className="add-link" type="submit">
+            Add streamer link
+          </button>
+          {dashboard.addStreamerForm.error !== undefined ? (
+            <p className="form-feedback error">{dashboard.addStreamerForm.error}</p>
+          ) : null}
+          {dashboard.addStreamerForm.message !== undefined ? (
+            <p className="form-feedback success">
+              {dashboard.addStreamerForm.message}
+            </p>
+          ) : null}
+        </form>
         <section className="streamer-list">
           {dashboard.streamers.map((streamer) => (
             <button
@@ -188,6 +233,10 @@ export function App(props: AppProps = {}): ReactElement {
               Streamer links are maintained automatically. Recording starts when
               a monitored streamer is detected live.
             </p>
+            <p className={`monitoring-feedback ${dashboard.monitoringFeedback.tone}`}>
+              <strong>Last action</strong>
+              <span>{dashboard.monitoringFeedback.message}</span>
+            </p>
           </div>
           <div className="control-buttons">
             <button
@@ -225,6 +274,110 @@ export function App(props: AppProps = {}): ReactElement {
             >
               Check now
             </button>
+          </div>
+        </section>
+
+        <section
+          className="credential-panel"
+          aria-label="Synthetic credential binding"
+        >
+          <div className="credential-panel-header">
+            <div>
+              <p className="eyebrow">Credential binding</p>
+              <h2>Per-streamer Cookie choice</h2>
+            </div>
+            <span className="credential-note">Synthetic view-model only</span>
+          </div>
+
+          <div className="intent-row" aria-label="Recording intent">
+            {(["public", "ticket", "private", "spy"] as const).map((intent) => (
+              <button
+                className={
+                  selectedCredentialBinding.recordingIntent === intent
+                    ? "intent-button selected"
+                    : "intent-button"
+                }
+                key={intent}
+                type="button"
+                onClick={() => {
+                  dispatchDashboardAction({
+                    type: "credential.intentSelected",
+                    intent
+                  });
+                }}
+              >
+                {formatRecordingIntent(intent)}
+              </button>
+            ))}
+          </div>
+
+          <p className="credential-message">
+            {selectedCredentialBinding.message}
+          </p>
+
+          <div className="credential-lists">
+            <div>
+              <h3>Bound profiles</h3>
+              {selectedCredentialProfiles.length === 0 ? (
+                <p className="credential-empty">No synthetic profiles bound.</p>
+              ) : (
+                <ul>
+                  {selectedCredentialProfiles.map((profile) => (
+                    <li key={profile.id}>
+                      <div>
+                        <strong>{profile.label}</strong>
+                        <span>{profile.accountHint}</span>
+                      </div>
+                      <div className="credential-actions">
+                        {profile.id === selectedCredentialBinding.defaultProfileId ? (
+                          <b>Default Cookie</b>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            dispatchDashboardAction({
+                              type: "credential.profileRemoved",
+                              profileId: profile.id
+                            });
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <h3>Available synthetic profiles</h3>
+              {availableCredentialProfiles.length === 0 ? (
+                <p className="credential-empty">All synthetic profiles are bound.</p>
+              ) : (
+                <ul>
+                  {availableCredentialProfiles.map((profile) => (
+                    <li key={profile.id}>
+                      <div>
+                        <strong>{profile.label}</strong>
+                        <span>{formatCredentialHealth(profile.health)}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          dispatchDashboardAction({
+                            type: "credential.profileSelected",
+                            profileId: profile.id
+                          });
+                        }}
+                      >
+                        Bind
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </section>
 
@@ -413,6 +566,42 @@ function describeSelfTest(dashboard: RecordingDashboardState): string {
       } timeline facts`;
     case "failed":
       return selfTest.errorMessage ?? "Offline self-test failed.";
+  }
+}
+
+function createEmptyCredentialBinding(): RecordingDashboardState["credentialBindings"][string] {
+  return {
+    recordingIntent: "public",
+    boundProfileIds: [],
+    message: "Public recording does not need a Cookie."
+  };
+}
+
+function formatRecordingIntent(
+  intent: RecordingDashboardState["credentialBindings"][string]["recordingIntent"]
+): string {
+  switch (intent) {
+    case "public":
+      return "Public";
+    case "ticket":
+      return "Ticket";
+    case "private":
+      return "Private";
+    case "spy":
+      return "Spy";
+  }
+}
+
+function formatCredentialHealth(
+  health: MockCredentialProfile["health"]
+): string {
+  switch (health) {
+    case "ok":
+      return "Usable synthetic profile";
+    case "expired":
+      return "Expired synthetic profile";
+    case "revoked":
+      return "Revoked synthetic profile";
   }
 }
 

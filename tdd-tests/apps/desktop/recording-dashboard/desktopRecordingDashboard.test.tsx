@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   App,
   createInitialRecordingDashboard,
+  getSelectedStreamer,
   reduceRecordingDashboard
 } from "@chronarium/desktop";
 
@@ -160,5 +161,153 @@ describe("desktop recording dashboard", () => {
     expect(html).toContain("No sessions archived yet.");
     expect(html).toContain("No current recording");
     expect(html).not.toContain("Recording Now");
+  });
+
+  it("rejects malformed streamer links with a clear form error", () => {
+    const dashboard = reduceRecordingDashboard(createInitialRecordingDashboard(), {
+      type: "streamerLink.inputChanged",
+      value: "not a streamer link"
+    });
+    const submitted = reduceRecordingDashboard(dashboard, {
+      type: "streamerLink.submit"
+    });
+
+    const html = renderToStaticMarkup(<App dashboard={submitted} />);
+
+    expect(submitted.addStreamerForm.error).toBe(
+      "Enter a supported synthetic streamer URL."
+    );
+    expect(submitted.streamers).toHaveLength(
+      createInitialRecordingDashboard().streamers.length
+    );
+    expect(html).toContain("Enter a supported synthetic streamer URL.");
+  });
+
+  it("adds and selects a streamer from a supported synthetic link", () => {
+    const dashboard = reduceRecordingDashboard(createInitialRecordingDashboard(), {
+      type: "streamerLink.inputChanged",
+      value: "https://chaturbate.com/MiraNova"
+    });
+    const submitted = reduceRecordingDashboard(dashboard, {
+      type: "streamerLink.submit"
+    });
+
+    const selected = getSelectedStreamer(submitted);
+    const html = renderToStaticMarkup(<App dashboard={submitted} />);
+
+    expect(submitted.streamers).toHaveLength(
+      createInitialRecordingDashboard().streamers.length + 1
+    );
+    expect(selected).toMatchObject({
+      id: "cb-miranova",
+      name: "MiraNova",
+      site: "CB",
+      monitoringState: "active",
+      captureState: "waiting"
+    });
+    expect(submitted.addStreamerForm.message).toBe(
+      "Added MiraNova to monitoring."
+    );
+    expect(html).toContain("MiraNova monitoring");
+    expect(html).toContain("Added MiraNova to monitoring.");
+  });
+
+  it("shows clear monitoring feedback for pause, resume, and check-now actions", () => {
+    const paused = reduceRecordingDashboard(createInitialRecordingDashboard(), {
+      type: "monitoring.pauseSelected"
+    });
+    const resumed = reduceRecordingDashboard(paused, {
+      type: "monitoring.resumeSelected"
+    });
+    const checked = reduceRecordingDashboard(resumed, {
+      type: "monitoring.checkNow"
+    });
+
+    const pausedHtml = renderToStaticMarkup(<App dashboard={paused} />);
+    const checkedHtml = renderToStaticMarkup(<App dashboard={checked} />);
+
+    expect(paused.monitoringFeedback.message).toBe(
+      "Monitoring paused for LunaCeleste."
+    );
+    expect(checked.monitoringFeedback.message).toBe(
+      "Manual check queued for LunaCeleste."
+    );
+    expect(pausedHtml).toContain("Monitoring paused for LunaCeleste.");
+    expect(checkedHtml).toContain("Manual check queued for LunaCeleste.");
+    expect(checkedHtml).toContain("Last action");
+  });
+
+  it("elects the oldest usable bound credential profile as the default cookie", () => {
+    const dashboard = createInitialRecordingDashboard();
+    const selectedCredential = dashboard.credentialBindings[dashboard.selectedStreamerId];
+
+    expect(selectedCredential.defaultProfileId).toBe("cred-luna-main");
+
+    const updated = reduceRecordingDashboard(dashboard, {
+      type: "credential.profileRemoved",
+      profileId: "cred-luna-main"
+    });
+    const updatedCredential =
+      updated.credentialBindings[updated.selectedStreamerId];
+    const html = renderToStaticMarkup(<App dashboard={updated} />);
+
+    expect(updatedCredential.defaultProfileId).toBe("cred-luna-ticket");
+    expect(html).toContain("Default Cookie");
+    expect(html).toContain("Ticket backup");
+  });
+
+  it("shows public no-cookie guidance and gated degrade guidance", () => {
+    const publicIntent = reduceRecordingDashboard(
+      createInitialRecordingDashboard(),
+      {
+        type: "credential.intentSelected",
+        intent: "public"
+      }
+    );
+    const withoutMain = reduceRecordingDashboard(publicIntent, {
+      type: "credential.profileRemoved",
+      profileId: "cred-luna-main"
+    });
+    const withoutTicket = reduceRecordingDashboard(withoutMain, {
+      type: "credential.profileRemoved",
+      profileId: "cred-luna-ticket"
+    });
+    const privateIntent = reduceRecordingDashboard(withoutTicket, {
+      type: "credential.intentSelected",
+      intent: "private"
+    });
+
+    const publicHtml = renderToStaticMarkup(<App dashboard={publicIntent} />);
+    const privateHtml = renderToStaticMarkup(<App dashboard={privateIntent} />);
+
+    expect(publicIntent.credentialBindings.luna.message).toBe(
+      "Public recording does not need a Cookie."
+    );
+    expect(privateIntent.credentialBindings.luna.message).toBe(
+      "No usable bound Cookie. This gated intent degrades to no-cookie public recording."
+    );
+    expect(publicHtml).toContain("Public recording does not need a Cookie.");
+    expect(privateHtml).toContain(
+      "No usable bound Cookie. This gated intent degrades to no-cookie public recording."
+    );
+  });
+
+  it("does not treat a bound profile as usable when it lacks the selected gated intent", () => {
+    const withoutMain = reduceRecordingDashboard(
+      createInitialRecordingDashboard(),
+      {
+        type: "credential.profileRemoved",
+        profileId: "cred-luna-main"
+      }
+    );
+    const privateIntent = reduceRecordingDashboard(withoutMain, {
+      type: "credential.intentSelected",
+      intent: "private"
+    });
+
+    expect(privateIntent.credentialBindings.luna.defaultProfileId).toBeUndefined();
+    expect(privateIntent.credentialBindings.luna.message).toBe(
+      "No usable bound Cookie. This gated intent degrades to no-cookie public recording."
+    );
   });
 });

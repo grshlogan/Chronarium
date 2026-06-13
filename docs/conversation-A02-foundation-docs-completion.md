@@ -617,3 +617,57 @@ is uncommitted pending the user's go.
 
 Either extend the recovery plan toward a safe-rebuild executor design (still
 gated), or pivot to the replay / IPC contract — both in Claude's lane.
+
+---
+
+## Phase 9: Replay Timeline Reader (packages/player) — parallel lane
+
+### Topic And Scope
+
+Same A02 conversation, parallel with Codex (Codex's lane this round:
+`apps/desktop` dashboard polish + synthetic credential-binding panel). My core
+lane slice: stand up `packages/player` with the first fixture-safe replay reader
+(`docs/REPLAY_MODEL_V1.md` milestone a + a slice of b).
+
+### Status
+
+My slice completed and verified (player 4/4). Note: the combined working tree has
+one failing test in Codex's in-progress `apps/desktop` dashboard work — a
+different lane, not touched here; Codex must green it before the unified commit.
+
+### What Landed
+
+- New package `packages/player` (`@chronarium/player`) with `replayTimeline.ts`:
+  - `buildReplayTimeline(events)`: ordered-by-`sequence` replay steps, each with a
+    replay-clock `positionMs` (`monotonicMs` relative to epoch, else approximate
+    `capturedAt` delta flagged `approximate`) and a presentation class
+    (point/state/span).
+  - `reconstructRoomStateAt(events, atMs)`: per-key last-write-wins fold of
+    `room.state.changed` up to `T` in sequence order.
+- Pure functions, no IO; root wiring (tsconfig.base/tsconfig/vitest) for the new
+  package.
+
+### Decisions
+
+- Honors REPLAY_MODEL_V1: `sequence` is the only ordering authority;
+  `monotonicMs` positions (else approximate, flagged); `sourceTime` never
+  positions; epoch = first event; presentation classes as specified.
+- Replay-result types live package-local in `packages/player`; `packages/types`
+  untouched.
+
+### Verification
+
+- TDD RED→GREEN (4 tests). `pnpm install`, `pnpm typecheck`, `pnpm build` passed;
+  player tests 4/4; `git diff --check` clean.
+
+### Coordination Note
+
+Two lanes share one working tree. The only red test is Codex's WIP dashboard
+test (`apps/desktop`); my lane (`packages/player`, `packages/archive`) is green.
+Commits are made by the user-designated committer (Codex), sweeping both lanes;
+I provide a short description for the combined title.
+
+### Next Safe Step
+
+Replay milestone (b)/(c): seek/scrub fold over the same reader, then a synthetic
+split-track alignment fixture — still in Claude's lane, fixture-safe.

@@ -84,6 +84,13 @@ Current state:
   with a safety level (`report-only` / `safe-rebuild` / `destructive-confirm`)
   and `executable: false`. It executes nothing; a future approved executor would
   consume it.
+- `packages/player` (`@chronarium/player`) has a first fixture-safe replay
+  reader: `buildReplayTimeline` (orders by `sequence`, positions by `monotonicMs`
+  or an approximate `capturedAt` delta, classifies presentation point/state/span)
+  and `reconstructRoomStateAt` (per-key last-write-wins fold of
+  `room.state.changed` up to a replay-clock time). Pure, no IO; covers
+  REPLAY_MODEL_V1 milestone (a) + a slice of (b). No media playback, segment
+  alignment, GUI, or archive-read integration yet.
 - `packages/core` has the first GUI-facing service facade. It exposes health,
   archive validate/read/reindex/list, maintenance inspection, and recovery
   inspection through one core entry point for a future GUI. It is not yet wired
@@ -945,3 +952,20 @@ Media tool output parser fixtures checks:
 - `git diff --check` passed.
 - trailing whitespace scan found no matches.
 - JSON/package parse scan parsed 30 JSON files.
+
+Web dashboard credential binding lane checks:
+
+- TDD RED: desktop recording-dashboard tests failed because `addStreamerForm`
+  did not exist.
+- GREEN: added browser-local synthetic streamer-link validation, safe feedback,
+  and add/select behavior for supported synthetic streamer URLs.
+- TDD RED/GREEN: pause/resume/check-now actions now expose and render clearer
+  latest-action monitoring feedback.
+- TDD RED/GREEN: added a pure mock per-streamer credential-binding panel with
+  public/ticket/private/spy intent, oldest usable default Cookie election,
+  bind/remove actions, public no-cookie guidance, and gated no-usable-Cookie
+  degrade messaging.
+- Extra RED/GREEN: default Cookie election now requires a healthy profile that
+  supports the selected gated intent.
+- Targeted desktop recording-dashboard tests passed 15 tests.
+- `pnpm typecheck` passed after this desktop lane.

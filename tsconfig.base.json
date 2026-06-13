@@ -25,6 +25,7 @@
       "@chronarium/core": ["packages/core/src/index.ts"],
       "@chronarium/indexer": ["packages/indexer/src/index.ts"],
       "@chronarium/media-tools": ["packages/media-tools/src/index.ts"],
+      "@chronarium/player": ["packages/player/src/index.ts"],
       "@chronarium/desktop": ["apps/desktop/src/index.ts"],
       "@chronarium/adapter-kit": ["packages/adapters/kit/src/index.ts"],
       "@chronarium/adapter-chaturbate": [

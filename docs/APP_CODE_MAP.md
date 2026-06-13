@@ -1155,6 +1155,16 @@ Current status:
 - The UI exposes pause monitoring, resume monitoring, and check now controls for
   the selected streamer. The synthetic demo is presented as an offline
   self-test under maintenance diagnostics, not as a recording start action.
+- The add-streamer link form is browser-local and synthetic. It validates
+  supported streamer URLs, rejects malformed links with safe feedback, and can
+  add/select a synthetic maintained streamer without contacting any site.
+- Pause, resume, and check-now actions update a visible latest-action feedback
+  object for the selected streamer.
+- The dashboard has a synthetic per-streamer credential-binding panel. It uses
+  local mock profiles only, shows public/ticket/private/spy recording intent,
+  elects the oldest healthy bound profile that supports the selected gated
+  intent as the default Cookie, re-elects after removal, and shows a no-cookie
+  public degrade message when no usable bound profile exists.
 - The UI can run the self-test action from a button and render
   completed/failed status into history and latest facts.
 - The dev server defaults to `http://127.0.0.1:5187/` with `--strictPort`.
@@ -1162,6 +1172,9 @@ Current status:
 - It does not connect to core, read archives, query SQLite, start tasks,
   launch Electron, expose preload/IPC, preview live streams, or connect to real
   sites.
+- It does not handle real cookies, headers, tokens, signed URLs, credential
+  imports, encrypted storage, or credential injection. The credential panel is
+  a pure mock view-model.
 - The status board does not implement real site state, ticket/private-show
   detection, media stream capture, or information stream capture.
 
@@ -1469,6 +1482,15 @@ Owns:
 - media playback coordination;
 - overlays for room/chat/paid-room events;
 - diagnostic timeline views.
+
+Current status:
+
+- Exists with a first fixture-safe replay reader: `buildReplayTimeline`
+  (orders by `sequence`, positions by `monotonicMs` or an approximate
+  `capturedAt` delta, classifies presentation as point/state/span) and
+  `reconstructRoomStateAt` (per-key last-write-wins fold of `room.state.changed`
+  up to a replay-clock time). Pure functions over a timeline event array; no
+  media playback, segment alignment, GUI, or archive-read integration yet.
 
 ### `packages/testkit`
 

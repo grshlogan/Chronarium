@@ -2077,3 +2077,41 @@ unimplemented ideas as completed work.
   - JSON/package parse scan parsed 30 JSON files.
 - Next: candidate media-tools lane work: package-local parsed-output mapping to
   future diagnostic facts, still without executing tools.
+
+## 2026-06-14: Web dashboard credential binding mock
+
+- Conversation: A01 / Codex apps/desktop parallel lane from
+  `docs/AGENT_WORK_SPLIT.md`.
+- Landed: browser-local add-streamer link validation, clearer monitoring action
+  feedback, and a synthetic per-streamer credential-binding panel.
+- Files:
+  - `apps/desktop/src/App.tsx`
+  - `apps/desktop/src/index.ts`
+  - `apps/desktop/src/recordingDashboard.ts`
+  - `apps/desktop/src/styles.css`
+  - `tdd-tests/apps/desktop/recording-dashboard/desktopRecordingDashboard.test.tsx`
+  - `docs/plan/plan_web_dashboard_credential_binding.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+- Decisions:
+  - Credential UI is a pure synthetic view-model. It does not import or modify
+    `packages/types`, `packages/core`, credential storage, IPC, or live adapter
+    code.
+  - Default Cookie in the dashboard is the oldest healthy bound profile that
+    supports the selected gated intent. Removing it elects the next oldest
+    usable profile.
+  - Public intent explicitly needs no Cookie. Gated intents with no usable
+    bound profile display no-cookie/public degrade messaging instead of an
+    error.
+- Verification:
+  - Targeted desktop recording-dashboard tests passed 15 tests.
+  - `pnpm typecheck` passed after this lane.
+  - `pnpm test` passed 34 files and 191 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm build` passed.
+  - Browser smoke on `http://127.0.0.1:5187/` confirmed the add-link form,
+    monitoring feedback, credential panel, and Default Cookie label render.
+- Next: hand the uncommitted slice to the designated committer together with
+  Claude's `packages/player` lane.

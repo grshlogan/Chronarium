@@ -97,6 +97,12 @@ importers:
 
   packages/media-tools: {}
 
+  packages/player:
+    dependencies:
+      '@chronarium/types':
+        specifier: workspace:*
+        version: link:../types
+
   packages/schemas:
     dependencies:
       '@chronarium/types':
