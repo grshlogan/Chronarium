@@ -88,6 +88,11 @@ Current state:
 - `packages/core` has a fixture-only adapter lifecycle host that consumes
   adapter protocol messages and records ready/fact/diagnostic/error/finished
   state without starting real child processes.
+- `packages/core` has `readAdapterWorkerJsonlMessages`, the first future
+  adapter child-process stdout boundary. It parses JSON Lines into validated
+  adapter-to-core messages, ignores blank lines, and reports invalid JSON or
+  invalid protocol with stable code/lineNumber errors without echoing raw
+  worker output.
 - `packages/core` has an adapter catalog that registers adapter manifests,
   lists adapters, looks up by adapter id, rejects duplicate adapter ids, and
   rejects manifests that declare sensitive source field emission.
@@ -217,6 +222,8 @@ Current state:
   selectable maintained-streamer list behavior.
 - `docs/plan/plan_web_dashboard_streamer_context.md` records the check-time
   wrapping fix and selected-streamer context linkage.
+- `docs/plan/plan_adapter_worker_message_stream.md` records the adapter worker
+  JSONL stdout parsing boundary.
 - `docs/ADAPTER_SITE_READINESS.md` records the practical checklist for new
   adapter packages: manifest, synthetic/redacted fixtures, parser/builders,
   protocol fixture runner, readiness gate, catalog registration, and core task
@@ -381,32 +388,35 @@ The project should optimize for AI-assisted long-term maintenance:
    `docs/ADAPTER_SITE_READINESS.md`: add synthetic or approved redacted
    fixtures for playlist parsing, room state, chat/event extraction,
    reconnect/gap handling, and error handling before any live-site request.
-2. Add media segment hash and duration validation fixtures, still without
+2. Continue the adapter worker boundary with a typed child-process command
+   builder or supervised stdout/stderr harness, still without connecting to
+   real sites.
+3. Add media segment hash and duration validation fixtures, still without
    executing media tools.
-3. Add schema drafts and fixtures for processed-output facts, derivation facts,
+4. Add schema drafts and fixtures for processed-output facts, derivation facts,
    playable-validation facts, and retention/upload decision facts, while keeping
    upload and deletion optional policy areas rather than mandatory release
    behavior.
-4. Add schema drafts for editable processing plans: source sessions, included
+5. Add schema drafts for editable processing plans: source sessions, included
    ranges, excluded fragments, exclusion reasons, output timeline mapping, and
    resulting processed output ids.
-5. Continue WebUI behavior with add-link form validation and clearer
+6. Continue WebUI behavior with add-link form validation and clearer
    pause/resume/check state feedback, still synthetic-only.
-6. Replace the browser-only offline self-test action with a real GUI-facing
+7. Replace the browser-only offline self-test action with a real GUI-facing
    DTO/preload boundary, then connect it to `CoreGuiService` without letting the
    renderer call archive/indexer internals directly.
-7. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
+8. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
    real tools.
-8. Build the Electron shell and preload/IPC boundary around the existing
+9. Build the Electron shell and preload/IPC boundary around the existing
    Web-first renderer only after the GUI/core DTO boundary is stable.
-9. Let the Web renderer use the offline fixture capture pipeline to show
+10. Let the Web renderer use the offline fixture capture pipeline to show
    archive list, timeline facts, validation, recovery, and maintenance status.
-10. Extend the maintenance inspector with index freshness comparison, keeping
+11. Extend the maintenance inspector with index freshness comparison, keeping
    writes as explicit safe-rebuild suggestions rather than automatic actions.
-11. Add real media segment IO only after segment reader/validator coverage,
+12. Add real media segment IO only after segment reader/validator coverage,
    media-track metadata validation, and media-tool fixture parsing remain
    stable.
-12. If real Chaturbate behavior needs validation, first prepare separately
+13. If real Chaturbate behavior needs validation, first prepare separately
    approved redacted evidence or synthetic reproductions derived from approved
    local samples.
 
@@ -641,6 +651,27 @@ Offline fixture capture pipeline checks:
 - `git diff --check`: produced no output.
 - Trailing whitespace scan produced no output.
 - JSON/package config parse scan parsed 22 JSON files.
+
+Adapter worker JSONL message stream checks:
+
+- TDD RED: targeted message stream test failed because
+  `readAdapterWorkerJsonlMessages` did not exist.
+- GREEN: targeted test passed after adding the JSONL parser and exporting it
+  through core adapters.
+- TDD RED/GREEN: invalid JSON errors gained stable
+  `adapter_worker_stream.invalid_json` code and line number without echoing raw
+  output.
+- Added protocol-invalid coverage for sensitive-looking fields; errors use
+  `adapter_worker_stream.protocol_invalid` and do not echo raw worker output.
+- Targeted adapter message stream tests passed 1 file and 3 tests.
+- `pnpm typecheck`: passed.
+- `pnpm test`: passed 24 files and 103 tests, with the known Node
+  `node:sqlite` ExperimentalWarning.
+- `pnpm build`: passed.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan produced no output.
+- JSON/package config parse scan parsed 26 JSON files.
 
 Stripchat offline combined fixture and adapter task gate checks:
 

@@ -104,6 +104,9 @@ AI 可以快速接手局部问题
 - `packages/core` 已有 fixture-only adapter lifecycle host，可消费 adapter
   protocol message stream、收集 ready/fact/diagnostic/error/finished 状态；
   尚未启动真实 child process 或连接真实站点。
+- `packages/core` 已有 adapter worker JSONL message stream parser，可把未来
+  child process stdout 的 JSON Lines 安全解析成已验证的 adapter-to-core
+  messages；解析错误带稳定 code/lineNumber，但不回显原始输出行。
 - `packages/core` 已有 adapter catalog，可登记站点 adapter manifest，并拒绝
   重复 adapter id 或声明会输出敏感源字段的 manifest。
 - `packages/core` 已有第一条离线 capture-like pipeline，可把 fixture adapter
@@ -203,6 +206,7 @@ small module boundaries.
 - [docs/plan/plan_media_lifecycle_upload_retention.md](./docs/plan/plan_media_lifecycle_upload_retention.md)：媒体生命周期、上传和保留策略设计文档的计划。
 - [docs/plan/plan_adapter_site_readiness_gate.md](./docs/plan/plan_adapter_site_readiness_gate.md)：站点 adapter 接入前的 manifest、catalog 和 readiness gate 计划。
 - [docs/plan/plan_stripchat_offline_combined_fixture.md](./docs/plan/plan_stripchat_offline_combined_fixture.md)：Stripchat/SC-like combined A/V 离线 fixture scaffold 计划。
+- [docs/plan/plan_adapter_worker_message_stream.md](./docs/plan/plan_adapter_worker_message_stream.md)：未来 adapter child-process stdout JSONL 消息流解析边界计划。
 - [docs/plan/plan_web_first_recording_dashboard.md](./docs/plan/plan_web_first_recording_dashboard.md)：第一版 Web-first 录制工作台计划和验证记录。
 - [docs/plan/plan_web_dashboard_offline_behavior.md](./docs/plan/plan_web_dashboard_offline_behavior.md)：Web 录制工作台离线 demo 行为计划。
 - [docs/plan/plan_web_dashboard_monitoring_semantics.md](./docs/plan/plan_web_dashboard_monitoring_semantics.md)：Web 录制工作台监控/自检语义修正计划。
@@ -244,15 +248,17 @@ Chronarium 目标 GitHub 仓库：
    [docs/ADAPTER_SITE_READINESS.md](./docs/ADAPTER_SITE_READINESS.md) 补更多
    synthetic/redacted fixtures：playlist 解析、room state、chat/event、
    reconnect/gap、错误处理，仍不连真实站点。
-2. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
-3. 给 media segment 增加 hash/duration validation fixtures，仍不探测真实媒体
+2. 继续 adapter worker 边界：增加 typed child-process command builder 或
+   stdout/stderr 监督测试，仍不启动真实站点 adapter。
+3. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
+4. 给 media segment 增加 hash/duration validation fixtures，仍不探测真实媒体
    内容、不执行 FFmpeg。
-4. 为 processed output / raw segment hash、duration、derivation facts 先补
+5. 为 processed output / raw segment hash、duration、derivation facts 先补
    schema 草案和离线 fixture，仍不执行真实压缩、上传或删除。
-5. 继续推进 Web-first 录制工作台的信息密度和行为入口：添加链接表单、
+6. 继续推进 Web-first 录制工作台的信息密度和行为入口：添加链接表单、
    监控暂停/恢复/立即检查的状态反馈，以及 offline self-test 诊断结果。
-6. 把 Web-first 录制工作台里的浏览器 self-test action 替换成 GUI-facing
+7. 把 Web-first 录制工作台里的浏览器 self-test action 替换成 GUI-facing
    DTO/preload 边界，再接入 core facade 显示 health/status。
-7. 让 Web renderer 接入离线 capture-like pipeline，展示 archive 列表、
+8. 让 Web renderer 接入离线 capture-like pipeline，展示 archive 列表、
    timeline facts、validation / maintenance / recovery 状态。
-8. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。
+9. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。

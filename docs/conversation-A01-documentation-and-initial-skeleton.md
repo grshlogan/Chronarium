@@ -198,6 +198,14 @@ capabilities, and fixture adapters that are not marked fixture-ready before
 consuming adapter messages or writing archives. `docs/ADAPTER_SITE_READINESS.md`
 now records the practical checklist for future site adapter packages.
 
+The current A01 adapter worker boundary pass added
+`readAdapterWorkerJsonlMessages` in `packages/core`. This is the first safe
+parser for future adapter child-process stdout. It reads JSON Lines, ignores
+blank lines, validates adapter-to-core protocol messages through the shared
+schema, and throws line-numbered `AdapterWorkerMessageStreamError` values for
+invalid JSON or invalid protocol without echoing raw worker output. It does not
+spawn workers, connect to live sites, or execute media tools.
+
 The current A01 GUI pass added the first Web-first React/Vite recording
 dashboard shell under `apps/desktop`. It follows the streamer-maintenance
 layout direction: maintained streamers on the left, selected streamer recording
@@ -393,8 +401,12 @@ Current long-run adapter readiness continuation adds:
 - `packages/core/src/runtime.ts`
 - `packages/core/src/guiService.ts`
 - `packages/core/src/offlineFixtureCapturePipeline.ts`
+- `packages/core/src/adapters/adapterMessageStream.ts`
+- `packages/core/src/adapters/index.ts`
 - `tdd-tests/packages/adapters/stripchat/stripchatCombinedFixture.test.ts`
 - `tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts`
+- `tdd-tests/packages/core/adapter-message-stream/adapterMessageStream.test.ts`
+- `docs/plan/plan_adapter_worker_message_stream.md`
 - `tsconfig.json`
 - `vitest.config.ts`
 
@@ -812,6 +824,29 @@ Checks already run during this continuation:
   task gate.
 - JSON/package config parse scan: parsed 26 JSON files after Stripchat scaffold
   and core adapter task gate.
+- TDD RED for adapter worker JSONL stream:
+  `pnpm exec vitest run
+  tdd-tests/packages/core/adapter-message-stream/adapterMessageStream.test.ts`
+  failed because `readAdapterWorkerJsonlMessages` did not exist.
+- GREEN for adapter worker JSONL stream: added the core parser and exported it
+  through `packages/core/src/adapters/index.ts`; targeted test passed.
+- TDD RED/GREEN for worker stream errors: invalid JSON errors gained stable
+  `adapter_worker_stream.invalid_json` code and line numbers without echoing raw
+  output.
+- Added protocol-invalid coverage for sensitive-looking fields; errors use
+  `adapter_worker_stream.protocol_invalid` without echoing raw worker output.
+- Targeted adapter worker message stream tests passed 1 file and 3 tests.
+- `pnpm typecheck`: passed after adapter worker JSONL message stream parser.
+- `pnpm test`: passed 24 files and 103 tests after adapter worker JSONL message
+  stream parser, with the known Node `node:sqlite` ExperimentalWarning.
+- `pnpm build`: passed after adapter worker JSONL message stream parser.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed after
+  adapter worker JSONL message stream parser.
+- `git diff --check`: passed after adapter worker JSONL message stream parser.
+- trailing whitespace scan: passed after adapter worker JSONL message stream
+  parser.
+- JSON/package config parse scan: parsed 26 JSON files after adapter worker
+  JSONL message stream parser.
 
 ## Next Safe Step
 

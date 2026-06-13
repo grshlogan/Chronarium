@@ -10,6 +10,9 @@ writing, and generic core state. A site adapter discovers facts and emits
 structured messages to `chronarium-core`.
 
 The protocol is message-based so adapters can run in child processes or workers.
+The first implemented process-boundary helper is a JSON Lines reader for future
+adapter stdout; it validates adapter-to-core messages before core lifecycle
+code consumes them.
 
 Every adapter package should also expose an adapter manifest. The manifest is
 not a runtime message; it is the registration metadata core uses before a
@@ -223,6 +226,25 @@ an adapter catalog, a capture request fails before adapter startup if:
 The gate does not start child processes, does not connect to a site, and does
 not prove live compatibility. It prevents invalid task setup from consuming an
 adapter message stream or writing an archive.
+
+## Worker JSONL Stream
+
+Future adapter child processes are expected to emit adapter-to-core messages as
+JSON Lines. `packages/core` currently exposes `readAdapterWorkerJsonlMessages`
+as the first safe parser for that boundary.
+
+The parser:
+
+- ignores blank lines;
+- parses each nonblank line as JSON;
+- validates through the shared adapter-to-core schema;
+- yields typed `AdapterToCoreMessage` values;
+- throws `AdapterWorkerMessageStreamError` with stable `code` and `lineNumber`
+  for invalid JSON or invalid protocol;
+- does not echo raw worker output lines in errors.
+
+This is only a parser boundary. It does not spawn child processes or connect to
+live sites.
 
 ## Security Rules
 

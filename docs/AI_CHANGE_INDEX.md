@@ -1486,3 +1486,49 @@ unimplemented ideas as completed work.
 - Next: add more synthetic or approved redacted adapter fixtures for playlist
   parsing, room state, chat/event extraction, reconnect/gap handling, and
   error handling; still do not connect to real sites.
+
+## 2026-06-13: Adapter worker JSONL message stream
+
+- Conversation: continued the long-running adapter readiness work after the
+  Stripchat scaffold, focusing on a child-process-safe message boundary without
+  starting real adapter workers.
+- Landed: added a core JSON Lines parser for future adapter stdout and tests
+  that keep error reporting line-numbered but raw-output-safe.
+- Files:
+  - `README.md`
+  - `docs/ADAPTER_PROTOCOL.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_adapter_worker_message_stream.md`
+  - `packages/core/src/adapters/adapterMessageStream.ts`
+  - `packages/core/src/adapters/index.ts`
+  - `tdd-tests/packages/core/adapter-message-stream/adapterMessageStream.test.ts`
+- Decisions:
+  - Future adapter worker stdout should be parsed as JSON Lines before core
+    lifecycle code consumes it.
+  - `readAdapterWorkerJsonlMessages` ignores blank lines, parses JSON, validates
+    through `parseAdapterToCoreMessageV1`, and yields typed
+    `AdapterToCoreMessage` values.
+  - `AdapterWorkerMessageStreamError` reports stable `code` and `lineNumber`
+    for invalid JSON and invalid protocol without echoing raw worker output.
+  - This is a parser boundary only; it does not spawn child processes, connect
+    to live sites, or execute media tools.
+- Verification:
+  - TDD RED: targeted adapter message stream test failed because
+    `readAdapterWorkerJsonlMessages` did not exist.
+  - GREEN: targeted test passed after adding the parser and core export.
+  - TDD RED/GREEN: invalid JSON errors gained stable code and line number
+    without echoing raw output.
+  - Targeted adapter message stream tests passed 1 file and 3 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 24 files and 103 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed.
+  - `git diff --check` passed.
+  - trailing whitespace scan passed.
+  - JSON/package config parse scan parsed 26 JSON files.
+- Next: add a typed adapter child-process command builder or supervised
+  stdout/stderr harness, still without connecting to real sites.

@@ -83,6 +83,7 @@ docs/
     plan_media_lifecycle_upload_retention.md
     plan_adapter_site_readiness_gate.md
     plan_stripchat_offline_combined_fixture.md
+    plan_adapter_worker_message_stream.md
     plan_web_dashboard_offline_behavior.md
     plan_web_dashboard_monitoring_semantics.md
     plan_web_dashboard_streamer_selection.md
@@ -127,6 +128,8 @@ tdd-tests/
         adapterCatalog.test.ts
       adapter-gate/
         adapterTaskGate.test.ts
+      adapter-message-stream/
+        adapterMessageStream.test.ts
     testkit/
       adapter-readiness/
         adapterReadiness.test.ts
@@ -595,6 +598,15 @@ Responsibility:
   generation, overlap rejection, readiness gate usage, and core catalog/task
   gate coverage.
 
+### `docs/plan/plan_adapter_worker_message_stream.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first future adapter child-process
+  stdout JSONL parsing boundary.
+- Records that the parser validates adapter-to-core messages, reports stable
+  line-numbered errors, and does not echo raw worker output.
+
 ### `docs/plan/plan_web_dashboard_offline_behavior.md`
 
 Responsibility:
@@ -758,6 +770,7 @@ packages/
       adapters/
         adapterCatalog.ts
         adapterLifecycle.ts
+        adapterMessageStream.ts
         index.ts
       archiveIndexService.ts
       guiService.ts
@@ -1043,6 +1056,9 @@ Current status:
   fixture capture tasks.
 - The fixture adapter lifecycle host can consume adapter protocol message
   streams and summarize ready/fact/diagnostic/error/finished state.
+- The adapter worker JSONL message stream parser can read future child-process
+  stdout lines into validated adapter-to-core messages, reporting line-numbered
+  errors without echoing raw worker output.
 - The adapter catalog can register adapter manifests, list registered adapters,
   return a manifest by adapter id, reject duplicate adapter ids, and reject
   manifests that declare sensitive source field emission.
@@ -1343,6 +1359,8 @@ tdd-tests/
         adapterCatalog.test.ts
       adapter-gate/
         adapterTaskGate.test.ts
+      adapter-message-stream/
+        adapterMessageStream.test.ts
     indexer/
       timeline-batches/
         indexerTimelineBatches.test.ts
