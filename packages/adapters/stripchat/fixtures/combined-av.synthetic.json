@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "name": "combined-av.synthetic",
+  "sessionId": "session-sc-synthetic-001",
+  "capturedAt": "2026-01-01T00:00:00.000Z",
+  "monotonicStartMs": 0,
+  "topology": {
+    "protocol": "hls-combined-av",
+    "playlistReference": "fixture://stripchat/combined-av/master.m3u8",
+    "redactionStatus": "synthetic"
+  },
+  "track": {
+    "id": "combined-main",
+    "kind": "video",
+    "label": "Synthetic combined audio/video",
+    "codec": "h264+aac",
+    "container": "mpegts",
+    "timeBase": "1/1000",
+    "sourceIdHash": "synthetic-stripchat-source-hash",
+    "playlistReference": "fixture://stripchat/combined-av/combined.m3u8",
+    "containsAudio": true,
+    "segments": [
+      {
+        "id": "combined-segment-0001",
+        "sourceSequence": 1,
+        "mediaStartMs": 0,
+        "durationMs": 2000
+      },
+      {
+        "id": "combined-segment-0002",
+        "sourceSequence": 2,
+        "mediaStartMs": 2000,
+        "durationMs": 2000
+      }
+    ]
+  }
+}

@@ -1432,3 +1432,57 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan parsed 24 JSON files.
 - Next: add the first new site adapter scaffold through this gate, or add
   media hash/duration and processed-output fact schemas before live-site work.
+
+## 2026-06-13: Stripchat offline fixture and adapter task gate
+
+- Conversation: user asked for long autonomous progress until Chronarium is
+  clearly ready to start connecting site adapters, without touching real sites
+  or opening unmanaged side conversations.
+- Landed: added the first non-Chaturbate fixture-only adapter scaffold and the
+  first runtime-catalog preflight gate for offline fixture capture tasks.
+- Files:
+  - `README.md`
+  - `docs/ADAPTER_PROTOCOL.md`
+  - `docs/ADAPTER_SITE_READINESS.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_adapter_site_readiness_gate.md`
+  - `docs/plan/plan_stripchat_offline_combined_fixture.md`
+  - `packages/adapters/stripchat/`
+  - `packages/core/src/guiService.ts`
+  - `packages/core/src/offlineFixtureCapturePipeline.ts`
+  - `packages/core/src/runtime.ts`
+  - `tdd-tests/packages/adapters/stripchat/stripchatCombinedFixture.test.ts`
+  - `tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts`
+  - `tsconfig.base.json`
+  - `tsconfig.json`
+  - `vitest.config.ts`
+- Decisions:
+  - `packages/adapters/stripchat` is fixture-only and models an SC-like
+    combined audio/video HLS topology with one raw media track.
+  - Non-contiguous combined media segments become `media.gap.detected` facts;
+    overlapping or backwards media segments are rejected as bad fixture timing.
+  - Runtime adapter manifests can now be passed into the offline capture
+    pipeline as a preflight gate. Unregistered adapters, unsupported modes,
+    missing requested capabilities, and fixture-not-ready manifests fail before
+    adapter messages are consumed or archives are written.
+  - `docs/ADAPTER_SITE_READINESS.md` is the practical checklist for future
+    adapter packages before any live-site design.
+- Verification:
+  - TDD RED/GREEN for missing Stripchat package, overlapping segment rejection,
+    gap fact generation, and unregistered adapter preflight.
+  - Targeted readiness/catalog/adapter-gate/Stripchat regression passed 6 files
+    and 16 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 23 files and 100 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed.
+  - `git diff --check` passed.
+  - trailing whitespace scan passed.
+  - JSON/package config parse scan parsed 26 JSON files.
+- Next: add more synthetic or approved redacted adapter fixtures for playlist
+  parsing, room state, chat/event extraction, reconnect/gap handling, and
+  error handling; still do not connect to real sites.

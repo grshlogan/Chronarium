@@ -179,6 +179,25 @@ sensitive source field emission. This makes the next site adapter path explicit:
 manifest -> synthetic/redacted fixtures -> readiness gate -> catalog
 registration -> only then live-site design.
 
+The current A01 long-run adapter readiness continuation added the first
+non-Chaturbate adapter scaffold. `packages/adapters/stripchat` is fixture-only
+and models an SC-like combined audio/video HLS topology with one raw media
+track. It exports `STRIPCHAT_ADAPTER_MANIFEST`, parses a synthetic combined A/V
+fixture, builds media track metadata, emits timeline facts through an adapter
+protocol fixture runner, passes `verifyAdapterFixtureReadiness`, and registers
+through `createAdapterCatalog`. It records non-contiguous segments as
+`media.gap.detected` facts and rejects overlapping or backwards segment timing.
+It does not connect to Stripchat, download media, poll rooms, handle accounts,
+or serialize cookies/headers/tokens/sessions/signed URLs.
+
+The same continuation added the first core adapter task gate. `CoreRuntime` can
+optionally hold adapter manifests as an adapter catalog. When a GUI-facing
+offline fixture capture call runs with that catalog, the pipeline rejects
+unregistered adapters, unsupported runtime modes, missing requested
+capabilities, and fixture adapters that are not marked fixture-ready before
+consuming adapter messages or writing archives. `docs/ADAPTER_SITE_READINESS.md`
+now records the practical checklist for future site adapter packages.
+
 The current A01 GUI pass added the first Web-first React/Vite recording
 dashboard shell under `apps/desktop`. It follows the streamer-maintenance
 layout direction: maintained streamers on the left, selected streamer recording
@@ -358,6 +377,26 @@ Documentation changes for this continuation:
 - `docs/APP_CODE_MAP.md`
 - `docs/AI_HANDOFF.md`
 - `docs/AI_CHANGE_INDEX.md`
+
+Current long-run adapter readiness continuation adds:
+
+- `docs/ADAPTER_SITE_READINESS.md`
+- `docs/plan/plan_stripchat_offline_combined_fixture.md`
+- `packages/adapters/stripchat/package.json`
+- `packages/adapters/stripchat/tsconfig.json`
+- `packages/adapters/stripchat/fixtures/README.md`
+- `packages/adapters/stripchat/fixtures/combined-av.synthetic.json`
+- `packages/adapters/stripchat/src/combinedFixture.ts`
+- `packages/adapters/stripchat/src/fixtureAdapter.ts`
+- `packages/adapters/stripchat/src/index.ts`
+- `packages/adapters/stripchat/src/manifest.ts`
+- `packages/core/src/runtime.ts`
+- `packages/core/src/guiService.ts`
+- `packages/core/src/offlineFixtureCapturePipeline.ts`
+- `tdd-tests/packages/adapters/stripchat/stripchatCombinedFixture.test.ts`
+- `tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts`
+- `tsconfig.json`
+- `vitest.config.ts`
 
 ## Verification Log
 
@@ -740,15 +779,49 @@ Checks already run during this continuation:
   work.
 - JSON/package config parse scan: parsed 24 JSON files after adapter readiness
   gate and catalog work.
+- TDD RED for Stripchat combined A/V fixture:
+  `pnpm exec vitest run
+  tdd-tests/packages/adapters/stripchat/stripchatCombinedFixture.test.ts`
+  initially failed because `@chronarium/adapter-stripchat` did not exist.
+- GREEN for Stripchat scaffold: added the fixture-only package, synthetic
+  combined A/V fixture, parser/builders, manifest, and fixture runner; targeted
+  Stripchat test passed.
+- TDD RED for Stripchat segment timing: overlapping combined media segments
+  were accepted; GREEN added overlap/backwards timing rejection.
+- TDD RED for Stripchat gap facts: non-contiguous combined media segments did
+  not emit `media.gap.detected`; GREEN added gap fact generation.
+- TDD RED for core adapter task gate:
+  `pnpm exec vitest run
+  tdd-tests/packages/core/adapter-gate/adapterTaskGate.test.ts` failed because
+  an unregistered adapter task consumed adapter messages before preflight.
+- GREEN for core adapter task gate: `CoreRuntime` now optionally holds adapter
+  manifests as a catalog, `CoreGuiService` passes that catalog into offline
+  fixture capture, and the pipeline fails unregistered/incapable adapters before
+  adapter startup.
+- Targeted readiness/catalog/adapter-gate/Stripchat regression passed 6 files
+  and 16 tests.
+- `pnpm typecheck`: passed after Stripchat scaffold and core adapter task gate.
+- `pnpm test`: passed 23 files and 100 tests after Stripchat scaffold and core
+  adapter task gate, with the known Node `node:sqlite` ExperimentalWarning.
+- `pnpm build`: passed after Stripchat scaffold and core adapter task gate.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed after
+  Stripchat scaffold and core adapter task gate.
+- `git diff --check`: passed after Stripchat scaffold and core adapter task
+  gate.
+- trailing whitespace scan: passed after Stripchat scaffold and core adapter
+  task gate.
+- JSON/package config parse scan: parsed 26 JSON files after Stripchat scaffold
+  and core adapter task gate.
 
 ## Next Safe Step
 
-Use the adapter readiness path for the first new site scaffold: adapter
-manifest, synthetic or redacted fixtures, readiness gate test, and core catalog
-registration before any live-site request. In parallel, add media segment
-hash/duration validation fixtures plus schema drafts for editable processing
-plans, processed-output, derivation, playable-validation, retention/upload
-decision, and deletion-record facts, still without executing real media tools
-or deleting files. GUI visual polish is now intended for A03, while A01 should
-keep working on lower-level archive/core foundations unless the user redirects.
-Keep A02 independent and do not create extra A01 pseudo-conversation files.
+Use `docs/ADAPTER_SITE_READINESS.md` for the next adapter behavior: add more
+synthetic or approved redacted fixtures for playlist parsing, room state,
+chat/event extraction, reconnect/gap handling, and error handling before any
+live-site request. In parallel, add media segment hash/duration validation
+fixtures plus schema drafts for editable processing plans, processed-output,
+derivation, playable-validation, retention/upload decision, and deletion-record
+facts, still without executing real media tools or deleting files. GUI visual
+polish is intended for a separate allowed GUI thread, while A01 should keep
+working on lower-level archive/core foundations unless the user redirects. Keep
+A02 independent and do not create extra A01 pseudo-conversation files.

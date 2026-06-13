@@ -9,6 +9,7 @@ import type {
   MediaTrack
 } from "@chronarium/types";
 import type { ArchiveIndexSummary } from "@chronarium/indexer";
+import type { AdapterCatalog } from "./adapters/index.js";
 import type { CoreArchiveIndexService } from "./archiveIndexService.js";
 import {
   createFixtureAdapterLifecycleHost,
@@ -36,7 +37,7 @@ export interface OfflineFixtureCaptureResult {
   readonly status: OfflineFixtureCaptureStatus;
   readonly archiveRootPath: string;
   readonly task: CoreTaskSnapshot;
-  readonly lifecycle: AdapterLifecycleSnapshot;
+  readonly lifecycle?: AdapterLifecycleSnapshot;
   readonly indexSummary?: ArchiveIndexSummary;
 }
 
@@ -45,6 +46,7 @@ export interface OfflineFixtureCapturePipelineOptions {
   readonly taskScheduler?: CoreTaskScheduler;
   readonly lifecycleHost?: FixtureAdapterLifecycleHost;
   readonly archiveWriterFactory?: ArchiveWriterFactory;
+  readonly adapterCatalog?: AdapterCatalog;
 }
 
 export async function runOfflineFixtureCapture(
@@ -59,7 +61,21 @@ export async function runOfflineFixtureCapture(
   };
 
   const createdTask = taskScheduler.createTask(input.task);
-  taskScheduler.startTask(createdTask.taskId);
+  const runningTask = taskScheduler.startTask(createdTask.taskId);
+
+  const gateFailure = getAdapterTaskGateFailure(
+    input.task,
+    options.adapterCatalog
+  );
+  if (gateFailure) {
+    const failedTask = taskScheduler.failTask(runningTask.taskId, gateFailure);
+
+    return {
+      status: "failed",
+      archiveRootPath: input.archiveRootPath,
+      task: failedTask
+    };
+  }
 
   const lifecycle = await lifecycleHost.runFixture({
     request: {
@@ -126,4 +142,54 @@ function firstAdapterError(
   return messages.find(
     (message): message is AdapterErrorMessage => message.type === "adapter.error"
   );
+}
+
+function getAdapterTaskGateFailure(
+  task: CoreTaskRequest,
+  adapterCatalog: AdapterCatalog | undefined
+): CoreTaskSnapshot["failure"] | undefined {
+  if (!adapterCatalog) {
+    return undefined;
+  }
+
+  const manifest = adapterCatalog.getAdapter(task.adapterId);
+  if (!manifest) {
+    return {
+      code: "adapter.catalog.unregistered",
+      message: `Adapter ${task.adapterId} is not registered in the runtime adapter catalog.`,
+      retryable: false
+    };
+  }
+
+  if (!manifest.runtimeModes.includes(task.mode)) {
+    return {
+      code: "adapter.catalog.unsupported_mode",
+      message: `Adapter ${task.adapterId} does not support ${task.mode} mode.`,
+      retryable: false
+    };
+  }
+
+  const missingCapability = task.capabilitiesRequested.find(
+    (capability) => !manifest.capabilities.includes(capability)
+  );
+  if (missingCapability) {
+    return {
+      code: "adapter.catalog.capability_missing",
+      message: `Adapter ${task.adapterId} does not declare capability ${missingCapability}.`,
+      retryable: false
+    };
+  }
+
+  if (
+    task.mode === "fixture" &&
+    manifest.fixtureReadiness.status !== "fixture-ready"
+  ) {
+    return {
+      code: "adapter.catalog.fixture_not_ready",
+      message: `Adapter ${task.adapterId} is not fixture-ready.`,
+      retryable: false
+    };
+  }
+
+  return undefined;
 }

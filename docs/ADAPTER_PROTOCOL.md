@@ -173,6 +173,8 @@ An adapter manifest declares a package's safe registration shape:
 
 The first manifest schema is implemented in `packages/types` and
 `packages/schemas`, and core can register manifests through its adapter catalog.
+When a runtime is configured with manifests, the offline capture pipeline uses
+that catalog as a preflight gate before consuming adapter messages.
 
 For a future live adapter, `runtimeModes` must not include `live` until the
 adapter has:
@@ -204,6 +206,24 @@ Passing the readiness gate only means the adapter is safe to wire into
 Chronarium's offline core contract. It does not prove current live-site
 behavior.
 
+`docs/ADAPTER_SITE_READINESS.md` is the practical checklist for new adapter
+packages.
+
+## Core Task Gate
+
+The current core gate applies to offline fixture capture. When the runtime has
+an adapter catalog, a capture request fails before adapter startup if:
+
+- the adapter id is not registered;
+- the requested runtime mode is not declared by the manifest;
+- a requested capability is not declared by the manifest;
+- fixture mode is requested while `fixtureReadiness.status` is not
+  `fixture-ready`.
+
+The gate does not start child processes, does not connect to a site, and does
+not prove live compatibility. It prevents invalid task setup from consuming an
+adapter message stream or writing an archive.
+
 ## Security Rules
 
 - GUI must never talk directly to site adapters.
@@ -219,15 +239,27 @@ behavior.
 - Adapter manifests that declare sensitive source field emission are rejected by
   the current core catalog.
 
-## Chaturbate Initial Scope
+## Current Fixture Scopes
 
-The first `packages/adapters/chaturbate` boundary is fixture-first:
+`packages/adapters/chaturbate` is the split audio/video example:
 
 - synthetic fixtures only;
 - no network requests;
 - no live room polling;
 - no media download;
 - no account, cookie, header, or session handling.
+- CB-like split audio/video topology fixtures.
+
+`packages/adapters/stripchat` is the combined audio/video example:
+
+- synthetic fixtures only;
+- no network requests;
+- no live room polling;
+- no media download;
+- no account, cookie, header, or session handling;
+- SC-like combined audio/video topology fixture;
+- non-contiguous media segments become `media.gap.detected` facts;
+- overlapping or backwards media segments are rejected.
 
 Live capture can only be designed after archive, timeline, validation, fixture
 tests, and redaction rules are proven.

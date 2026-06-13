@@ -91,10 +91,18 @@ Current state:
 - `packages/core` has an adapter catalog that registers adapter manifests,
   lists adapters, looks up by adapter id, rejects duplicate adapter ids, and
   rejects manifests that declare sensitive source field emission.
+- `packages/core` runtime can optionally hold adapter manifests as a catalog,
+  and the GUI-facing offline fixture capture path passes that catalog into a
+  preflight task gate.
 - `packages/core` has the first offline fixture capture pipeline exposed
   through the GUI-facing service. It can turn fixture adapter messages into a
   capture task, write a synthetic `.chron` archive, reindex SQLite, and report
   success/failure to future GUI callers.
+- When a runtime adapter catalog is present, offline fixture capture fails
+  before adapter startup for unregistered adapters, unsupported runtime modes,
+  missing requested capabilities, or fixture adapters that are not marked
+  fixture-ready. In that case the adapter message stream is not consumed and no
+  archive is written.
 - Adapter lifecycle errors and missing `adapter.finished` messages map to
   failed tasks and skip archive indexing.
 - `apps/desktop` has the first Web-first React/Vite recording dashboard shell.
@@ -169,6 +177,14 @@ Current state:
   output. These fixtures are contract tests for Chronarium's ability to store,
   read, validate, and query bad recording facts; they do not prove current live
   Chaturbate behavior.
+- `packages/adapters/stripchat` now exists as the first non-Chaturbate adapter
+  scaffold. It is fixture-only and models an SC-like combined audio/video HLS
+  topology with one raw media track.
+- The Stripchat fixture parser rejects unsafe/non-synthetic references and
+  overlapping or backwards media segments. Non-contiguous segments become
+  `media.gap.detected` facts.
+- The Stripchat fixture stream passes `verifyAdapterFixtureReadiness`, and its
+  fixture-only manifest can be registered through the core adapter catalog.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
 - `packages/testkit` has `verifyAdapterFixtureReadiness`, a reusable offline
@@ -201,13 +217,19 @@ Current state:
   selectable maintained-streamer list behavior.
 - `docs/plan/plan_web_dashboard_streamer_context.md` records the check-time
   wrapping fix and selected-streamer context linkage.
-- Sixteen Vitest behavior test files exercise synthetic archive writing, reading,
+- `docs/ADAPTER_SITE_READINESS.md` records the practical checklist for new
+  adapter packages: manifest, synthetic/redacted fixtures, parser/builders,
+  protocol fixture runner, readiness gate, catalog registration, and core task
+  gate before live-site design.
+- Vitest behavior test files exercise synthetic archive writing, reading,
   validation failures, SQLite indexing, the core archive/index service, core
   runtime lifecycle, core maintenance inspection, archive recovery inspection,
   the core GUI facade, task scheduling, fixture adapter lifecycle, offline
   fixture capture pipeline, media command builders, and the first desktop
   recording dashboard behavior, plus Chaturbate offline split-track fixture
-  behavior and fixture archive/indexer and diagnostic flows.
+  behavior, Stripchat offline combined-track behavior, fixture archive/indexer
+  and diagnostic flows, adapter readiness, adapter catalog, and adapter task
+  gate behavior.
 - No Electron shell, preload/IPC, live GUI-core binding, live task execution,
   real adapter child process, external media tool execution, real media segment
   capture/reader/prober, archive repair/migration, replay player, or real site
@@ -234,6 +256,7 @@ docs/ARCHIVE_FORMAT_V1.md
 docs/TIMELINE_SCHEMA_V1.md
 docs/REPLAY_MODEL_V1.md
 docs/ADAPTER_PROTOCOL.md
+docs/ADAPTER_SITE_READINESS.md
 docs/GUI_CORE_PROTOCOL.md
 docs/DIAGNOSTIC_CODES_V1.md
 docs/MEDIA_TOOLS_BOUNDARY.md
@@ -268,6 +291,7 @@ docs/plan/plan_archive_recovery_and_gui_core_facade.md
 docs/plan/plan_streaming_archive_io_and_benchmarks.md
 docs/plan/plan_media_lifecycle_upload_retention.md
 docs/plan/plan_adapter_site_readiness_gate.md
+docs/plan/plan_stripchat_offline_combined_fixture.md
 docs/plan/plan_web_dashboard_offline_behavior.md
 docs/plan/plan_web_first_recording_dashboard.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
@@ -287,6 +311,7 @@ packages/archive/
 packages/indexer/
 packages/core/
 packages/adapters/chaturbate/
+packages/adapters/stripchat/
 packages/media-tools/
 packages/testkit/
 apps/desktop/
@@ -352,9 +377,10 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. For the next site adapter, start with a fixture-first package manifest,
-   synthetic or redacted fixtures, `verifyAdapterFixtureReadiness`, and core
-   catalog registration before any live-site request.
+1. For the next site adapter behavior, follow
+   `docs/ADAPTER_SITE_READINESS.md`: add synthetic or approved redacted
+   fixtures for playlist parsing, room state, chat/event extraction,
+   reconnect/gap handling, and error handling before any live-site request.
 2. Add media segment hash and duration validation fixtures, still without
    executing media tools.
 3. Add schema drafts and fixtures for processed-output facts, derivation facts,
@@ -615,3 +641,27 @@ Offline fixture capture pipeline checks:
 - `git diff --check`: produced no output.
 - Trailing whitespace scan produced no output.
 - JSON/package config parse scan parsed 22 JSON files.
+
+Stripchat offline combined fixture and adapter task gate checks:
+
+- TDD RED: targeted Stripchat fixture test initially failed because
+  `@chronarium/adapter-stripchat` did not exist.
+- GREEN: targeted Stripchat fixture test passed after adding the fixture-only
+  adapter scaffold.
+- TDD RED/GREEN: overlapping combined media segments were accepted, then
+  rejected as invalid fixture timing.
+- TDD RED/GREEN: non-contiguous combined media segments lacked gap facts, then
+  emitted `media.gap.detected`.
+- TDD RED/GREEN: core offline fixture capture consumed an unregistered adapter
+  stream, then failed preflight with `adapter.catalog.unregistered` before
+  adapter startup.
+- Targeted readiness/catalog/adapter-gate/Stripchat regression passed 6 files
+  and 16 tests.
+- `pnpm typecheck`: passed.
+- `pnpm test`: passed 23 files and 100 tests, with the known Node
+  `node:sqlite` ExperimentalWarning.
+- `pnpm build`: passed.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed.
+- `git diff --check`: produced no output.
+- Trailing whitespace scan produced no output.
+- JSON/package config parse scan parsed 26 JSON files.

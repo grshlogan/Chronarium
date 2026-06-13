@@ -9,7 +9,10 @@ Chronarium now has documentation plus a minimal executable TypeScript validation
 chain. The package code is still early and fixture-first. It has a report-only
 archive recovery inspector, a core GUI-facing facade, fixture task/lifecycle
 skeletons, typed media command builders, and the first offline capture-like
-pipeline. It also has a first Web-first React/Vite recording dashboard shell
+pipeline with manifest-backed adapter task gating. It also has a first
+non-Chaturbate fixture adapter scaffold for an SC-like combined A/V topology
+under `packages/adapters/stripchat`. It also has a first Web-first React/Vite
+recording dashboard shell
 under `apps/desktop`, backed by synthetic data, monitoring-first controls, and
 a browser-safe offline self-test action only. No Electron shell, preload/IPC,
 real site capture, real adapter child process, external media tool execution,
@@ -38,6 +41,7 @@ docs/
   TIMELINE_SCHEMA_V1.md
   REPLAY_MODEL_V1.md
   ADAPTER_PROTOCOL.md
+  ADAPTER_SITE_READINESS.md
   GUI_CORE_PROTOCOL.md
   DIAGNOSTIC_CODES_V1.md
   MEDIA_TOOLS_BOUNDARY.md
@@ -78,6 +82,7 @@ docs/
     plan_streaming_archive_io_and_benchmarks.md
     plan_media_lifecycle_upload_retention.md
     plan_adapter_site_readiness_gate.md
+    plan_stripchat_offline_combined_fixture.md
     plan_web_dashboard_offline_behavior.md
     plan_web_dashboard_monitoring_semantics.md
     plan_web_dashboard_streamer_selection.md
@@ -109,9 +114,22 @@ packages/
   media-tools/
   adapters/
     chaturbate/
+    stripchat/
   testkit/
 tdd-tests/
   README.md
+  packages/
+    adapters/
+      stripchat/
+        stripchatCombinedFixture.test.ts
+    core/
+      adapter-catalog/
+        adapterCatalog.test.ts
+      adapter-gate/
+        adapterTaskGate.test.ts
+    testkit/
+      adapter-readiness/
+        adapterReadiness.test.ts
   apps/
     desktop/
       recording-dashboard/
@@ -248,11 +266,25 @@ Responsibility:
 - Core-to-adapter and adapter-to-core message families.
 - Process boundary.
 - Capability names.
-- Chaturbate fixture-first initial scope.
+- Current fixture-first adapter scopes.
+- Manifest/catalog/readiness/core-task gate rules.
 
 Boundary:
 
 - No live site behavior is implemented.
+
+### `docs/ADAPTER_SITE_READINESS.md`
+
+Responsibility:
+
+- Practical checklist for starting a new site adapter package.
+- Required fixture-first package shape, manifest rules, fixture rules, timeline
+  expectations, and core task gate behavior.
+- Current split A/V and combined A/V examples.
+
+Boundary:
+
+- Does not claim live site capture is implemented.
 
 ### `docs/GUI_CORE_PROTOCOL.md`
 
@@ -553,6 +585,16 @@ Responsibility:
   protocol validation, lifecycle order, capability checks, and sensitive data
   rejection.
 
+### `docs/plan/plan_stripchat_offline_combined_fixture.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the first non-Chaturbate adapter
+  scaffold.
+- Records the SC-like combined audio/video synthetic fixture, gap fact
+  generation, overlap rejection, readiness gate usage, and core catalog/task
+  gate coverage.
+
 ### `docs/plan/plan_web_dashboard_offline_behavior.md`
 
 Responsibility:
@@ -756,6 +798,17 @@ packages/
         diagnosticFixtures.test.ts
         splitTrackArchiveFlow.test.ts
         splitTrackFixture.test.ts
+    stripchat/
+      package.json
+      tsconfig.json
+      fixtures/
+        README.md
+        combined-av.synthetic.json
+      src/
+        combinedFixture.ts
+        fixtureAdapter.ts
+        index.ts
+        manifest.ts
   archive/
     package.json
     tsconfig.json
@@ -805,19 +858,23 @@ packages/
 tdd-tests/
   README.md
   packages/
-    core/
-      adapter-catalog/
-        adapterCatalog.test.ts
-    testkit/
-      adapter-readiness/
-        adapterReadiness.test.ts
+    adapters/
+      stripchat/
+        stripchatCombinedFixture.test.ts
     archive/
       timeline-reader/
         timelineReader.test.ts
+    core/
+      adapter-catalog/
+        adapterCatalog.test.ts
+      adapter-gate/
+        adapterTaskGate.test.ts
     indexer/
       timeline-batches/
         indexerTimelineBatches.test.ts
     testkit/
+      adapter-readiness/
+        adapterReadiness.test.ts
       large-timeline/
         largeSyntheticTimeline.test.ts
   apps/
@@ -847,11 +904,6 @@ packages/
       index/
       diagnostics/
       exports/
-  adapters/
-    stripchat/
-      src/
-      fixtures/
-      tests/
   archive/
     tests/
       media segment archive IO tests
@@ -994,10 +1046,16 @@ Current status:
 - The adapter catalog can register adapter manifests, list registered adapters,
   return a manifest by adapter id, reject duplicate adapter ids, and reject
   manifests that declare sensitive source field emission.
+- The runtime can optionally hold adapter manifests as a catalog for GUI/core
+  task preflight.
 - The offline fixture capture pipeline can run a fixture capture request from
   adapter messages into a synthetic `.chron` archive, write media track
   metadata, append timeline facts, reindex SQLite, and return the result
   through the GUI facade.
+- When a runtime catalog is provided, the offline fixture capture pipeline
+  rejects unregistered adapters, unsupported runtime modes, missing requested
+  capabilities, and non-ready fixture adapters before consuming adapter
+  messages or writing archives.
 - Adapter errors and missing `adapter.finished` map to failed tasks and skip
   archive indexing.
 - Does not run live capture jobs, start adapter child processes, export media,
@@ -1033,6 +1091,19 @@ Current status:
   of network-looking or token-bearing fixture references, writing the fixture
   into a synthetic `.chron` archive, archive reader/validator consumption, and
   SQLite indexer queries for split-track and diagnostic facts.
+- It does not perform network requests, downloads, account handling, cookies, or
+  session handling.
+- `packages/adapters/stripchat` exists as a synthetic fixture adapter scaffold
+  for an SC-like combined audio/video topology.
+- It exports a fixture-only adapter manifest for the core adapter catalog. The
+  manifest declares `runtimeModes: ["fixture"]`, no network access, no
+  credential requirement, and no sensitive source field emission.
+- It includes a committed offline combined A/V fixture that becomes one
+  Chronarium media track.
+- It can parse that fixture into media track metadata and timeline facts, then
+  emit those facts through an adapter protocol fixture runner.
+- It emits `media.gap.detected` for non-contiguous combined media segments and
+  rejects overlapping or backwards segments.
 - It does not perform network requests, downloads, account handling, cookies, or
   session handling.
 
@@ -1260,6 +1331,26 @@ Current root-level TDD slices:
 
 ```text
 tdd-tests/
+  packages/
+    adapters/
+      stripchat/
+        stripchatCombinedFixture.test.ts
+    archive/
+      timeline-reader/
+        timelineReader.test.ts
+    core/
+      adapter-catalog/
+        adapterCatalog.test.ts
+      adapter-gate/
+        adapterTaskGate.test.ts
+    indexer/
+      timeline-batches/
+        indexerTimelineBatches.test.ts
+    testkit/
+      adapter-readiness/
+        adapterReadiness.test.ts
+      large-timeline/
+        largeSyntheticTimeline.test.ts
   apps/
     desktop/
       recording-dashboard/

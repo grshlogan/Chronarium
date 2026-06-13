@@ -20,6 +20,9 @@ export default defineConfig({
       "@chronarium/adapter-chaturbate": sourceAlias(
         "./packages/adapters/chaturbate/src/index.ts"
       ),
+      "@chronarium/adapter-stripchat": sourceAlias(
+        "./packages/adapters/stripchat/src/index.ts"
+      ),
       "@chronarium/testkit": sourceAlias("./packages/testkit/src/index.ts")
     }
   }

@@ -1,10 +1,18 @@
-import type { AdapterId, IsoDateTimeString } from "@chronarium/types";
+import type {
+  AdapterId,
+  AdapterManifest,
+  IsoDateTimeString
+} from "@chronarium/types";
 import {
   type ChronariumIndex,
   openChronariumIndex
 } from "@chronarium/indexer";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import {
+  createAdapterCatalog,
+  type AdapterCatalog
+} from "./adapters/index.js";
 import {
   createCoreArchiveIndexService,
   type CoreArchiveIndexService
@@ -16,6 +24,7 @@ export interface CoreRuntimeOptions {
   readonly dataRoot: string;
   readonly archiveRoot: string;
   readonly adapters: readonly AdapterId[];
+  readonly adapterManifests?: readonly AdapterManifest[];
   readonly indexDatabasePath?: string;
 }
 
@@ -30,6 +39,7 @@ export interface CoreRuntime {
   stop(): Promise<void>;
   getHealth(): Promise<CoreHealthSnapshot>;
   getArchiveIndexService(): CoreArchiveIndexService;
+  getAdapterCatalog(): AdapterCatalog | undefined;
 }
 
 export function createCoreRuntime(options: CoreRuntimeOptions): CoreRuntime {
@@ -47,8 +57,15 @@ class DefaultCoreRuntime implements CoreRuntime {
   private message = "Core runtime has not started.";
   private index: ChronariumIndex | undefined;
   private archiveIndexService: CoreArchiveIndexService | undefined;
+  private readonly adapterCatalog: AdapterCatalog | undefined;
 
-  constructor(private readonly options: CoreRuntimeOptions) {}
+  constructor(private readonly options: CoreRuntimeOptions) {
+    this.adapterCatalog = options.adapterManifests
+      ? createAdapterCatalog({
+          manifests: options.adapterManifests
+        })
+      : undefined;
+  }
 
   async start(): Promise<void> {
     if (this.status === "running") {
@@ -114,6 +131,10 @@ class DefaultCoreRuntime implements CoreRuntime {
     }
 
     return this.archiveIndexService;
+  }
+
+  getAdapterCatalog(): AdapterCatalog | undefined {
+    return this.adapterCatalog;
   }
 
   private getIndexDatabasePath(): string {

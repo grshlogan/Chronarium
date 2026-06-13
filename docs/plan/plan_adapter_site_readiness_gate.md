@@ -46,10 +46,13 @@ that the adapter can be safely wired into Chronarium's core contract.
 - `packages/core` has an offline fixture capture pipeline.
 - `packages/adapters/chaturbate` has synthetic split audio/video and diagnostic
   fixtures.
+- `packages/adapters/stripchat` has a synthetic combined audio/video fixture
+  scaffold.
 - Adapter protocol runtime schemas already exist in `packages/schemas`.
-- Sensitive fixture string checks exist inside the Chaturbate parser but not yet
-  as a reusable adapter-level gate.
-- No shared adapter manifest or core adapter catalog exists yet.
+- `packages/testkit` has a reusable adapter fixture readiness gate.
+- `packages/core` has a shared adapter manifest catalog.
+- `packages/core` can now preflight offline fixture capture tasks against a
+  runtime adapter catalog before consuming adapter messages.
 
 ## Constraints
 
@@ -70,8 +73,13 @@ that the adapter can be safely wired into Chronarium's core contract.
    manifest that declares fixture-only readiness.
 5. RED/GREEN: add a core adapter catalog that rejects duplicate adapter ids and
    exposes registered adapter manifests to future task setup.
-6. Use the Chaturbate synthetic fixture as a passing readiness example.
-7. Update adapter protocol docs, code map, handoff, change index, and A01
+6. RED/GREEN: add a core task gate that rejects unregistered or incapable
+   adapters before adapter startup.
+7. Use the Chaturbate synthetic fixture as a passing readiness example.
+8. Add a second combined A/V fixture-only site scaffold to prove the path is not
+   Chaturbate-specific.
+9. Update adapter protocol docs, site readiness docs, code map, handoff, change
+   index, and A01
    context.
 
 ## Verification
@@ -93,6 +101,14 @@ Expected checks:
   in `packages/schemas`.
 - Added `CHATURBATE_ADAPTER_MANIFEST` as a fixture-only manifest.
 - Added `createAdapterCatalog` in `packages/core`.
+- Added `STRIPCHAT_ADAPTER_MANIFEST` and a fixture-only SC-like combined A/V
+  scaffold under `packages/adapters/stripchat`.
+- Added `docs/ADAPTER_SITE_READINESS.md` as the practical adapter bring-up
+  checklist.
+- Added runtime catalog handoff from `CoreRuntime` through `CoreGuiService` into
+  `runOfflineFixtureCapture`.
+- Added offline capture preflight gating for unregistered adapters, unsupported
+  modes, missing capabilities, and fixture-not-ready manifests.
 - TDD RED/GREEN:
   - readiness API missing -> added testkit readiness gate;
   - messages after `adapter.finished` accepted -> rejected as
@@ -101,17 +117,24 @@ Expected checks:
     `adapter_readiness.duplicate_ready`;
   - secret-looking diagnostic field names accepted -> rejected as
     `adapter_readiness.secret_reference`;
-  - adapter catalog missing -> added manifest/schema/catalog boundary.
-- Targeted readiness/catalog tests passed.
+  - adapter catalog missing -> added manifest/schema/catalog boundary;
+  - Stripchat package missing -> added fixture-only combined A/V scaffold;
+  - overlapping Stripchat media segments accepted -> rejected overlap/backwards
+    timing;
+  - non-contiguous Stripchat media segments lacked gap facts -> emitted
+    `media.gap.detected`;
+  - unregistered adapter task consumed messages -> failed preflight before
+    startup with `adapter.catalog.unregistered`.
+- Targeted readiness/catalog/adapter-gate/Stripchat tests passed.
 - `pnpm typecheck` passed.
 - Full verification passed:
   - `pnpm typecheck`
-  - `pnpm test` passed 21 files and 95 tests;
+  - `pnpm test` passed 23 files and 100 tests;
   - `pnpm build`
   - `pnpm benchmark:timeline -- --events 1000 --batch-size 128`
   - `git diff --check`
   - trailing whitespace scan
-  - JSON/package config parse scan parsed 24 JSON files.
+  - JSON/package config parse scan parsed 26 JSON files.
 
 ## Blockers
 

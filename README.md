@@ -110,6 +110,9 @@ AI 可以快速接手局部问题
   message stream 转成一次 capture task，写入 synthetic `.chron` archive，
   重新建立 SQLite index，并通过 GUI-facing service 返回结果。失败的 adapter
   lifecycle 会映射成 failed task，且不会索引成功 archive。
+- 当 runtime 注册了 adapter manifest catalog 时，离线 capture pipeline 会在
+  adapter 启动前检查 adapter 是否已注册、mode 是否支持、capability 是否声明、
+  fixture 是否 ready；未通过时不会消费 adapter message stream，也不会写 archive。
 - `packages/media-tools` 已有 typed FFmpeg/ffprobe command builder 骨架，可生成
   argv/redactedArgv 和执行边界描述；测试不执行真实外部工具。
 - `packages/adapters/chaturbate` 已有第一个离线 split audio/video synthetic
@@ -121,6 +124,10 @@ AI 可以快速接手局部问题
   契约测试，用来证明 Chronarium 能保存坏录制事实，不代表真实 CB 站点行为已验证。
 - `packages/adapters/chaturbate` 已导出 fixture-only adapter manifest，声明
   当前只允许 fixture runtime、无网络访问、无凭据需求、不会输出敏感源字段。
+- `packages/adapters/stripchat` 已有第一个离线 combined audio/video synthetic
+  fixture scaffold，用作 SC-like 合流媒体拓扑模板。它只生成合成 media track
+  metadata、timeline facts 和 adapter protocol fixture stream；会把非连续片段
+  记录为 `media.gap.detected`，并拒绝重叠或倒序片段。
 - `packages/testkit` 已有 adapter fixture readiness gate，可检查 adapter message
   stream 的协议合法性、ready/finished 顺序、capability、session/adapter 匹配、
   finished 后尾随消息，以及网络 URL/header/token/cookie 等敏感痕迹。
@@ -177,6 +184,7 @@ small module boundaries.
 - [docs/TIMELINE_SCHEMA_V1.md](./docs/TIMELINE_SCHEMA_V1.md)：timeline event envelope 和事件族草案。
 - [docs/REPLAY_MODEL_V1.md](./docs/REPLAY_MODEL_V1.md)：回放语义契约草案——回放输入、回放时钟、seek 和状态重建规则。
 - [docs/ADAPTER_PROTOCOL.md](./docs/ADAPTER_PROTOCOL.md)：core 与 adapter worker 的消息协议草案。
+- [docs/ADAPTER_SITE_READINESS.md](./docs/ADAPTER_SITE_READINESS.md)：站点 adapter 接入前的离线 scaffold、manifest、fixture、readiness 和 core gate 清单。
 - [docs/GUI_CORE_PROTOCOL.md](./docs/GUI_CORE_PROTOCOL.md)：GUI 与 core 之间的消息协议草案。
 - [docs/DIAGNOSTIC_CODES_V1.md](./docs/DIAGNOSTIC_CODES_V1.md)：诊断与校验错误码注册表和命名规则。
 - [docs/MEDIA_TOOLS_BOUNDARY.md](./docs/MEDIA_TOOLS_BOUNDARY.md)：外部媒体工具的类型化命令边界契约草案。
@@ -194,6 +202,7 @@ small module boundaries.
 - [docs/plan/plan_streaming_archive_io_and_benchmarks.md](./docs/plan/plan_streaming_archive_io_and_benchmarks.md)：archive 流式/分批读取入口与大规模 timeline benchmark 的计划。
 - [docs/plan/plan_media_lifecycle_upload_retention.md](./docs/plan/plan_media_lifecycle_upload_retention.md)：媒体生命周期、上传和保留策略设计文档的计划。
 - [docs/plan/plan_adapter_site_readiness_gate.md](./docs/plan/plan_adapter_site_readiness_gate.md)：站点 adapter 接入前的 manifest、catalog 和 readiness gate 计划。
+- [docs/plan/plan_stripchat_offline_combined_fixture.md](./docs/plan/plan_stripchat_offline_combined_fixture.md)：Stripchat/SC-like combined A/V 离线 fixture scaffold 计划。
 - [docs/plan/plan_web_first_recording_dashboard.md](./docs/plan/plan_web_first_recording_dashboard.md)：第一版 Web-first 录制工作台计划和验证记录。
 - [docs/plan/plan_web_dashboard_offline_behavior.md](./docs/plan/plan_web_dashboard_offline_behavior.md)：Web 录制工作台离线 demo 行为计划。
 - [docs/plan/plan_web_dashboard_monitoring_semantics.md](./docs/plan/plan_web_dashboard_monitoring_semantics.md)：Web 录制工作台监控/自检语义修正计划。
@@ -231,8 +240,10 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 给新站点 adapter 准备 fixture-first scaffold：manifest、synthetic fixture、
-   readiness gate 测试、catalog 登记测试，仍不连真实站点。
+1. 给真实站点 adapter 写 live 设计前，先按
+   [docs/ADAPTER_SITE_READINESS.md](./docs/ADAPTER_SITE_READINESS.md) 补更多
+   synthetic/redacted fixtures：playlist 解析、room state、chat/event、
+   reconnect/gap、错误处理，仍不连真实站点。
 2. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
 3. 给 media segment 增加 hash/duration validation fixtures，仍不探测真实媒体
    内容、不执行 FFmpeg。

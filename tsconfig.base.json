@@ -29,6 +29,9 @@
       "@chronarium/adapter-chaturbate": [
         "packages/adapters/chaturbate/src/index.ts"
       ],
+      "@chronarium/adapter-stripchat": [
+        "packages/adapters/stripchat/src/index.ts"
+      ],
       "@chronarium/testkit": ["packages/testkit/src/index.ts"]
     }
   }
