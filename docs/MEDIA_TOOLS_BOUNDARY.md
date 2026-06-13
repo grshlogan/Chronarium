@@ -30,6 +30,8 @@ Every tool invocation should therefore answer two questions:
 - What evidence proves how and why this run happened?
 
 How replay consumes preserved facts is the subject of docs/REPLAY_MODEL_V1.md.
+How raw media, processed outputs, upload verification, and safe deletion relate
+to each other is recorded in docs/MEDIA_LIFECYCLE_AND_RETENTION.md.
 
 ## Tool Roles
 
@@ -50,6 +52,36 @@ Planned tool roles, each behind its own typed command builder:
 
 No other external media tool is in scope for this contract. Adding one
 requires extending this document first.
+
+## Processing And Retention Role
+
+Real livestream media is often not directly useful as a final file. A future
+post-session processing job should turn raw captured segments into playable,
+compressed outputs only after the raw capture facts are finalized.
+
+The media-tool layer must preserve:
+
+- input raw segment facts and hashes;
+- continuity and gap decisions;
+- editable processing plan inputs, including included ranges, excluded
+  fragments, and merge sources;
+- mux/transcode profile and tool version;
+- processed output hash, byte length, duration, and codec/container facts;
+- playable validation evidence;
+- derivation from raw facts to processed outputs.
+
+For CB-like split audio/video, media tools align and mux separate raw tracks
+into a derived output. They must not erase the fact that the raw layer was
+split. For SC-like combined A/V, one raw media track may feed the processed
+output directly.
+
+AV1/`av01` MP4 output is a future candidate profile, not a hard-coded
+requirement. Profile choice must remain configurable and evidence-backed.
+
+Media tools execute an approved processing plan; they do not decide silently
+which captured fragments matter. If a future tool run merges two restarted
+sessions or excludes tiny fragments, the plan and reasons must already be
+represented as facts so the output is editable and auditable.
 
 ## Planned Package Boundary
 

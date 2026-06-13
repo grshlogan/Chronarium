@@ -16,6 +16,7 @@
     "typecheck": "tsc -b tsconfig.json --pretty false"
   },
   "dependencies": {
+    "@chronarium/schemas": "workspace:*",
     "@chronarium/types": "workspace:*"
   }
 }

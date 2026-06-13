@@ -1310,3 +1310,125 @@ unimplemented ideas as completed work.
   - JSON/package config parse scan parsed 21 JSON files.
 - Next: add hash/duration validation fixtures or media-tool output parser
   fixtures without executing real tools.
+
+## 2026-06-13: Media lifecycle and retention design
+
+- Conversation: user clarified that disk space is central, raw media should be
+  processed after recording, the project owner's local machine should delete
+  raw media after verified processing and later upload/delete processed outputs,
+  but public releases must not force that policy on every user.
+- Landed: added a media lifecycle and retention design contract and linked it
+  from product, architecture, archive, timeline, media-tool, security, code-map,
+  handoff, and A01 context docs.
+- Files:
+  - `README.md`
+  - `docs/PRODUCT_SPEC.md`
+  - `docs/ARCHITECTURE.md`
+  - `docs/ARCHIVE_FORMAT_V1.md`
+  - `docs/TIMELINE_SCHEMA_V1.md`
+  - `docs/MEDIA_TOOLS_BOUNDARY.md`
+  - `docs/MEDIA_LIFECYCLE_AND_RETENTION.md`
+  - `docs/SECURITY_PRIVACY.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_media_lifecycle_upload_retention.md`
+- Decisions:
+  - Chronarium supports configurable retention/upload policies; it should not
+    force the project owner's local deletion/upload policy on public releases.
+  - Durable local truth is the fact archive. Media files may be retained,
+    processed, uploaded, or deleted according to policy.
+  - Raw hashes prove captured evidence; processed-output hashes prove produced,
+    uploaded, or locally deletable artifacts.
+  - CB-like raw audio/video tracks stay split until a derived mux/transcode
+    output is produced. SC-like combined A/V may be modeled as one raw media
+    track.
+  - Gap fill is synthetic derived output and must not be treated as captured
+    media.
+  - Processed recording products must be editable: future processing should be
+    able to merge interrupted/restarted sessions, exclude tiny or unusable
+    fragments, and record the output timeline mapping without rewriting raw
+    capture facts.
+- Verification:
+  - `git diff --check` passed.
+  - trailing whitespace scan passed.
+  - JSON/package config parse scan parsed 24 JSON files.
+- Next: add schema drafts and fixtures for raw hash/duration, processed-output,
+  editable processing plans, derivation, playable-validation, and
+  retention/upload decision facts without executing real media tools.
+
+## 2026-06-13: Adapter site readiness gate
+
+- Conversation: user asked for long-running autonomous progress until
+  Chronarium is clearly ready to start connecting site adapters, while keeping
+  the work fixture-first and not leaving unmanaged side conversations behind.
+- Landed: added a reusable adapter fixture readiness gate, adapter manifest
+  types and schemas, a fixture-only Chaturbate adapter manifest, and a core
+  adapter catalog.
+- Files:
+  - `README.md`
+  - `docs/ADAPTER_PROTOCOL.md`
+  - `docs/APP_CODE_MAP.md`
+  - `docs/AI_HANDOFF.md`
+  - `docs/AI_CHANGE_INDEX.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+  - `docs/plan/plan_adapter_site_readiness_gate.md`
+  - `packages/types/src/adapter.ts`
+  - `packages/schemas/src/adapterSchemas.ts`
+  - `packages/core/package.json`
+  - `packages/core/tsconfig.json`
+  - `packages/core/src/adapters/adapterCatalog.ts`
+  - `packages/core/src/adapters/index.ts`
+  - `packages/adapters/chaturbate/src/manifest.ts`
+  - `packages/adapters/chaturbate/src/index.ts`
+  - `packages/testkit/package.json`
+  - `packages/testkit/tsconfig.json`
+  - `packages/testkit/src/adapterReadiness.ts`
+  - `packages/testkit/src/index.ts`
+  - `tdd-tests/packages/core/adapter-catalog/adapterCatalog.test.ts`
+  - `tdd-tests/packages/testkit/adapter-readiness/adapterReadiness.test.ts`
+- Decisions:
+  - A site adapter should not move toward live-site design until it has a
+    manifest, synthetic or redacted fixtures, a passing readiness gate, and
+    catalog registration.
+  - The readiness gate checks protocol parsing, ready/finished ordering,
+    duplicate ready, requested capabilities, adapter/session matching, no
+    messages after `adapter.finished`, and secret-looking or network-looking
+    message content.
+  - Adapter manifests declare runtime modes, capabilities, fixture readiness,
+    and security posture. The current Chaturbate manifest is fixture-only and
+    declares no network access or credential requirement.
+  - The core catalog rejects duplicate adapter ids and manifests that declare
+    sensitive source field emission.
+- Verification:
+  - TDD RED: adapter readiness test failed because
+    `verifyAdapterFixtureReadiness` did not exist.
+  - GREEN: targeted readiness test passed after adding the testkit readiness
+    gate.
+  - TDD RED: finished-terminal test failed because facts after
+    `adapter.finished` were still accepted.
+  - GREEN: targeted readiness test passed after adding
+    `adapter_readiness.message_after_finished`.
+  - TDD RED: duplicate-ready test failed because duplicate `adapter.ready`
+    messages were accepted.
+  - GREEN: targeted readiness test passed after adding
+    `adapter_readiness.duplicate_ready`.
+  - TDD RED: secret-looking diagnostic field test failed because an
+    `Authorization` field name was accepted.
+  - GREEN: targeted readiness test passed after scanning secret-looking field
+    names.
+  - TDD RED: adapter catalog test failed because `createAdapterCatalog` did not
+    exist.
+  - GREEN: targeted adapter catalog test passed after adding adapter manifest
+    types/schema, Chaturbate manifest, and core catalog.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 21 files and 95 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed.
+  - `git diff --check` passed.
+  - trailing whitespace scan passed.
+  - JSON/package config parse scan parsed 24 JSON files.
+- Next: add the first new site adapter scaffold through this gate, or add
+  media hash/duration and processed-output fact schemas before live-site work.

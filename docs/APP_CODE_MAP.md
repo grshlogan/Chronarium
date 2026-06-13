@@ -41,6 +41,7 @@ docs/
   GUI_CORE_PROTOCOL.md
   DIAGNOSTIC_CODES_V1.md
   MEDIA_TOOLS_BOUNDARY.md
+  MEDIA_LIFECYCLE_AND_RETENTION.md
   SECURITY_PRIVACY.md
   MAINTENANCE_OPS_DESIGN.md
   CB_RECORDING_REFERENCES.md
@@ -75,6 +76,8 @@ docs/
     plan_offline_fixture_capture_pipeline.md
     plan_media_segment_reader_validator.md
     plan_streaming_archive_io_and_benchmarks.md
+    plan_media_lifecycle_upload_retention.md
+    plan_adapter_site_readiness_gate.md
     plan_web_dashboard_offline_behavior.md
     plan_web_dashboard_monitoring_semantics.md
     plan_web_dashboard_streamer_selection.md
@@ -290,6 +293,21 @@ Boundary:
 - Design contract plus implemented command-builder boundary. The current
   `packages/media-tools` package builds typed FFmpeg/ffprobe command
   descriptions only; it does not execute tools.
+
+### `docs/MEDIA_LIFECYCLE_AND_RETENTION.md`
+
+Responsibility:
+
+- Design contract for raw media, processed outputs, upload verification,
+  retention policy, hash responsibilities, and deletion gates.
+- Distinguishes the project owner's local disk-saving policy from optional
+  public-release behavior.
+- Clarifies CB-like split A/V raw tracks versus SC-like combined A/V tracks.
+
+Boundary:
+
+- Does not claim real capture, transcoding, upload, playable-output validation,
+  hash validation, or deletion automation exists.
 
 ### `docs/SECURITY_PRIVACY.md`
 
@@ -516,6 +534,25 @@ Responsibility:
   benchmark script so future Rust/native module decisions have measured
   evidence.
 
+### `docs/plan/plan_media_lifecycle_upload_retention.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for documenting raw media, processed
+  output, upload, retention, hash, and deletion-gate requirements.
+- Records that the pass is documentation-only and does not implement real
+  transcoding, upload, or cleanup behavior.
+
+### `docs/plan/plan_adapter_site_readiness_gate.md`
+
+Responsibility:
+
+- Plan, scope, and verification notes for the reusable adapter site readiness
+  gate.
+- Defines the pre-live adapter checklist: manifest, catalog registration,
+  protocol validation, lifecycle order, capability checks, and sensitive data
+  rejection.
+
 ### `docs/plan/plan_web_dashboard_offline_behavior.md`
 
 Responsibility:
@@ -677,6 +714,7 @@ packages/
     tsconfig.json
     src/
       adapters/
+        adapterCatalog.ts
         adapterLifecycle.ts
         index.ts
       archiveIndexService.ts
@@ -712,6 +750,7 @@ packages/
       src/
         fixtureAdapter.ts
         index.ts
+        manifest.ts
         splitTrackFixture.ts
       tests/
         diagnosticFixtures.test.ts
@@ -759,12 +798,19 @@ packages/
     tsconfig.json
     fixtures/
     src/
+      adapterReadiness.ts
       fixtures.ts
       index.ts
       largeTimeline.ts
 tdd-tests/
   README.md
   packages/
+    core/
+      adapter-catalog/
+        adapterCatalog.test.ts
+    testkit/
+      adapter-readiness/
+        adapterReadiness.test.ts
     archive/
       timeline-reader/
         timelineReader.test.ts
@@ -896,7 +942,7 @@ Change this first when a public contract changes.
 Current status:
 
 - Exists with initial TypeScript types for primitives, sessions, media,
-  timeline events, archive manifests, and adapter messages.
+  timeline events, archive manifests, adapter messages, and adapter manifests.
 
 ### `packages/schemas`
 
@@ -909,7 +955,8 @@ Owns:
 Current status:
 
 - Performs first-pass Zod runtime validation for sessions, media tracks,
-  timeline events, archive manifests, and adapter protocol messages.
+  timeline events, archive manifests, adapter protocol messages, and adapter
+  manifests.
 
 ### `packages/core`
 
@@ -944,6 +991,9 @@ Current status:
   fixture capture tasks.
 - The fixture adapter lifecycle host can consume adapter protocol message
   streams and summarize ready/fact/diagnostic/error/finished state.
+- The adapter catalog can register adapter manifests, list registered adapters,
+  return a manifest by adapter id, reject duplicate adapter ids, and reject
+  manifests that declare sensitive source field emission.
 - The offline fixture capture pipeline can run a fixture capture request from
   adapter messages into a synthetic `.chron` archive, write media track
   metadata, append timeline facts, reindex SQLite, and return the result
@@ -968,6 +1018,9 @@ Adapters must not call each other.
 Current status:
 
 - `packages/adapters/chaturbate` exists as a synthetic fixture adapter.
+- It exports a fixture-only adapter manifest for the core adapter catalog. The
+  manifest declares `runtimeModes: ["fixture"]`, no network access, no
+  credential requirement, and no sensitive source field emission.
 - It includes a committed offline split audio/video fixture for a CB-like
   LL-HLS/CMAF topology.
 - It can parse that fixture into media track metadata and timeline facts, then
@@ -1096,6 +1149,10 @@ Current status:
 - Exists with helpers for synthetic sessions and timeline events.
 - Includes a helper for synthetic archive manifests.
 - Includes a helper for synthetic media tracks.
+- Includes `verifyAdapterFixtureReadiness`, a reusable offline gate that checks
+  adapter protocol parsing, ready/finished ordering, requested capabilities,
+  adapter/session matching, terminal finished behavior, and secret-looking or
+  network-looking message content.
 - Includes `createLargeSyntheticTimelineBuilder`, which can generate
   deterministic large synthetic timeline events, stream JSONL chunks, and write
   a synthetic `.chron` fixture without constructing one giant event array.

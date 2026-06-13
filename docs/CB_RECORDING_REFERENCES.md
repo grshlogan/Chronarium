@@ -303,6 +303,12 @@ Did the final export lose duration compared with source tracks?
 The final `.ts`, `.mp4`, or `.mkv` should be treated as an export or derived
 artifact, not the only session truth.
 
+For the project owner's local deployment, raw CB split-track media is expected
+to be short-lived after verified processing, and processed outputs may later be
+uploaded and deleted locally after upload verification. Public Chronarium
+releases should treat that as a configurable retention/upload policy, not a
+mandatory default for every user.
+
 Future timeline event families should include:
 
 - `media.track.discovered`;
@@ -399,8 +405,8 @@ site.
 
 - Whether `N_m3u8DL-RE` becomes an optional supported external tool or only a
   reference implementation.
-- Whether Chronarium should store raw segment files, remuxed intermediate files,
-  or both.
+- Where raw segment files, processed outputs, and optional intermediates should
+  live on disk for each retention policy.
 - How much public stream topology can be stored before it risks becoming a
   signed URL or session leak.
 - Whether the first media-tool package should come before or after the first CB

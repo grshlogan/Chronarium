@@ -96,6 +96,11 @@ Adapters:
 - must emit structured facts;
 - must not write final archives directly.
 
+Future site adapters must pass the offline readiness gate before live-site
+design begins. The gate rejects raw network URLs, secret-looking field names,
+cookies, authorization headers, bearer tokens, signed URLs, token query strings,
+and `contains-sensitive` messages in committed fixtures.
+
 ## Filesystem Safety
 
 - Archive-relative paths must not be absolute.
@@ -103,6 +108,13 @@ Adapters:
 - Writers must not silently overwrite archives, media, exports, or indexes.
 - Destructive cleanup must require explicit user intent and bounded target
   paths.
+- Media retention and upload are policy choices. The project owner's local
+  deployment may delete raw media after verified processing and delete local
+  processed outputs after verified upload, but a public release must not force
+  that policy on every user.
+- Automatic media deletion must be backed by recorded verification facts, such
+  as raw hashes, processed-output hashes, playable validation, upload
+  verification, and bounded deletion targets.
 - Diagnostics bundles must be reviewed for sensitive data before sharing.
 
 ## External Tools

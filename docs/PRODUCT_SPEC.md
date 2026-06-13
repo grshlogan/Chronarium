@@ -91,6 +91,28 @@ should be tied to session time.
 Exports should be generated from preserved facts and media tracks. Exported
 files are not the source of truth and may be deleted or rebuilt.
 
+### Process And Retain Media
+
+Chronarium should treat disk space as a first-class product constraint, but
+media retention and upload must be configurable policy rather than mandatory
+release behavior. Raw media segments are captured as evidence, then may be
+processed after the session into playable compressed outputs when enough source
+data exists. Both raw hashes and processed-output hashes should be recorded
+because they prove different things: raw hashes prove what Chronarium captured,
+while output hashes prove what was produced, uploaded, or safely deleted.
+
+For the project owner's local deployment, the preferred policy is to delete raw
+media after verified processing, then upload processed outputs on schedule and
+delete local outputs after upload verification. Public releases should expose
+that as an optional policy, not force it on every user. See
+`docs/MEDIA_LIFECYCLE_AND_RETENTION.md`.
+
+Processing must be editable rather than overly strict. If recording was
+interrupted, restarted, or produced many tiny fragments, Chronarium should be
+able to merge multiple source sessions, exclude unusable fragments, and record
+the edit plan as derived facts. This must not rewrite the original raw capture
+facts.
+
 ### Diagnose A Failure
 
 The maintainer should be able to answer:

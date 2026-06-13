@@ -19,6 +19,35 @@ export type AdapterCapability =
   | "chat.events"
   | "diagnostics";
 
+export type AdapterFixtureReadinessStatus =
+  | "not-ready"
+  | "fixture-ready";
+
+export type AdapterNetworkAccess = "none" | "planned" | "live";
+
+export interface AdapterFixtureReadiness {
+  readonly status: AdapterFixtureReadinessStatus;
+  readonly fixtureNames: readonly string[];
+  readonly lastVerifiedAt?: IsoDateTimeString;
+}
+
+export interface AdapterSecurityPosture {
+  readonly networkAccess: AdapterNetworkAccess;
+  readonly requiresCredentials: boolean;
+  readonly emitsSensitiveSourceFields: boolean;
+}
+
+export interface AdapterManifest {
+  readonly schemaVersion: 1;
+  readonly adapterId: AdapterId;
+  readonly siteId: string;
+  readonly displayName: string;
+  readonly runtimeModes: readonly AdapterRuntimeMode[];
+  readonly capabilities: readonly AdapterCapability[];
+  readonly fixtureReadiness: AdapterFixtureReadiness;
+  readonly security: AdapterSecurityPosture;
+}
+
 export interface AdapterMessageBase<TType extends string = string> {
   readonly protocolVersion: typeof ADAPTER_PROTOCOL_VERSION;
   readonly messageId: ChronariumId;

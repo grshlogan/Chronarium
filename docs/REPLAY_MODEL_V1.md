@@ -64,6 +64,17 @@ Explicitly NOT replay inputs:
   source of truth. Replay must work from the archive alone, on a machine that
   has never built an index.
 
+If a retention policy has deleted local raw media or processed outputs, replay
+must degrade honestly: timeline, chat, room state, diagnostics, and media
+availability facts can still be shown, but full media playback requires local
+media evidence or a future verified restore path from uploaded artifacts.
+
+For merged or edited outputs, replay must distinguish the original capture
+timeline from the derived output timeline. A processed output may skip tiny
+fragments, merge restarted sessions, or insert synthetic gap fill, but those
+choices are replayed as edit decisions and source-range mappings rather than as
+changes to the original session facts.
+
 ## The Replay Clock
 
 The replay clock mirrors the time model in `docs/TIMELINE_SCHEMA_V1.md`.
@@ -211,6 +222,8 @@ interrupted or damaged package is recovery work, owned by
 - require network access; replay is a local-first, offline operation;
 - require SQLite; the index is an acceleration cache only;
 - require `exports/`; derived outputs may be absent or deleted;
+- hide media-retention facts; if local media was deleted by policy, replay must
+  show that state instead of pretending the captured media is still present;
 - surface events marked `contains-sensitive` in shareable form, including
   screenshots, exported reports, or diagnostics bundles. Sensitivity labels
   (`safe`, `synthetic`, `redacted`, `contains-sensitive`, `unknown`) travel

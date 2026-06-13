@@ -5,7 +5,7 @@ Chronarium is a new local-first livestream archive and replay platform under
 
 ## Current Status
 
-Date: 2026-06-12
+Date: 2026-06-13
 
 Current state:
 
@@ -47,6 +47,16 @@ Current state:
 - `packages/archive` validates `media.segment.*` timeline facts that declare a
   `relativePath`: payload schema, declared track, archive-relative path safety,
   owning track `segmentsPath`, file existence, and declared byte length.
+- `docs/MEDIA_LIFECYCLE_AND_RETENTION.md` records the media lifecycle design:
+  raw media facts, processed playable outputs, raw/output hash responsibilities,
+  optional upload policy, verification-backed deletion gates, CB-like split
+  audio/video handling, and SC-like combined A/V handling. It explicitly
+  distinguishes the project owner's local disk-saving policy from optional
+  public-release behavior.
+- The same media lifecycle design now treats processed recording products as
+  editable compositions. Future processing should be able to merge interrupted
+  or restarted sessions, exclude tiny or unusable fragments, and record output
+  timeline mappings without rewriting raw capture facts.
 - `packages/archive` has a fixture-safe reader/validator for `manifest.json`,
   `timeline.jsonl`, and manifest-declared media track metadata, including basic
   timeline and track consistency diagnostics.
@@ -78,6 +88,9 @@ Current state:
 - `packages/core` has a fixture-only adapter lifecycle host that consumes
   adapter protocol messages and records ready/fact/diagnostic/error/finished
   state without starting real child processes.
+- `packages/core` has an adapter catalog that registers adapter manifests,
+  lists adapters, looks up by adapter id, rejects duplicate adapter ids, and
+  rejects manifests that declare sensitive source field emission.
 - `packages/core` has the first offline fixture capture pipeline exposed
   through the GUI-facing service. It can turn fixture adapter messages into a
   capture task, write a synthetic `.chron` archive, reindex SQLite, and report
@@ -142,6 +155,10 @@ Current state:
   design plan; the first implemented slice is report-only inspection.
 - `packages/adapters/chaturbate` has a first offline split audio/video
   synthetic fixture for a CB-like LL-HLS/CMAF topology.
+- `packages/adapters/chaturbate` exports a fixture-only adapter manifest. It
+  declares `runtimeModes: ["fixture"]`, no network access, no credentials, no
+  sensitive source field emission, and fixture-ready status for committed
+  synthetic fixtures.
 - The Chaturbate fixture code converts that fixture into media track metadata
   and timeline facts, then verifies those facts through the existing adapter
   protocol fixture runner.
@@ -154,6 +171,10 @@ Current state:
   Chaturbate behavior.
 - `packages/testkit` has synthetic session, timeline event, archive manifest,
   and media track helpers.
+- `packages/testkit` has `verifyAdapterFixtureReadiness`, a reusable offline
+  gate for future site adapters. It validates adapter protocol messages,
+  adapter/session matching, capability declaration, ready/finished ordering,
+  terminal finished behavior, and secret-looking or network-looking strings.
 - `packages/archive` has first streaming-shaped timeline read entries:
   `iterateTimelineRecords` and `readTimelineEventBatches`. They parse JSONL
   line by line and yield events or validation issues through bounded records or
@@ -216,6 +237,7 @@ docs/ADAPTER_PROTOCOL.md
 docs/GUI_CORE_PROTOCOL.md
 docs/DIAGNOSTIC_CODES_V1.md
 docs/MEDIA_TOOLS_BOUNDARY.md
+docs/MEDIA_LIFECYCLE_AND_RETENTION.md
 docs/SECURITY_PRIVACY.md
 docs/MAINTENANCE_OPS_DESIGN.md
 docs/CB_RECORDING_REFERENCES.md
@@ -244,6 +266,8 @@ docs/plan/plan_chaturbate_offline_diagnostic_fixtures.md
 docs/plan/plan_core_maintenance_inspector_foundation.md
 docs/plan/plan_archive_recovery_and_gui_core_facade.md
 docs/plan/plan_streaming_archive_io_and_benchmarks.md
+docs/plan/plan_media_lifecycle_upload_retention.md
+docs/plan/plan_adapter_site_readiness_gate.md
 docs/plan/plan_web_dashboard_offline_behavior.md
 docs/plan/plan_web_first_recording_dashboard.md
 docs/conversation-A01-documentation-and-initial-skeleton.md
@@ -328,25 +352,35 @@ The project should optimize for AI-assisted long-term maintenance:
 
 ## Suggested Next Steps
 
-1. Add media segment hash and duration validation fixtures, still without
+1. For the next site adapter, start with a fixture-first package manifest,
+   synthetic or redacted fixtures, `verifyAdapterFixtureReadiness`, and core
+   catalog registration before any live-site request.
+2. Add media segment hash and duration validation fixtures, still without
    executing media tools.
-2. Continue WebUI behavior with add-link form validation and clearer
+3. Add schema drafts and fixtures for processed-output facts, derivation facts,
+   playable-validation facts, and retention/upload decision facts, while keeping
+   upload and deletion optional policy areas rather than mandatory release
+   behavior.
+4. Add schema drafts for editable processing plans: source sessions, included
+   ranges, excluded fragments, exclusion reasons, output timeline mapping, and
+   resulting processed output ids.
+5. Continue WebUI behavior with add-link form validation and clearer
    pause/resume/check state feedback, still synthetic-only.
-3. Replace the browser-only offline self-test action with a real GUI-facing
+6. Replace the browser-only offline self-test action with a real GUI-facing
    DTO/preload boundary, then connect it to `CoreGuiService` without letting the
    renderer call archive/indexer internals directly.
-4. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
+7. Add media-tool output parser fixtures for ffprobe/ffmpeg without executing
    real tools.
-5. Build the Electron shell and preload/IPC boundary around the existing
+8. Build the Electron shell and preload/IPC boundary around the existing
    Web-first renderer only after the GUI/core DTO boundary is stable.
-6. Let the Web renderer use the offline fixture capture pipeline to show
+9. Let the Web renderer use the offline fixture capture pipeline to show
    archive list, timeline facts, validation, recovery, and maintenance status.
-7. Extend the maintenance inspector with index freshness comparison, keeping
+10. Extend the maintenance inspector with index freshness comparison, keeping
    writes as explicit safe-rebuild suggestions rather than automatic actions.
-8. Add real media segment IO only after segment reader/validator coverage,
+11. Add real media segment IO only after segment reader/validator coverage,
    media-track metadata validation, and media-tool fixture parsing remain
    stable.
-9. If real Chaturbate behavior needs validation, first prepare separately
+12. If real Chaturbate behavior needs validation, first prepare separately
    approved redacted evidence or synthetic reproductions derived from approved
    local samples.
 

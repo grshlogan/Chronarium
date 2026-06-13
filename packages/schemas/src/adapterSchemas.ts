@@ -1,4 +1,5 @@
 import type {
+  AdapterManifest,
   AdapterToCoreMessage,
   CoreToAdapterMessage
 } from "@chronarium/types";
@@ -19,6 +20,35 @@ const adapterCapabilitySchema = z.enum([
 ]);
 
 const adapterRuntimeModeSchema = z.enum(["fixture", "live"]);
+
+export const adapterFixtureReadinessV1Schema = z
+  .object({
+    status: z.enum(["not-ready", "fixture-ready"]),
+    fixtureNames: z.array(z.string().min(1)).readonly(),
+    lastVerifiedAt: isoDateTimeStringSchema.optional()
+  })
+  .strict();
+
+export const adapterSecurityPostureV1Schema = z
+  .object({
+    networkAccess: z.enum(["none", "planned", "live"]),
+    requiresCredentials: z.boolean(),
+    emitsSensitiveSourceFields: z.boolean()
+  })
+  .strict();
+
+export const adapterManifestV1Schema = z
+  .object({
+    schemaVersion: z.literal(1),
+    adapterId: z.string().min(1),
+    siteId: z.string().min(1),
+    displayName: z.string().min(1),
+    runtimeModes: z.array(adapterRuntimeModeSchema).min(1).readonly(),
+    capabilities: z.array(adapterCapabilitySchema).min(1).readonly(),
+    fixtureReadiness: adapterFixtureReadinessV1Schema,
+    security: adapterSecurityPostureV1Schema
+  })
+  .strict();
 
 export const adapterProtocolMessageBaseV1Schema = z
   .object({
@@ -156,4 +186,8 @@ export function parseAdapterToCoreMessageV1(
   value: unknown
 ): AdapterToCoreMessage {
   return adapterToCoreMessageV1Schema.parse(value) as AdapterToCoreMessage;
+}
+
+export function parseAdapterManifestV1(value: unknown): AdapterManifest {
+  return adapterManifestV1Schema.parse(value) as AdapterManifest;
 }

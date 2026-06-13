@@ -66,6 +66,9 @@ AI 可以快速接手局部问题
 - archive validation 已能检查带 `relativePath` 的 `media.segment.*` facts：
   track 是否声明、路径是否安全、是否位于所属 track 的 `segments/` 目录、
   文件是否存在，以及声明的 byteLength 是否匹配。
+- 已补充媒体生命周期与保留策略设计：raw 捕获事实、处理/压缩输出、hash
+  职责、上传验证、删除门槛、CB 分轨与 SC 合流模型。它是未来设计契约，
+  不代表上传、压缩、转码或删除自动化已经实现。
 - `packages/archive` 已增加第一版 timeline 流式/分批读取入口：
   `iterateTimelineRecords` 和 `readTimelineEventBatches`，供未来 GUI、replay
   和 maintenance 避免只依赖完整 `timelineEvents` 数组。
@@ -101,6 +104,8 @@ AI 可以快速接手局部问题
 - `packages/core` 已有 fixture-only adapter lifecycle host，可消费 adapter
   protocol message stream、收集 ready/fact/diagnostic/error/finished 状态；
   尚未启动真实 child process 或连接真实站点。
+- `packages/core` 已有 adapter catalog，可登记站点 adapter manifest，并拒绝
+  重复 adapter id 或声明会输出敏感源字段的 manifest。
 - `packages/core` 已有第一条离线 capture-like pipeline，可把 fixture adapter
   message stream 转成一次 capture task，写入 synthetic `.chron` archive，
   重新建立 SQLite index，并通过 GUI-facing service 返回结果。失败的 adapter
@@ -114,6 +119,11 @@ AI 可以快速接手局部问题
 - `packages/adapters/chaturbate` 已增加离线 synthetic diagnostic fixtures，
   覆盖缺音频、media gap、音视频时长不一致和输出停滞等故障模型。这些是合成
   契约测试，用来证明 Chronarium 能保存坏录制事实，不代表真实 CB 站点行为已验证。
+- `packages/adapters/chaturbate` 已导出 fixture-only adapter manifest，声明
+  当前只允许 fixture runtime、无网络访问、无凭据需求、不会输出敏感源字段。
+- `packages/testkit` 已有 adapter fixture readiness gate，可检查 adapter message
+  stream 的协议合法性、ready/finished 顺序、capability、session/adapter 匹配、
+  finished 后尾随消息，以及网络 URL/header/token/cookie 等敏感痕迹。
 - `packages/testkit` 已增加大规模 synthetic timeline builder，可确定性生成
   JSONL chunks 或 synthetic `.chron` fixture。根脚本
   `pnpm benchmark:timeline -- --events 1000 --batch-size 128` 可本地生成并
@@ -125,7 +135,7 @@ AI 可以快速接手局部问题
   metadata 缺失/不一致、SQLite index 写入/查询、core archive/index service、
   core runtime lifecycle、core maintenance inspector、offline fixture capture
   pipeline、Chaturbate 离线 split-track fixture、fixture archive/indexer flow
-  和 synthetic diagnostic fixture。
+  synthetic diagnostic fixture、adapter readiness gate 和 adapter catalog。
 - 尚未实现 Electron 桌面壳、preload/IPC、真实 task 执行、真实 adapter
   child process、真实站点 adapter、外部媒体工具执行、真实媒体分片写入、
   archive repair/migration 或 replay player。
@@ -170,6 +180,7 @@ small module boundaries.
 - [docs/GUI_CORE_PROTOCOL.md](./docs/GUI_CORE_PROTOCOL.md)：GUI 与 core 之间的消息协议草案。
 - [docs/DIAGNOSTIC_CODES_V1.md](./docs/DIAGNOSTIC_CODES_V1.md)：诊断与校验错误码注册表和命名规则。
 - [docs/MEDIA_TOOLS_BOUNDARY.md](./docs/MEDIA_TOOLS_BOUNDARY.md)：外部媒体工具的类型化命令边界契约草案。
+- [docs/MEDIA_LIFECYCLE_AND_RETENTION.md](./docs/MEDIA_LIFECYCLE_AND_RETENTION.md)：raw 媒体、压缩输出、上传、校验和本地删除门槛的生命周期设计契约。
 - [docs/SECURITY_PRIVACY.md](./docs/SECURITY_PRIVACY.md)：安全、隐私、fixture 和敏感数据规则。
 - [docs/MAINTENANCE_OPS_DESIGN.md](./docs/MAINTENANCE_OPS_DESIGN.md)：maintenance / ops 巡检系统设计草案和项目引用。
 - [docs/CB_RECORDING_REFERENCES.md](./docs/CB_RECORDING_REFERENCES.md)：CB 分离音视频录播参考项目和 Chronarium 设计取舍。
@@ -181,6 +192,8 @@ small module boundaries.
 - [docs/conversation-A02-foundation-docs-completion.md](./docs/conversation-A02-foundation-docs-completion.md)：A02 对话上下文维护文档。
 - [docs/plan/README.md](./docs/plan/README.md)：后续计划文档入口和命名规则。
 - [docs/plan/plan_streaming_archive_io_and_benchmarks.md](./docs/plan/plan_streaming_archive_io_and_benchmarks.md)：archive 流式/分批读取入口与大规模 timeline benchmark 的计划。
+- [docs/plan/plan_media_lifecycle_upload_retention.md](./docs/plan/plan_media_lifecycle_upload_retention.md)：媒体生命周期、上传和保留策略设计文档的计划。
+- [docs/plan/plan_adapter_site_readiness_gate.md](./docs/plan/plan_adapter_site_readiness_gate.md)：站点 adapter 接入前的 manifest、catalog 和 readiness gate 计划。
 - [docs/plan/plan_web_first_recording_dashboard.md](./docs/plan/plan_web_first_recording_dashboard.md)：第一版 Web-first 录制工作台计划和验证记录。
 - [docs/plan/plan_web_dashboard_offline_behavior.md](./docs/plan/plan_web_dashboard_offline_behavior.md)：Web 录制工作台离线 demo 行为计划。
 - [docs/plan/plan_web_dashboard_monitoring_semantics.md](./docs/plan/plan_web_dashboard_monitoring_semantics.md)：Web 录制工作台监控/自检语义修正计划。
@@ -218,13 +231,17 @@ Chronarium 目标 GitHub 仓库：
 
 下一步适合先做这些基础工作：
 
-1. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
-2. 给 media segment 增加 hash/duration validation fixtures，仍不探测真实媒体
+1. 给新站点 adapter 准备 fixture-first scaffold：manifest、synthetic fixture、
+   readiness gate 测试、catalog 登记测试，仍不连真实站点。
+2. 给 media-tools 增加 ffprobe/ffmpeg 输出解析 fixture，仍不执行真实工具。
+3. 给 media segment 增加 hash/duration validation fixtures，仍不探测真实媒体
    内容、不执行 FFmpeg。
-3. 继续推进 Web-first 录制工作台的信息密度和行为入口：添加链接表单、
+4. 为 processed output / raw segment hash、duration、derivation facts 先补
+   schema 草案和离线 fixture，仍不执行真实压缩、上传或删除。
+5. 继续推进 Web-first 录制工作台的信息密度和行为入口：添加链接表单、
    监控暂停/恢复/立即检查的状态反馈，以及 offline self-test 诊断结果。
-4. 把 Web-first 录制工作台里的浏览器 self-test action 替换成 GUI-facing
+6. 把 Web-first 录制工作台里的浏览器 self-test action 替换成 GUI-facing
    DTO/preload 边界，再接入 core facade 显示 health/status。
-5. 让 Web renderer 接入离线 capture-like pipeline，展示 archive 列表、
+7. 让 Web renderer 接入离线 capture-like pipeline，展示 archive 列表、
    timeline facts、validation / maintenance / recovery 状态。
-6. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。
+8. 后续如要验证真实 CB 行为，先准备用户批准的脱敏样本或合成复现材料。

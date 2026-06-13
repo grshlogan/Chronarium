@@ -46,6 +46,8 @@ It has:
   while running;
 - a read-only core maintenance archive inspector that turns archive validator
   issues and known timeline diagnostic facts into `MaintenanceReport` findings;
+- an adapter manifest/schema boundary, a core adapter catalog, and a reusable
+  testkit adapter fixture readiness gate;
 - a Web-first React/Vite recording dashboard under `apps/desktop`, using static
   synthetic data plus a browser-safe offline fixture capture demo action only,
   defaulting to `127.0.0.1:5187`;
@@ -53,7 +55,8 @@ It has:
   timeline consistency failures, writer append-time rejection, media track
   metadata diagnostics, SQLite indexing, core archive/index service
   coordination, core runtime lifecycle, core maintenance inspection, offline
-  fixture capture, and the first desktop recording dashboard.
+  fixture capture, adapter readiness/catalog checks, and the first desktop
+  recording dashboard.
 - a local timeline scan benchmark script that generates synthetic `.chron`
   archives under `runtime/benchmarks/` and scans them through the bounded batch
   reader.
@@ -111,6 +114,16 @@ using `5173`, which may be occupied by unrelated local projects.
 run and writes temporary archives under ignored `runtime/benchmarks/`. Use
 larger event counts only for explicit local benchmarking, not as a normal test.
 
+Adapter readiness targeted checks:
+
+```powershell
+pnpm exec vitest run tdd-tests/packages/testkit/adapter-readiness/adapterReadiness.test.ts
+pnpm exec vitest run tdd-tests/packages/core/adapter-catalog/adapterCatalog.test.ts
+```
+
+Passing these tests means an adapter fixture is safe for Chronarium's offline
+contract. It does not mean live-site behavior has been verified.
+
 ## Safe Checks
 
 ```powershell
@@ -139,4 +152,7 @@ Get-ChildItem -Recurse -File |
   direction.
 - Keep Chaturbate work fixture-first until archive and timeline foundations are
   validated.
+- New site adapters should begin with a manifest, synthetic/redacted fixtures,
+  readiness gate coverage, and core catalog registration before any live-site
+  request.
 - Keep docs honest about what is implemented.

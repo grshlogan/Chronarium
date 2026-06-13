@@ -75,13 +75,26 @@ adapter.*
 media.track.*
 media.segment.*
 media.gap.*
+media.process.*
 room.*
 chat.*
 paid_room.*
 network.*
+upload.*
 export.*
+retention.*
 diagnostic.*
 ```
+
+Media processing, upload, retention, and deletion decisions must be modeled as
+timeline facts when implemented. They are not invisible background actions:
+future consumers must be able to tell which raw facts produced which playable
+output, which output was uploaded, which verification passed, and why a local
+media file was deleted.
+
+Editable processing plans are derived facts. They may include multiple source
+sessions, included ranges, excluded fragments, and output timeline mappings.
+They must not rewrite original `session.*` or `media.segment.*` capture facts.
 
 ## Sensitivity Values
 

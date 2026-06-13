@@ -11,6 +11,10 @@ structured messages to `chronarium-core`.
 
 The protocol is message-based so adapters can run in child processes or workers.
 
+Every adapter package should also expose an adapter manifest. The manifest is
+not a runtime message; it is the registration metadata core uses before a
+worker is started.
+
 ## Process Boundary
 
 ```text
@@ -154,6 +158,52 @@ diagnostics
 Capabilities describe what the adapter can emit. They do not grant filesystem,
 network, credential, or shell access by themselves.
 
+## Adapter Manifest
+
+An adapter manifest declares a package's safe registration shape:
+
+- `schemaVersion`;
+- `adapterId`;
+- `siteId`;
+- `displayName`;
+- allowed `runtimeModes`;
+- emitted `capabilities`;
+- fixture readiness status and fixture names;
+- security posture.
+
+The first manifest schema is implemented in `packages/types` and
+`packages/schemas`, and core can register manifests through its adapter catalog.
+
+For a future live adapter, `runtimeModes` must not include `live` until the
+adapter has:
+
+- offline synthetic or redacted fixtures;
+- a passing adapter readiness gate;
+- documented credential and redaction boundaries;
+- a site-specific plan that does not store raw cookies, headers, signed URLs,
+  or private room/session details.
+
+## Readiness Gate
+
+Before live-site design begins, an adapter fixture stream must pass the
+readiness gate in `packages/testkit`.
+
+The gate checks:
+
+- protocol parsing through the shared adapter schema;
+- `adapter.ready` before facts;
+- a single `adapter.ready`;
+- requested capabilities are declared;
+- adapter and session ids match the request;
+- `adapter.finished` exists and is terminal;
+- no messages appear after `adapter.finished`;
+- no raw network URLs, secret-looking field names, cookies, authorization
+  headers, bearer tokens, signed URLs, or token query strings are present.
+
+Passing the readiness gate only means the adapter is safe to wire into
+Chronarium's offline core contract. It does not prove current live-site
+behavior.
+
 ## Security Rules
 
 - GUI must never talk directly to site adapters.
@@ -166,6 +216,8 @@ network, credential, or shell access by themselves.
 - Adapter logs must be treated as potentially sensitive until redacted.
 - Child process arguments must be typed and bounded; no arbitrary shell command
   strings.
+- Adapter manifests that declare sensitive source field emission are rejected by
+  the current core catalog.
 
 ## Chaturbate Initial Scope
 

@@ -141,6 +141,44 @@ streaming validation. Segment facts without `relativePath` remain valid
 observations for discovered-but-not-yet-downloaded segments. Hash, duration,
 container, codec, and FFmpeg/ffprobe validation remain pending.
 
+The current A01 documentation pass recorded the updated media lifecycle and
+retention requirements. `docs/MEDIA_LIFECYCLE_AND_RETENTION.md` now states that
+Chronarium should support configurable retention/upload policies rather than
+forcing one deletion model on every user. The project owner's local deployment
+policy is raw media -> process/transcode -> verify processed output -> delete
+raw, then processed output -> scheduled upload -> verify upload -> delete local
+output, with timeline facts kept locally. This is a personal deployment policy,
+not mandatory release behavior. The same document records raw versus processed
+hash responsibilities, CB-like split audio/video raw-track preservation,
+SC-like combined A/V handling, gap fill as synthetic derived output, and
+verification-backed deletion gates. The user then clarified that processing
+recording products should prioritize editability over strict automatic
+continuity: future processing must be able to merge interrupted or restarted
+sessions, exclude tiny or unusable fragments, and record output timeline
+mappings without rewriting raw capture facts. No real capture, transcode,
+upload, hash validation, playable validation, or deletion automation was
+implemented in this docs-only pass.
+
+The current A01 adapter-readiness pass added the first reusable gate for
+future site adapters. `packages/testkit` now exports
+`verifyAdapterFixtureReadiness`, which consumes an adapter fixture message
+stream and reports whether it is safe to wire into Chronarium's offline core
+contract. It checks shared protocol parsing, adapter/session id matching,
+requested capabilities, `adapter.ready` ordering, duplicate `adapter.ready`,
+terminal `adapter.finished`, no messages after finished, and secret-looking or
+network-looking values/field names. This does not prove live-site behavior; it
+only proves offline contract safety.
+
+The same pass added adapter manifests and a core adapter catalog. `packages/types`
+and `packages/schemas` now include an `AdapterManifest` contract. Chaturbate
+exports `CHATURBATE_ADAPTER_MANIFEST` as fixture-only, with no network access,
+no credential requirement, and no sensitive source field emission. Core can
+register manifests through `createAdapterCatalog`, list adapters, look up by
+adapter id, reject duplicate adapter ids, and reject manifests that declare
+sensitive source field emission. This makes the next site adapter path explicit:
+manifest -> synthetic/redacted fixtures -> readiness gate -> catalog
+registration -> only then live-site design.
+
 The current A01 GUI pass added the first Web-first React/Vite recording
 dashboard shell under `apps/desktop`. It follows the streamer-maintenance
 layout direction: maintained streamers on the left, selected streamer recording
@@ -292,6 +330,23 @@ Documentation changes for this continuation:
 - `packages/schemas/src/mediaSchemas.ts`
 - `packages/schemas/src/primitiveSchemas.ts`
 - `docs/plan/plan_media_segment_reader_validator.md`
+- `docs/MEDIA_LIFECYCLE_AND_RETENTION.md`
+- `docs/plan/plan_media_lifecycle_upload_retention.md`
+- `docs/plan/plan_adapter_site_readiness_gate.md`
+- `packages/types/src/adapter.ts`
+- `packages/schemas/src/adapterSchemas.ts`
+- `packages/core/src/adapters/adapterCatalog.ts`
+- `packages/core/src/adapters/index.ts`
+- `packages/core/package.json`
+- `packages/core/tsconfig.json`
+- `packages/adapters/chaturbate/src/manifest.ts`
+- `packages/adapters/chaturbate/src/index.ts`
+- `packages/testkit/src/adapterReadiness.ts`
+- `packages/testkit/src/index.ts`
+- `packages/testkit/package.json`
+- `packages/testkit/tsconfig.json`
+- `tdd-tests/packages/core/adapter-catalog/adapterCatalog.test.ts`
+- `tdd-tests/packages/testkit/adapter-readiness/adapterReadiness.test.ts`
 - `tdd-tests/packages/archive/timeline-reader/timelineReader.test.ts`
 - `tdd-tests/packages/indexer/timeline-batches/indexerTimelineBatches.test.ts`
 - `tdd-tests/packages/testkit/large-timeline/largeSyntheticTimeline.test.ts`
@@ -648,11 +703,52 @@ Checks already run during this continuation:
   monitoring/selection update.
 - JSON/package config parse scan: parsed 24 JSON files after the WebUI
   monitoring/selection update.
+- Added `docs/plan/plan_media_lifecycle_upload_retention.md` and
+  `docs/MEDIA_LIFECYCLE_AND_RETENTION.md` as a documentation-only pass. No real
+  capture, transcoding, upload, playable validation, hash validation, or
+  deletion automation was implemented.
+- `git diff --check`: passed after the media lifecycle documentation pass.
+- trailing whitespace scan: passed after the media lifecycle documentation pass.
+- JSON/package config parse scan: parsed 24 JSON files after the media
+  lifecycle documentation pass.
+- TDD RED for adapter readiness gate:
+  `pnpm exec vitest run
+  tdd-tests/packages/testkit/adapter-readiness/adapterReadiness.test.ts` failed
+  because `verifyAdapterFixtureReadiness` did not exist.
+- GREEN for adapter readiness gate: added the testkit readiness gate and the
+  targeted test passed.
+- TDD RED/GREEN for adapter readiness ordering: facts after
+  `adapter.finished`, duplicate `adapter.ready`, and secret-looking diagnostic
+  field names each failed first, then passed after the readiness gate was
+  tightened.
+- TDD RED for adapter catalog:
+  `pnpm exec vitest run
+  tdd-tests/packages/core/adapter-catalog/adapterCatalog.test.ts` failed
+  because `createAdapterCatalog` did not exist.
+- GREEN for adapter catalog: added adapter manifest types/schema, the
+  Chaturbate fixture-only manifest, and core adapter catalog; targeted catalog
+  test passed.
+- Targeted adapter readiness/catalog tests passed 2 files and 5 tests.
+- `pnpm typecheck`: passed after adapter readiness gate and catalog work.
+- `pnpm test`: passed 21 files and 95 tests after adapter readiness gate and
+  catalog work, with the known Node `node:sqlite` ExperimentalWarning.
+- `pnpm build`: passed after adapter readiness gate and catalog work.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed after
+  adapter readiness gate and catalog work.
+- `git diff --check`: passed after adapter readiness gate and catalog work.
+- trailing whitespace scan: passed after adapter readiness gate and catalog
+  work.
+- JSON/package config parse scan: parsed 24 JSON files after adapter readiness
+  gate and catalog work.
 
 ## Next Safe Step
 
-Add media segment hash/duration validation fixtures or ffprobe/ffmpeg output
-parser fixtures without executing real tools. GUI visual polish is now intended
-for A03, while A01 should keep working on lower-level archive/core foundations
-unless the user redirects. Keep A02 independent and do not create extra A01
-pseudo-conversation files.
+Use the adapter readiness path for the first new site scaffold: adapter
+manifest, synthetic or redacted fixtures, readiness gate test, and core catalog
+registration before any live-site request. In parallel, add media segment
+hash/duration validation fixtures plus schema drafts for editable processing
+plans, processed-output, derivation, playable-validation, retention/upload
+decision, and deletion-record facts, still without executing real media tools
+or deleting files. GUI visual polish is now intended for A03, while A01 should
+keep working on lower-level archive/core foundations unless the user redirects.
+Keep A02 independent and do not create extra A01 pseudo-conversation files.

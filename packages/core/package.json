@@ -18,6 +18,7 @@
   "dependencies": {
     "@chronarium/archive": "workspace:*",
     "@chronarium/indexer": "workspace:*",
+    "@chronarium/schemas": "workspace:*",
     "@chronarium/types": "workspace:*"
   }
 }

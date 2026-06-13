@@ -26,6 +26,12 @@ Record facts first. Render videos later.
 The primary artifact is a session archive. MP4, MKV, clips, reports, and replay
 views are derived artifacts.
 
+Chronarium also supports treating local media as bounded-retention evidence.
+Raw segments prove what was captured, processed outputs prove what was produced
+or uploaded, and timeline facts outlive both when a retention policy deletes
+local media. The detailed media retention and deletion-gate contract lives in
+`docs/MEDIA_LIFECYCLE_AND_RETENTION.md`.
+
 ## Default Stack
 
 ```text
@@ -149,11 +155,14 @@ adapter.*
 media.track.*
 media.segment.*
 media.gap.*
+media.process.*
 room.*
 chat.*
 paid_room.*
 network.*
+upload.*
 export.*
+retention.*
 diagnostic.*
 ```
 

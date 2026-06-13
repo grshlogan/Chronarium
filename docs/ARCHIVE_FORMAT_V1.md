@@ -67,6 +67,12 @@ path is reserved by v1.
 - `diagnostics/*.jsonl` stores diagnostic facts.
 - `exports/` contains derived outputs and may be deleted or rebuilt.
 
+V1 treats media retention as a fact problem, not only a filesystem problem.
+Raw segment files and processed playable outputs may both be deleted later by
+policy, but the timeline facts that describe capture, hashes, processing,
+upload verification, and deletion decisions must remain. The lifecycle contract
+is recorded in `docs/MEDIA_LIFECYCLE_AND_RETENTION.md`.
+
 SQLite indexes are caches and state stores outside or beside this package. They
 are not the only replay truth.
 
@@ -182,7 +188,9 @@ that point at a stored file:
 - declared `byteLength` must match the file size.
 
 Validation does not yet calculate hashes, validate durations, parse container
-metadata, or call media tools.
+metadata, or call media tools. Future hash validation must distinguish raw
+segment hashes from processed-output hashes: raw hashes prove captured evidence;
+processed-output hashes prove exported or uploaded artifacts.
 
 ## Path Rules
 
