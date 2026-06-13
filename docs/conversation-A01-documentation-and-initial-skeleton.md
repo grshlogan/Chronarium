@@ -1063,6 +1063,49 @@ Checks already run during this continuation:
   when it is healthy and supports the selected gated intent.
 - Targeted desktop recording-dashboard tests passed 15 tests.
 - `pnpm typecheck`: passed after the desktop credential binding lane.
+- Added `docs/plan/plan_chaturbate_live_parser_fixtures.md` for the Codex
+  adapters lane. This lane only modifies `packages/adapters/chaturbate`,
+  matching `tdd-tests`, this A01 context, and its plan document. Shared index
+  docs are intentionally left to the designated committer per
+  `docs/AGENT_WORK_SPLIT.md`.
+- TDD RED for CB live parser fixtures:
+  `pnpm exec vitest run tdd-tests/packages/adapters/chaturbate/chaturbateLiveParserFixtures.test.ts`
+  failed because `live-parser.synthetic.json` did not exist.
+- GREEN for CB playlist parsing: added synthetic master/media playlist text
+  and a pure parser that turns CB-like LL-HLS/CMAF split video/audio playlists
+  into `media.track.topology_observed`, `media.track.discovered`, and
+  `media.segment.observed` facts without network access.
+- RED/GREEN for room/chat: added synthetic `room.state.changed` and
+  `chat.message.observed` facts with synthetic-only room and chat data.
+- RED/GREEN for reconnect/gap/error: added synthetic `network.disconnected`,
+  `network.reconnected`, `media.gap.detected`, `diagnostic.note`, and a modeled
+  `adapter.error` fixture path. The healthy fixture stream does not emit
+  `adapter.error`.
+- GREEN for integration: the thick CB fixture now passes readiness gate,
+  catalog/offline capture, archive validation/reader, and SQLite indexing
+  checks. CB fixture capabilities now include `room.state` and `chat.events`;
+  manifest security posture remains fixture-only, no network, no credentials,
+  and no sensitive source fields.
+- Targeted CB tests passed 5 files and 17 tests.
+- `pnpm typecheck`: passed after the CB parser fixture lane.
+- `pnpm test`: passed 35 files and 195 tests after the CB parser fixture lane.
+- `pnpm build`: passed after the CB parser fixture lane.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128`: passed with
+  1000 scanned events, 8 batches, and 0 issues after the CB parser fixture
+  lane.
+- Follow-up RED for CB master playlist hardening:
+  `pnpm exec vitest run tdd-tests/packages/adapters/chaturbate/chaturbateLiveParserFixtures.test.ts --testNamePattern "rejects master playlist references"`
+  failed because quoted `URI="fixture://chaturbate/..."` references in the
+  master playlist were not checked against known media playlists.
+- GREEN for master playlist hardening: `liveParserFixture.ts` now extracts
+  quoted `URI` values and rejects unknown synthetic media playlist references.
+- Follow-up RED for CB playlist URL safety:
+  `pnpm exec vitest run tdd-tests/packages/adapters/chaturbate/chaturbateLiveParserFixtures.test.ts --testNamePattern "rejects raw network URLs"`
+  failed because a raw network URL embedded inside playlist text was accepted.
+- GREEN for playlist URL safety: playlist text is now validated line by line;
+  non-comment URI lines and quoted `URI` attributes must use
+  `fixture://chaturbate/...`.
+- Targeted CB tests passed 5 files and 19 tests after the hardening follow-up.
 
 ## Next Safe Step
 

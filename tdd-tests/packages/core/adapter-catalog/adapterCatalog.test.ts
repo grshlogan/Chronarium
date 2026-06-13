@@ -16,10 +16,13 @@ describe("adapter catalog", () => {
         capabilities: [
           "fixture.timeline",
           "media.discovery",
+          "room.state",
+          "chat.events",
           "diagnostics"
         ],
         fixtureReadiness: expect.objectContaining({
-          status: "fixture-ready"
+          status: "fixture-ready",
+          fixtureNames: expect.arrayContaining(["live-parser.synthetic"])
         })
       })
     ]);

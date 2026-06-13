@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "name": "cb-live-parser-synthetic",
+  "sessionId": "session-cb-live-parser-synthetic-001",
+  "capturedAt": "2026-06-14T00:00:00.000Z",
+  "monotonicStartMs": 0,
+  "masterPlaylist": {
+    "reference": "fixture://chaturbate/live-parser/master.m3u8",
+    "text": "#EXTM3U\n#EXT-X-VERSION:9\n#EXT-X-INDEPENDENT-SEGMENTS\n#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"synthetic-audio\",NAME=\"Synthetic audio\",DEFAULT=YES,AUTOSELECT=YES,URI=\"fixture://chaturbate/live-parser/audio-main.m3u8\"\n#EXT-X-STREAM-INF:BANDWIDTH=2400000,AVERAGE-BANDWIDTH=1800000,CODECS=\"avc1.64001f\",RESOLUTION=1280x720,FRAME-RATE=30.000,AUDIO=\"synthetic-audio\"\nfixture://chaturbate/live-parser/video-main.m3u8\n"
+  },
+  "mediaPlaylists": [
+    {
+      "trackId": "video-main",
+      "kind": "video",
+      "label": "Synthetic CB video",
+      "codec": "h264",
+      "sourceIdHash": "synthetic-cb-live-parser-video-source-hash",
+      "reference": "fixture://chaturbate/live-parser/video-main.m3u8",
+      "text": "#EXTM3U\n#EXT-X-VERSION:9\n#EXT-X-TARGETDURATION:2\n#EXT-X-MAP:URI=\"fixture://chaturbate/live-parser/video-init.mp4\"\n#EXT-X-MEDIA-SEQUENCE:101\n#EXTINF:2.000,\nfixture://chaturbate/live-parser/video-segment-0101.m4s\n#EXTINF:2.000,\nfixture://chaturbate/live-parser/video-segment-0102.m4s\n"
+    },
+    {
+      "trackId": "audio-main",
+      "kind": "audio",
+      "label": "Synthetic CB audio",
+      "codec": "aac",
+      "sourceIdHash": "synthetic-cb-live-parser-audio-source-hash",
+      "reference": "fixture://chaturbate/live-parser/audio-main.m3u8",
+      "text": "#EXTM3U\n#EXT-X-VERSION:9\n#EXT-X-TARGETDURATION:2\n#EXT-X-MAP:URI=\"fixture://chaturbate/live-parser/audio-init.mp4\"\n#EXT-X-MEDIA-SEQUENCE:201\n#EXTINF:2.000,\nfixture://chaturbate/live-parser/audio-segment-0201.m4s\n#EXTINF:2.000,\nfixture://chaturbate/live-parser/audio-segment-0202.m4s\n"
+    }
+  ],
+  "roomState": {
+    "state": "online",
+    "showMode": "ticket",
+    "viewerCount": 128,
+    "topic": "Synthetic CB room state"
+  },
+  "chatMessages": [
+    {
+      "messageId": "chat-synthetic-0001",
+      "authorRef": "synthetic-author-a",
+      "body": "Synthetic welcome message.",
+      "role": "viewer",
+      "monotonicMs": 500
+    },
+    {
+      "messageId": "chat-synthetic-0002",
+      "authorRef": "synthetic-moderator",
+      "body": "Synthetic moderation notice.",
+      "role": "moderator",
+      "monotonicMs": 1500
+    }
+  ],
+  "networkEvents": [
+    {
+      "kind": "disconnected",
+      "eventId": "network-disconnected-synthetic-0001",
+      "reason": "synthetic playlist update interruption",
+      "affectedTrackIds": ["video-main", "audio-main"],
+      "monotonicMs": 4000
+    },
+    {
+      "kind": "reconnected",
+      "disconnectedEventId": "network-disconnected-synthetic-0001",
+      "outageDurationMs": 3000,
+      "affectedTrackIds": ["video-main", "audio-main"],
+      "monotonicMs": 7000
+    }
+  ],
+  "gaps": [
+    {
+      "trackId": "video-main",
+      "previousSegmentId": "video-main-segment-0102",
+      "nextSegmentId": "video-main-segment-0104",
+      "gapStartMs": 4000,
+      "durationMs": 3000,
+      "level": "warning",
+      "message": "Synthetic CB fixture modeled a skipped video segment after reconnect.",
+      "monotonicMs": 7000
+    }
+  ],
+  "diagnosticNotes": [
+    {
+      "level": "warning",
+      "code": "adapter.synthetic_reconnect",
+      "message": "Synthetic CB parser recovered after a modeled playlist update interruption.",
+      "monotonicMs": 7100
+    }
+  ]
+}

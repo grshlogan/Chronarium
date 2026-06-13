@@ -51,6 +51,7 @@ docs/
   CREDENTIALS_AND_SESSIONS.md
   MAINTENANCE_OPS_DESIGN.md
   CB_RECORDING_REFERENCES.md
+  CHATURBATE_LIVE_ADAPTER_DESIGN.md
   DEVELOPMENT_SETUP.md
   APP_CODE_MAP.md
   AI_HANDOFF.md
@@ -88,7 +89,9 @@ docs/
     plan_adapter_worker_message_stream.md
     plan_adapter_worker_command_builder.md
     plan_adapter_worker_supervisor_harness.md
+    plan_adapter_worker_process_launcher.md
     plan_adapter_kit_shared_fixture_helpers.md
+    plan_chaturbate_live_parser_fixtures.md
     plan_timeline_payload_schemas_round2.md
     plan_timeline_payload_schemas_round3_4_5.md
     plan_credential_store_selector_fixture.md
@@ -134,6 +137,8 @@ tdd-tests/
     adapters/
       kit/
         adapterKitFixtureGuards.test.ts
+      chaturbate/
+        chaturbateLiveParserFixtures.test.ts
       stripchat/
         stripchatCombinedFixture.test.ts
     archive/
@@ -444,6 +449,19 @@ Boundary:
 - Does not implement live CB capture, downloader integration, cookies, headers,
   sessions, or real media recording.
 
+### `docs/CHATURBATE_LIVE_ADAPTER_DESIGN.md`
+
+Responsibility:
+
+- Design draft for the future Chaturbate live adapter boundary.
+- Records CB topology assumptions, live request boundaries, redaction rules,
+  manifest promotion criteria, threat model, and the first-live-test definition.
+
+Boundary:
+
+- Documentation only. It does not implement network access, real media download,
+  real cookies, manifest live mode, or a live worker.
+
 ### `docs/DEVELOPMENT_SETUP.md`
 
 Responsibility:
@@ -686,6 +704,19 @@ Responsibility:
 - Records how modeled command/stdout/stderr/exit data becomes a lifecycle
   report without launching a real process.
 
+### `docs/plan/plan_adapter_worker_process_launcher.md`
+
+Responsibility:
+
+- Implementation plan for a real `runAdapterWorkerProcess` child-process
+  launcher that delegates report semantics to the no-spawn supervisor harness.
+- Records the fixture/stub-worker-first scope and the stdin-handshake model.
+
+Boundary:
+
+- Plan only in the current tree. It does not spawn real workers yet and does
+  not connect to live sites.
+
 ### `docs/plan/plan_adapter_kit_shared_fixture_helpers.md`
 
 Responsibility:
@@ -826,6 +857,22 @@ Responsibility:
 - Records that missing audio, duration mismatch, media gap, and stalled-output
   scenarios are contract tests for Chronarium's storage/query behavior, not
   proof of current live Chaturbate behavior.
+
+### `docs/plan/plan_chaturbate_live_parser_fixtures.md`
+
+Responsibility:
+
+- Plan, scope, TDD notes, and verification record for the thick Chaturbate
+  live-parser synthetic fixture.
+- Records pure playlist parsing, split audio/video topology facts, synthetic
+  room/chat facts, reconnect/gap/diagnostic facts, and modeled adapter-error
+  behavior.
+
+Boundary:
+
+- Fixture-only. It uses only `fixture://chaturbate/...` inputs and excludes
+  network access, real media, real room/account data, real cookies, and manifest
+  live promotion.
 
 ### `docs/plan/plan_core_maintenance_inspector_foundation.md`
 
@@ -1321,6 +1368,17 @@ Current status:
   duration mismatch, and stalled output. These are contract tests for
   Chronarium's archive/timeline/index behavior, not evidence that current live
   Chaturbate behaves this way.
+- It includes a thicker `live-parser.synthetic.json` fixture plus
+  `liveParserFixture.ts`, which parses synthetic master/media playlist text into
+  split video/audio topology facts, segment observations, synthetic room/chat
+  facts, reconnect/gap/diagnostic facts, and a modeled adapter-error path.
+- The live-parser fixture validates playlist references line by line: media
+  playlist URIs, init segments, and segment lines must use
+  `fixture://chaturbate/...`, and master playlist references must be backed by
+  provided synthetic media playlists.
+- The thick fixture passes readiness, offline capture, archive validation/read,
+  and SQLite indexing. It is designed for future live code to reuse the parser
+  with approved downloaded bytes, but it does not make network requests.
 - Its tests validate timeline envelopes, adapter protocol messages, rejection
   of network-looking or token-bearing fixture references, writing the fixture
   into a synthetic `.chron` archive, archive reader/validator consumption, and

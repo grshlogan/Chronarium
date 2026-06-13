@@ -2115,3 +2115,63 @@ unimplemented ideas as completed work.
     monitoring feedback, credential panel, and Default Cookie label render.
 - Next: hand the uncommitted slice to the designated committer together with
   Claude's `packages/player` lane.
+
+## 2026-06-14: Chaturbate live adapter design + worker process launcher plan
+
+- Conversation: A02 / Claude prepared the live-crossing design gate while
+  staying documentation-only.
+- Landed: `docs/CHATURBATE_LIVE_ADAPTER_DESIGN.md` and
+  `docs/plan/plan_adapter_worker_process_launcher.md`.
+- Decisions:
+  - First CB live milestone is public-room, no-cookie capture only. Gated
+    ticket/private/spy paths still require separate credential live approval.
+  - Future live code must reuse the fixture-safe CB parsers and feed them
+    approved downloaded bytes; raw URLs, headers, cookies, room identities, and
+    chat identities must not cross into timeline/archive/index/logs.
+  - The next launcher step is `runAdapterWorkerProcess` over a fixture/stub
+    worker, delegating report semantics to `runModeledAdapterWorker`.
+- Verification: documentation-only slice covered by the final combined checks in
+  the commit that lands it.
+- Next: implement the fixture-safe real process launcher in `packages/core`
+  before any live site access.
+
+## 2026-06-14: Chaturbate thick parser fixture
+
+- Conversation: A01 / Codex adapters lane from `docs/AGENT_WORK_SPLIT.md`.
+- Landed: a thick Chaturbate synthetic parser fixture that brings the CB adapter
+  to "only missing real networking" without crossing the live line.
+- Files:
+  - `packages/adapters/chaturbate/src/liveParserFixture.ts`
+  - `packages/adapters/chaturbate/fixtures/live-parser.synthetic.json`
+  - `packages/adapters/chaturbate/src/fixtureAdapter.ts`
+  - `packages/adapters/chaturbate/src/index.ts`
+  - `packages/adapters/chaturbate/src/manifest.ts`
+  - `packages/adapters/chaturbate/fixtures/README.md`
+  - `tdd-tests/packages/adapters/chaturbate/chaturbateLiveParserFixtures.test.ts`
+  - `tdd-tests/packages/testkit/adapter-readiness/adapterReadiness.test.ts`
+  - `tdd-tests/packages/core/adapter-catalog/adapterCatalog.test.ts`
+  - `docs/plan/plan_chaturbate_live_parser_fixtures.md`
+  - `docs/conversation-A01-documentation-and-initial-skeleton.md`
+- Decisions:
+  - The parser is pure and fixture-first: input is synthetic playlist/room/chat
+    data, output is existing timeline facts.
+  - CB fixture capabilities now include `room.state` and `chat.events` because
+    the thick fixture emits matching facts.
+  - Playlist text is hardened so master/media playlist references must be
+    `fixture://chaturbate/...` and backed by the fixture; no raw network URLs
+    may hide inside playlist strings.
+  - CB manifest security posture remains fixture-only, no network, no
+    credentials, and no sensitive source fields.
+- Verification:
+  - Targeted CB/readiness tests passed 5 files and 19 tests.
+  - `pnpm typecheck` passed.
+  - `pnpm test` passed 35 files and 197 tests, with the known Node
+    `node:sqlite` ExperimentalWarning.
+  - `pnpm build` passed.
+  - `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed with
+    1000 scanned events, 8 batches, and 0 issues.
+  - `git diff --check` passed.
+  - trailing whitespace scan found no matches.
+- Next: implement the fixture/stub worker process launcher, then decide whether
+  to extend CB fixture coverage or request explicit approval for the first live
+  public-room crossing.

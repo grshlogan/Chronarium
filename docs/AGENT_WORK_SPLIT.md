@@ -66,3 +66,23 @@ Codex maintains `docs/conversation-A01-documentation-and-initial-skeleton.md`
    --check`, trailing-whitespace scan.
 4. Escalate to the user (and Claude) before anything touching secrets,
    destructive operations, a new cross-module contract, or the live-site line.
+
+## Shared Index Docs (single-writer rule)
+
+In one shared working tree, the index docs — `README.md`, `docs/AI_HANDOFF.md`,
+`docs/AI_CHANGE_INDEX.md`, `docs/APP_CODE_MAP.md` — are a recurring write-race:
+both agents editing the same file lose each other's edits. Rule:
+
+- Only the **designated committer** edits these four files. The other agent does
+  not touch them; instead it hands its index entry (a short dated snippet) to the
+  committer in its final report, and the committer pastes the snippet before
+  committing.
+- Each agent still freely edits its own source/tests, its own
+  `docs/plan/<plan>.md`, its own `conversation-*.md`, and lane-scoped core docs
+  (Claude → e.g. `REPLAY_MODEL_V1.md`; Codex → e.g. `MEDIA_TOOLS_BOUNDARY.md`).
+
+Heavier alternative (only if the commit model changes to per-agent branches):
+give each agent its own `git worktree` / branch and merge. That removes all
+shared-tree contention but means each agent commits its own branch instead of one
+agent committing both lanes. Not adopted while a single committer commits both
+lanes to `main`.

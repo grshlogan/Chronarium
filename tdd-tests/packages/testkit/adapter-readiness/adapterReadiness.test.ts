@@ -1,6 +1,6 @@
 import {
-  createChaturbateSplitTrackTimelineEvents,
-  parseChaturbateSplitTrackFixture,
+  createChaturbateLiveParserTimelineEvents,
+  parseChaturbateLiveParserFixture,
   runChaturbateFixture
 } from "@chronarium/adapter-chaturbate";
 import { verifyAdapterFixtureReadiness } from "@chronarium/testkit";
@@ -10,14 +10,20 @@ import { describe, expect, it } from "vitest";
 
 describe("adapter fixture readiness gate", () => {
   it("accepts a synthetic adapter stream that is safe to wire into core", async () => {
-    const fixture = parseChaturbateSplitTrackFixture(await readFixtureJson());
-    const events = createChaturbateSplitTrackTimelineEvents(fixture);
+    const fixture = parseChaturbateLiveParserFixture(await readFixtureJson());
+    const events = createChaturbateLiveParserTimelineEvents(fixture);
 
     const readiness = await verifyAdapterFixtureReadiness({
       request: {
         adapterId: "chaturbate",
         sessionId: fixture.sessionId,
-        capabilitiesRequested: ["fixture.timeline", "media.discovery"]
+        capabilitiesRequested: [
+          "fixture.timeline",
+          "media.discovery",
+          "room.state",
+          "chat.events",
+          "diagnostics"
+        ]
       },
       messages: runChaturbateFixture({
         name: fixture.name,
@@ -30,13 +36,15 @@ describe("adapter fixture readiness gate", () => {
       ok: true,
       adapterId: "chaturbate",
       sessionId: fixture.sessionId,
-      messageCount: 9,
-      timelineEventCount: 7
+      messageCount: events.length + 2,
+      timelineEventCount: events.length
     });
     expect(readiness.issues).toEqual([]);
     expect(readiness.capabilities).toEqual([
       "fixture.timeline",
       "media.discovery",
+      "room.state",
+      "chat.events",
       "diagnostics"
     ]);
   });
@@ -137,7 +145,7 @@ describe("adapter fixture readiness gate", () => {
 async function readFixtureJson(): Promise<unknown> {
   const text = await readFile(
     new URL(
-      "../../../../packages/adapters/chaturbate/fixtures/split-audio-video.synthetic.json",
+      "../../../../packages/adapters/chaturbate/fixtures/live-parser.synthetic.json",
       import.meta.url
     ),
     "utf8"

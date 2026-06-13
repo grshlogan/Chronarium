@@ -5,7 +5,7 @@ Chronarium is a new local-first livestream archive and replay platform under
 
 ## Current Status
 
-Date: 2026-06-13
+Date: 2026-06-14
 
 Current state:
 
@@ -26,8 +26,17 @@ Current state:
   `packages/testkit`.
 - Package code is contract-first, fixture-first, and only has the first
   executable validation path.
-- Chaturbate adapter code is synthetic fixture mode only and does not connect to
-  live rooms.
+- Chaturbate adapter code is still synthetic fixture mode only and does not
+  connect to live rooms. It now has a thicker live-parser synthetic fixture that
+  models CB-like split playlist topology, room/chat, reconnect/gap, diagnostic,
+  and adapter-error facts without network access.
+- `docs/CHATURBATE_LIVE_ADAPTER_DESIGN.md` records the CB live adapter design
+  gate and threat model. It is documentation only: no live request path, no real
+  media download, no manifest live promotion, and no real Cookie handling exist.
+- `docs/plan/plan_adapter_worker_process_launcher.md` records the next
+  fixture-safe core step: a real process launcher for fixture/stub workers that
+  delegates report semantics to `runModeledAdapterWorker`. It is not
+  implemented yet.
 - License selected and added: Apache-2.0.
 - Minimal dependencies have been installed and `pnpm-lock.yaml` exists.
 - `packages/schemas` has first-pass Zod runtime schemas.
@@ -210,6 +219,18 @@ Current state:
   output. These fixtures are contract tests for Chronarium's ability to store,
   read, validate, and query bad recording facts; they do not prove current live
   Chaturbate behavior.
+- `packages/adapters/chaturbate` now has a thicker
+  `live-parser.synthetic.json` fixture and pure `liveParserFixture.ts` parser.
+  It parses synthetic master/media playlist text into split video/audio
+  topology facts, segment observations, synthetic room/chat facts,
+  reconnect/gap/diagnostic facts, and a modeled adapter-error path. Playlist
+  references must be `fixture://chaturbate/...`; quoted master `URI` references
+  must be backed by provided synthetic media playlists, and raw network URLs are
+  rejected even when embedded inside playlist text.
+- The thick Chaturbate fixture passes `verifyAdapterFixtureReadiness`, the core
+  offline capture task gate, archive validation/read, and SQLite indexing. It is
+  designed so future live code can reuse the same pure parser with approved
+  downloaded bytes, but no live request path exists yet.
 - `packages/adapters/stripchat` now exists as the first non-Chaturbate adapter
   scaffold. It is fixture-only and models an SC-like combined audio/video HLS
   topology with one raw media track.
@@ -242,8 +263,9 @@ Current state:
   `media.gap.detected` facts, making it the first room/chat/network/gap
   bring-up template. Its readiness stream requests and proves `room.state` and
   `chat.events`; the readiness gate now rejects streams that declare or request
-  those capabilities without matching facts. The Chaturbate fixture no longer
-  declares `room.state` until it has a room-state fixture.
+  those capabilities without matching facts. The thick Chaturbate live-parser
+  fixture now also declares and proves `room.state` and `chat.events` through
+  synthetic room/chat facts.
 - `docs/CREDENTIALS_AND_SESSIONS.md` records the design draft for authenticated
   recording (ticket / private / spy shows): a `CredentialProfile` is one
   account's full cookie jar, a streamer binds one or more profiles with a
@@ -969,3 +991,19 @@ Web dashboard credential binding lane checks:
   supports the selected gated intent.
 - Targeted desktop recording-dashboard tests passed 15 tests.
 - `pnpm typecheck` passed after this desktop lane.
+
+Chaturbate thick parser fixture and live-design doc checks:
+
+- A02 design/docs landed `docs/CHATURBATE_LIVE_ADAPTER_DESIGN.md` and
+  `docs/plan/plan_adapter_worker_process_launcher.md`; no network/live code.
+- A01 TDD RED/GREEN added the thick `live-parser.synthetic.json` fixture and
+  `liveParserFixture.ts`, then hardened master/media playlist reference checks.
+- Targeted CB/readiness tests passed 5 files and 19 tests.
+- `pnpm typecheck` passed.
+- `pnpm test` passed 35 files and 197 tests, with the known Node
+  `node:sqlite` ExperimentalWarning.
+- `pnpm build` passed.
+- `pnpm benchmark:timeline -- --events 1000 --batch-size 128` passed with 1000
+  scanned events, 8 batches, and 0 issues.
+- `git diff --check` passed.
+- trailing whitespace scan found no matches.

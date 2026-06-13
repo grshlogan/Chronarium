@@ -131,8 +131,16 @@ AI 可以快速接手局部问题
 - `packages/adapters/chaturbate` 已增加离线 synthetic diagnostic fixtures，
   覆盖缺音频、media gap、音视频时长不一致和输出停滞等故障模型。这些是合成
   契约测试，用来证明 Chronarium 能保存坏录制事实，不代表真实 CB 站点行为已验证。
+- `packages/adapters/chaturbate` 已增加更厚的离线 live-parser synthetic fixture：
+  纯解析合成 master/media playlist 文本，生成 split audio/video 拓扑、segment、
+  room state、chat、reconnect/gap、diagnostic 和 modeled adapter-error 事实，并
+  通过 readiness、offline capture、archive validation/reader 和 SQLite indexer。
+  这仍然不联网、不下载真实媒体、不处理真实 Cookie。
 - `packages/adapters/chaturbate` 已导出 fixture-only adapter manifest，声明
   当前只允许 fixture runtime、无网络访问、无凭据需求、不会输出敏感源字段。
+- `docs/CHATURBATE_LIVE_ADAPTER_DESIGN.md` 已记录 CB live adapter 的设计和威胁
+  模型：第一步只考虑公开房间无 Cookie 录制，真实请求、真实媒体、manifest 升级
+  到 live、以及 gated Cookie 注入仍未实现，且需要明确批准。
 - `packages/adapters/stripchat` 已有第一个离线 combined audio/video synthetic
   fixture scaffold，用作 SC-like 合流媒体拓扑模板。它只生成合成 media track
   metadata、timeline facts 和 adapter protocol fixture stream；会把非连续片段
@@ -228,6 +236,7 @@ small module boundaries.
 - [docs/CREDENTIALS_AND_SESSIONS.md](./docs/CREDENTIALS_AND_SESSIONS.md)：认证录制(ticket/private/spy)的凭据模型、按主播绑定、选择策略、脱敏与存储的设计契约草案。
 - [docs/MAINTENANCE_OPS_DESIGN.md](./docs/MAINTENANCE_OPS_DESIGN.md)：maintenance / ops 巡检系统设计草案和项目引用。
 - [docs/CB_RECORDING_REFERENCES.md](./docs/CB_RECORDING_REFERENCES.md)：CB 分离音视频录播参考项目和 Chronarium 设计取舍。
+- [docs/CHATURBATE_LIVE_ADAPTER_DESIGN.md](./docs/CHATURBATE_LIVE_ADAPTER_DESIGN.md)：CB live adapter 的设计、redaction 规则、manifest promotion 门槛和威胁模型；当前仅为设计文档。
 - [docs/DEVELOPMENT_SETUP.md](./docs/DEVELOPMENT_SETUP.md)：当前开发环境、依赖、脚本和安全检查说明。
 - [docs/APP_CODE_MAP.md](./docs/APP_CODE_MAP.md)：当前文件树和计划中的代码地图。
 - [docs/AI_HANDOFF.md](./docs/AI_HANDOFF.md)：给后续 AI 或开发者接手的当前状态、决策和下一步。
@@ -242,6 +251,8 @@ small module boundaries.
 - [docs/plan/plan_adapter_worker_message_stream.md](./docs/plan/plan_adapter_worker_message_stream.md)：未来 adapter child-process stdout JSONL 消息流解析边界计划。
 - [docs/plan/plan_adapter_worker_command_builder.md](./docs/plan/plan_adapter_worker_command_builder.md)：未来 adapter child-process typed spawn command descriptor 计划。
 - [docs/plan/plan_adapter_worker_supervisor_harness.md](./docs/plan/plan_adapter_worker_supervisor_harness.md)：no-spawn adapter worker stdout/stderr/exit/lifecycle 监督 harness 计划。
+- [docs/plan/plan_adapter_worker_process_launcher.md](./docs/plan/plan_adapter_worker_process_launcher.md)：真实 adapter worker process launcher 的实现计划；目标是先 spawn fixture/stub worker，不接真实站点。
+- [docs/plan/plan_chaturbate_live_parser_fixtures.md](./docs/plan/plan_chaturbate_live_parser_fixtures.md)：CB 厚离线 live-parser fixture、playlist parser、room/chat/reconnect/gap/error 事实生成计划。
 - [docs/plan/plan_real_site_adapter_bringup_checklist.md](./docs/plan/plan_real_site_adapter_bringup_checklist.md)：真实站点 adapter fixture-first 开工清单计划。
 - [docs/plan/plan_documentation_code_state_sync.md](./docs/plan/plan_documentation_code_state_sync.md)：文档与当前代码状态同步计划。
 - [docs/plan/plan_web_first_recording_dashboard.md](./docs/plan/plan_web_first_recording_dashboard.md)：第一版 Web-first 录制工作台计划和验证记录。

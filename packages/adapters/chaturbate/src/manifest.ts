@@ -15,6 +15,7 @@ export const CHATURBATE_ADAPTER_MANIFEST = {
   fixtureReadiness: {
     status: "fixture-ready",
     fixtureNames: [
+      "live-parser.synthetic",
       "split-audio-video.synthetic",
       "missing-audio.synthetic",
       "diagnostic-anomalies.synthetic"
